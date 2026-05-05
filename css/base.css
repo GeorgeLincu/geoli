@@ -1,0 +1,135 @@
+/* ─── Reset ─────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ─── Design Tokens ─────────────────────────────────── */
+:root {
+  --bg:           #08090f;
+  --bg-card:      rgba(255,255,255,0.03);
+  --bg-card-h:    rgba(255,255,255,0.055);
+  --border:       rgba(255,255,255,0.07);
+  --border-h:     rgba(255,255,255,0.14);
+  --indigo:       #6366f1;
+  --cyan:         #22d3ee;
+  --purple:       #a855f7;
+  --emerald:      #10b981;
+  --text:         #f1f5f9;
+  --text-muted:   #64748b;
+  --text-soft:    #94a3b8;
+  --font-sans:    'Inter', system-ui, sans-serif;
+  --font-head:    'Syne', system-ui, sans-serif;
+  --radius:       16px;
+  --radius-lg:    24px;
+  --radius-full:  100px;
+  --blur:         blur(20px);
+  --trans:        0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Base ──────────────────────────────────────────── */
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+
+/* ─── Noise overlay ─────────────────────────────────── */
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px;
+}
+
+/* ─── Layout utilities ──────────────────────────────── */
+.container { width: min(1160px, 100% - 3rem); margin-inline: auto; }
+
+.glass {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  -webkit-backdrop-filter: var(--blur);
+  border: 1px solid var(--border);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--indigo) 0%, var(--cyan) 50%, var(--purple) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 4s linear infinite;
+}
+
+/* ─── Section scaffolding ───────────────────────────── */
+.section { padding: 7rem 0; }
+
+.section__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin-bottom: 0.85rem;
+}
+.section__label::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--indigo);
+}
+.section__title {
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+.section__subtitle {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin-bottom: 3rem;
+}
+
+/* ─── Scroll reveal (progressive enhancement) ──────── */
+/* Content is visible by default. JS adds .js-ready to <body>
+   to opt-in to animations — so content always shows without JS. */
+.js-ready .reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.65s cubic-bezier(0.4,0,0.2,1), transform 0.65s cubic-bezier(0.4,0,0.2,1);
+}
+.js-ready .reveal.visible { opacity: 1; transform: translateY(0); }
+
+/* ─── Keyframes ─────────────────────────────────────── */
+@keyframes shimmer  { to { background-position: 200% center; } }
+@keyframes float    { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(2%,3%) scale(1.04)} 66%{transform:translate(-2%,-2%) scale(0.97)} }
+@keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.85)} }
+@keyframes bounce   { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(6px)} }
+@keyframes langFade { 0%{opacity:0;transform:translateY(4px)} 100%{opacity:1;transform:translateY(0)} }
+
+.lang-switching [data-i18n] { animation: langFade 0.25s ease forwards; }
+
+/* ─── Custom scrollbar ──────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ─── Focus visible ─────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
