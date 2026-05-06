@@ -62,6 +62,36 @@ const translations = Object.freeze({
     'contact.subtitle': "Whether you have a project in mind, a question about automation, or just want to connect — I'd love to hear from you.",
 
     'footer.tagline': 'Technology · AI · RPA',
+
+    'about.cv': 'Download CV',
+
+    'blog.label':    'Insights',
+    'blog.title':    'Latest Thinking',
+    'blog.subtitle': 'Articles on AI, automation, and digital transformation.',
+    'blog.read':     'Read article →',
+    'blog.soon':     'Coming soon',
+
+    'b1.tag':   'AI Agents',
+    'b1.title': 'Building Your First AI Agent with Copilot Studio',
+    'b1.desc':  'A practical guide to designing and deploying conversational AI agents — from trigger design to multi-topic flows and generative answers.',
+    'b1.date':  'May 2026',
+
+    'b2.tag':   'RPA',
+    'b2.title': 'RPA at Scale: Lessons from Enterprise Deployments',
+    'b2.desc':  'What separates RPA pilots from production-ready automation — governance models, exception handling, and building for long-term maintainability.',
+    'b2.date':  'April 2026',
+
+    'b3.tag':   'Azure',
+    'b3.title': 'Zero-Cost Azure Architecture for Modern Websites',
+    'b3.desc':  'How to architect resilient, secure, globally distributed websites on Azure\'s free tier — Static Web Apps, serverless Functions, and Cloudflare working together.',
+    'b3.date':  'March 2026',
+
+    'form.name':    'Your name',
+    'form.email':   'Your email',
+    'form.message': 'Your message',
+    'form.send':    'Send message',
+    'form.success': "Message sent — I'll get back to you shortly.",
+    'form.error':   'Something went wrong. Please try again.',
   },
 
   ro: {
@@ -125,6 +155,36 @@ const translations = Object.freeze({
     'contact.subtitle': 'Indiferent dacă ai un proiect în minte, o întrebare despre automatizare sau vrei doar să ne conectăm — mi-ar face plăcere să te aud.',
 
     'footer.tagline': 'Tehnologie · AI · RPA',
+
+    'about.cv': 'Descarcă CV',
+
+    'blog.label':    'Articole',
+    'blog.title':    'Ultimele Gânduri',
+    'blog.subtitle': 'Articole despre AI, automatizare și transformare digitală.',
+    'blog.read':     'Citește articolul →',
+    'blog.soon':     'În curând',
+
+    'b1.tag':   'Agenți AI',
+    'b1.title': 'Construiește Primul Tău Agent AI cu Copilot Studio',
+    'b1.desc':  'Un ghid practic pentru proiectarea și implementarea agenților AI conversaționali — de la design-ul triggerelor la fluxuri multi-topic și răspunsuri generative.',
+    'b1.date':  'Mai 2026',
+
+    'b2.tag':   'RPA',
+    'b2.title': 'RPA la Scară Largă: Lecții din Implementări Enterprise',
+    'b2.desc':  'Ce separă piloții RPA de automatizarea gata pentru producție — modele de guvernanță, gestionarea excepțiilor și mentenabilitate pe termen lung.',
+    'b2.date':  'Aprilie 2026',
+
+    'b3.tag':   'Azure',
+    'b3.title': 'Arhitectură Azure Fără Cost pentru Site-uri Moderne',
+    'b3.desc':  'Cum să arhitecturezi site-uri web reziliente, sigure și distribuite global pe nivelul gratuit Azure — Static Web Apps, Functions și Cloudflare lucrând împreună.',
+    'b3.date':  'Martie 2026',
+
+    'form.name':    'Numele tău',
+    'form.email':   'Email-ul tău',
+    'form.message': 'Mesajul tău',
+    'form.send':    'Trimite mesajul',
+    'form.success': 'Mesaj trimis — îți voi răspunde în scurt timp.',
+    'form.error':   'Ceva a mers greșit. Te rog încearcă din nou.',
   },
 });
 

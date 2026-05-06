@@ -4,25 +4,50 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="George Lincu — Technology, AI &amp; RPA specialist. Helping organisations automate intelligently and scale with confidence." />
-  <meta name="robots" content="index, follow" />
-  <title>GeoLi — Technology · AI · RPA</title>
 
-  <!-- Fonts — crossorigin required for CORS-safe font loading -->
+  <!-- SEO -->
+  <title>GeoLi — Technology · AI · RPA</title>
+  <meta name="description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation. Based in Europe." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://geoli.eu" />
+
+  <!-- Open Graph -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:url"         content="https://geoli.eu" />
+  <meta property="og:title"       content="GeoLi — Technology · AI · RPA" />
+  <meta property="og:description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation." />
+  <meta property="og:image"       content="https://geoli.eu/assets/og-image.svg" />
+  <meta property="og:locale"      content="en_GB" />
+
+  <!-- Twitter / X card -->
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="GeoLi — Technology · AI · RPA" />
+  <meta name="twitter:description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation." />
+  <meta name="twitter:image"       content="https://geoli.eu/assets/og-image.svg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+  <link rel="preconnect" href="https://fonts.gstatic.com"    crossorigin="anonymous" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
 
-  <!-- CSS modules loaded in parallel via individual link tags -->
+  <!-- CSS modules -->
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/nav.css" />
   <link rel="stylesheet" href="css/hero.css" />
   <link rel="stylesheet" href="css/sections.css" />
+
+  <!-- Cloudflare Web Analytics
+       Enable in Cloudflare dashboard → Analytics → Web Analytics → your site
+       then replace YOUR_TOKEN below with the token they give you -->
+  <!-- <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon='{"token":"YOUR_CF_ANALYTICS_TOKEN"}'></script> -->
 </head>
 <body>
 
-  <!-- NOISE OVERLAY -->
   <div class="noise" aria-hidden="true"></div>
 
   <!-- NAV -->
@@ -33,11 +58,12 @@
         <li role="none"><a href="#about"    role="menuitem" data-i18n="nav.about">About</a></li>
         <li role="none"><a href="#services" role="menuitem" data-i18n="nav.services">Services</a></li>
         <li role="none"><a href="#stack"    role="menuitem" data-i18n="nav.stack">Stack</a></li>
+        <li role="none"><a href="#blog"     role="menuitem" data-i18n="blog.label">Insights</a></li>
         <li role="none"><a href="#contact"  role="menuitem" class="btn btn--sm" data-i18n="nav.cta">Let's Talk</a></li>
       </ul>
       <div class="nav__right">
         <div class="lang-toggle" id="langToggle" role="group" aria-label="Language switcher">
-          <span class="lang-slider" id="langSlider" aria-hidden="true"></span>
+          <span class="lang-slider" aria-hidden="true"></span>
           <button class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
           <button class="lang-btn"        data-lang="ro" aria-pressed="false">RO</button>
         </div>
@@ -62,8 +88,8 @@
         <span data-i18n="hero.badge">Available for projects</span>
       </div>
       <h1 class="hero__title">
-        <span class="hero__title-line" data-i18n="hero.title1">Automating the</span>
-        <span class="hero__title-line gradient-text" data-i18n="hero.title2">future of work.</span>
+        <span data-i18n="hero.title1">Automating the</span>
+        <span class="gradient-text" data-i18n="hero.title2">future of work.</span>
       </h1>
       <p class="hero__subtitle" data-i18n="hero.subtitle">
         I help organisations cut through complexity — building intelligent automation,
@@ -72,6 +98,10 @@
       <div class="hero__cta">
         <a href="#services" class="btn btn--primary" data-i18n="hero.cta1">Explore Services</a>
         <a href="#contact"  class="btn btn--ghost"   data-i18n="hero.cta2">Get in Touch</a>
+        <a href="#" class="btn btn--ghost" data-contact="cv" download aria-label="Download CV">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          <span data-i18n="about.cv">Download CV</span>
+        </a>
       </div>
       <div class="hero__chips" aria-hidden="true">
         <span class="chip"><span class="chip__icon chip__icon--ai"></span>AI Agents</span>
@@ -132,6 +162,10 @@
             <span class="tag">Power Platform</span>
             <span class="tag">Process Mining</span>
           </div>
+          <a href="#" class="btn btn--ghost btn--sm" data-contact="cv" download>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+            <span data-i18n="about.cv">Download CV</span>
+          </a>
           <div class="about__status">
             <span class="status__dot" aria-hidden="true"></span>
             <span data-i18n="about.status">Open to collaboration</span>
@@ -149,7 +183,7 @@
       <p class="section__subtitle" data-i18n="services.subtitle">End-to-end expertise across the intelligent automation stack.</p>
       <div class="bento">
 
-        <article class="bento__card bento__card--wide glass reveal" aria-label="AI Agent Development">
+        <article class="bento__card bento__card--wide glass reveal">
           <div class="bento__glow bento__glow--indigo" aria-hidden="true"></div>
           <div class="bento__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 001.5 2.122m-1.5-2.122c.251.023.501.05.75.082M14.25 3.104A24.3 24.3 0 0119 5.5m0 0a2.25 2.25 0 011.5 2.122v.085a2.25 2.25 0 01-1.5 2.122m0-4.329v5.714a2.25 2.25 0 01-.659 1.591L14.5 14.5M5 14.5a2.25 2.25 0 002.25 2.25h9A2.25 2.25 0 0018.5 14.5m-13.5 0v3.75a2.25 2.25 0 002.25 2.25h9a2.25 2.25 0 002.25-2.25V14.5"/></svg>
@@ -165,7 +199,7 @@
           </div>
         </article>
 
-        <article class="bento__card glass reveal" aria-label="Robotic Process Automation">
+        <article class="bento__card glass reveal">
           <div class="bento__glow bento__glow--cyan" aria-hidden="true"></div>
           <div class="bento__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
@@ -181,7 +215,7 @@
           </div>
         </article>
 
-        <article class="bento__card glass reveal" aria-label="Cloud and Azure Architecture">
+        <article class="bento__card glass reveal">
           <div class="bento__glow bento__glow--purple" aria-hidden="true"></div>
           <div class="bento__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z"/></svg>
@@ -197,7 +231,7 @@
           </div>
         </article>
 
-        <article class="bento__card bento__card--wide glass reveal" aria-label="Digital Transformation Strategy">
+        <article class="bento__card bento__card--wide glass reveal">
           <div class="bento__glow bento__glow--emerald" aria-hidden="true"></div>
           <div class="bento__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg>
@@ -251,6 +285,48 @@
     </div>
   </section>
 
+  <!-- INSIGHTS / BLOG -->
+  <section class="section" id="blog" aria-label="Insights">
+    <div class="container">
+      <p class="section__label" data-i18n="blog.label">Insights</p>
+      <h2 class="section__title" data-i18n="blog.title">Latest Thinking</h2>
+      <p class="section__subtitle" data-i18n="blog.subtitle">Articles on AI, automation, and digital transformation.</p>
+      <div class="blog__grid">
+
+        <article class="blog__card glass reveal">
+          <div class="blog__card-top">
+            <span class="blog__tag" data-i18n="b1.tag">AI Agents</span>
+            <span class="blog__date" data-i18n="b1.date">May 2026</span>
+          </div>
+          <h3 data-i18n="b1.title">Building Your First AI Agent with Copilot Studio</h3>
+          <p data-i18n="b1.desc">A practical guide to designing and deploying conversational AI agents — from trigger design to multi-topic flows and generative answers.</p>
+          <span class="blog__read" data-i18n="blog.soon">Coming soon</span>
+        </article>
+
+        <article class="blog__card glass reveal">
+          <div class="blog__card-top">
+            <span class="blog__tag" data-i18n="b2.tag">RPA</span>
+            <span class="blog__date" data-i18n="b2.date">April 2026</span>
+          </div>
+          <h3 data-i18n="b2.title">RPA at Scale: Lessons from Enterprise Deployments</h3>
+          <p data-i18n="b2.desc">What separates RPA pilots from production-ready automation — governance models, exception handling, and building for long-term maintainability.</p>
+          <span class="blog__read" data-i18n="blog.soon">Coming soon</span>
+        </article>
+
+        <article class="blog__card glass reveal">
+          <div class="blog__card-top">
+            <span class="blog__tag" data-i18n="b3.tag">Azure</span>
+            <span class="blog__date" data-i18n="b3.date">March 2026</span>
+          </div>
+          <h3 data-i18n="b3.title">Zero-Cost Azure Architecture for Modern Websites</h3>
+          <p data-i18n="b3.desc">How to architect resilient, secure, globally distributed websites on Azure's free tier — Static Web Apps, serverless Functions, and Cloudflare working together.</p>
+          <span class="blog__read" data-i18n="blog.soon">Coming soon</span>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
   <!-- CONTACT -->
   <section class="section contact" id="contact" aria-label="Contact">
     <div class="container">
@@ -262,8 +338,42 @@
           Whether you have a project in mind, a question about automation,
           or just want to connect — I'd love to hear from you.
         </p>
+
+        <!-- Contact form — powered by Web3Forms (free at web3forms.com) -->
+        <form
+          id="contactForm"
+          class="contact__form"
+          novalidate
+          data-msg-success="Message sent — I'll get back to you shortly."
+          data-msg-error="Something went wrong. Please try again."
+        >
+          <input type="hidden" name="access_key" value="" />
+          <input type="hidden" name="subject"    value="New message from geoli.eu" />
+          <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" aria-hidden="true" />
+
+          <div class="form__row">
+            <div class="form__field">
+              <label for="fname" data-i18n="form.name">Your name</label>
+              <input id="fname" type="text" name="name" autocomplete="name" required />
+            </div>
+            <div class="form__field">
+              <label for="femail" data-i18n="form.email">Your email</label>
+              <input id="femail" type="email" name="email" autocomplete="email" required />
+            </div>
+          </div>
+          <div class="form__field">
+            <label for="fmsg" data-i18n="form.message">Your message</label>
+            <textarea id="fmsg" name="message" rows="5" required></textarea>
+          </div>
+          <button type="submit" class="btn btn--primary form__submit" data-form="submit" data-i18n="form.send">
+            Send message
+          </button>
+          <div id="formStatus" class="form__status" hidden role="alert"></div>
+        </form>
+
+        <div class="contact__divider">or reach out directly</div>
+
         <div class="contact__links">
-          <!-- href and label are injected from config.js — no plaintext email in HTML -->
           <a href="#" class="contact__link glass" data-contact="email" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
             <span data-contact="email-label">Email</span>
@@ -288,7 +398,6 @@
     </div>
   </footer>
 
-  <!-- ES module — deferred by default, strict mode, no global leakage -->
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

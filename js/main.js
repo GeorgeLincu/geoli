@@ -2,6 +2,7 @@ import { CONFIG }         from './config.js';
 import { initLang }       from './i18n.js';
 import { initNav }        from './nav.js';
 import { initAnimations } from './animations.js';
+import { initForm }       from './form.js';
 
 function populateContacts() {
   document.querySelectorAll('[data-contact="email"]').forEach(el => {
@@ -16,9 +17,13 @@ function populateContacts() {
   document.querySelectorAll('[data-contact="footer-copy"]').forEach(el => {
     el.textContent = `© ${CONFIG.year} ${CONFIG.name} · ${CONFIG.domain}`;
   });
+  document.querySelectorAll('[data-contact="cv"]').forEach(el => {
+    if (el.tagName === 'A') el.href = CONFIG.cvPath;
+  });
 }
 
 initNav();
 initAnimations();
 populateContacts();
+initForm();
 initLang();
