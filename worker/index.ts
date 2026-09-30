@@ -2,6 +2,7 @@
 //
 //   /vault/*  private area behind Cloudflare Access (login) — files live in the R2 bucket VAULT
 //   /s/<tok>  public, time-limited share links signed with SHARE_SECRET
+//   /media/*  public images for articles (uploaded from the vault's article editor, stored in R2 under media/)
 //   anything else → static assets (the Worker only runs for the paths in wrangler.jsonc "run_worker_first")
 //
 // Permissions
@@ -12,6 +13,7 @@ import { marked } from 'marked';
 import { getUser, type User } from './auth';
 import { createShareToken, verifyShareToken, MAX_SHARE_HOURS } from './share';
 import { APP_HTML, APP_CSS, APP_JS, pageHtml } from './ui';
+import { listPosts, getPost, savePost, deletePost, validate, HttpError } from './posts';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -21,9 +23,14 @@ export interface Env {
   ADMIN_EMAILS: string;       // comma-separated
   SHARE_SECRET?: string;      // secret — `wrangler secret put SHARE_SECRET`
   DEV_EMAIL?: string;         // local development only (.dev.vars)
+  GITHUB_TOKEN?: string;      // secret — fine-grained token: this repo only, Contents read/write
+  GITHUB_REPO?: string;       // default GeorgeLincu/geoli
+  GITHUB_BRANCH?: string;     // default main
 }
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // Workers request-body limit on the free plan
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+const IMAGE_TYPES: Record<string, string> = { png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', webp: 'image/webp', gif: 'image/gif', avif: 'image/avif' };
 const PEOPLE = 'people/';
 
 // Types that are safe to render inline on our origin. Everything else is forced to download
@@ -181,7 +188,18 @@ async function handleVault(request: Request, env: Env, url: URL) {
   if (path === '/vault/app.css') return respond(APP_CSS, { headers: { 'Content-Type': 'text/css; charset=utf-8' } });
   if (path === '/vault/app.js')  return respond(APP_JS,  { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
 
-  if (path === '/vault/api/me') return json({ email: user.email, admin: user.admin, sharing: !!env.SHARE_SECRET });
+  if (path === '/vault/api/me') return json({ email: user.email, admin: user.admin, sharing: !!env.SHARE_SECRET, publishing: user.admin && !!env.GITHUB_TOKEN });
+
+  // ─── Article publishing (admin) ───
+  if (path.startsWith('/vault/api/posts') || path === '/vault/api/preview' || path.startsWith('/vault/api/media/')) {
+    if (!user.admin) return error(403, 'Only admins can manage articles');
+    try {
+      return await handlePublishing(request, env, url, user);
+    } catch (e) {
+      if (e instanceof HttpError) return error(e.status, e.message);
+      throw e;
+    }
+  }
 
   if (path === '/vault/api/list' && method === 'GET') {
     const raw = url.searchParams.get('prefix') || '';
@@ -259,6 +277,73 @@ async function handleVault(request: Request, env: Env, url: URL) {
   return error(404, 'Not found');
 }
 
+async function handlePublishing(request: Request, env: Env, url: URL, user: User) {
+  const path = url.pathname;
+  const method = request.method;
+
+  if (path === '/vault/api/preview' && method === 'POST') {
+    const { body } = (await request.json().catch(() => ({}))) as { body?: string };
+    return json({ html: await marked.parse(String(body || '').slice(0, 300_000), { gfm: true }) });
+  }
+
+  // PUT /vault/api/media/<slug>/<file.ext> — image for an article, public at /media/blog/<slug>/<unique-name>
+  if (path.startsWith('/vault/api/media/') && method === 'PUT') {
+    const [slug, ...rest] = path.slice('/vault/api/media/'.length).split('/');
+    const raw = decodeURIComponent(rest.join('/'));
+    const ext = (raw.split('.').pop() || '').toLowerCase();
+    if (!/^[a-z0-9-]{1,90}$/.test(slug) || !IMAGE_TYPES[ext]) return error(400, 'Images only: PNG, JPG, WebP, GIF, AVIF');
+    const length = Number(request.headers.get('Content-Length') || NaN);
+    if (!Number.isFinite(length)) return error(411, 'Content-Length required');
+    if (length > MAX_IMAGE_BYTES) return error(413, 'Image too large (max 8 MB)');
+    const base = raw.replace(/\.[^.]+$/, '').toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'image';
+    const key = `media/blog/${slug}/${Date.now().toString(36)}-${base}.${ext}`;
+    await env.VAULT.put(key, request.body, { httpMetadata: { contentType: IMAGE_TYPES[ext] }, customMetadata: { uploadedBy: user.email } });
+    return json({ ok: true, url: `/${key}` });
+  }
+
+  if (path === '/vault/api/posts' && method === 'GET') return json({ posts: await listPosts(env) });
+
+  const slug = decodeURIComponent(path.slice('/vault/api/posts/'.length));
+  if (!slug) return error(404, 'Not found');
+
+  if (method === 'GET') {
+    const post = await getPost(env, slug);
+    return post ? json(post) : error(404, 'Not found');
+  }
+  if (method === 'PUT') {
+    if (!(request.headers.get('Content-Type') || '').includes('application/json')) return error(415, 'JSON expected');
+    const post = validate({ ...((await request.json().catch(() => ({}))) as object), slug });
+    return json({ ok: true, ...(await savePost(env, post, user.email)) });
+  }
+  if (method === 'DELETE') {
+    await deletePost(env, slug, url.searchParams.get('sha') || '', user.email);
+    return json({ ok: true });
+  }
+  return error(405, 'Method not allowed');
+}
+
+/** Public article images from R2 (media/…). Unique file names → cache forever. */
+async function handleMedia(request: Request, env: Env, url: URL) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return error(405, 'Method not allowed');
+  const key = cleanKey(url.pathname.slice(1));
+  if (!key || !key.startsWith('media/')) return error(404, 'Not found');
+  const obj = await env.VAULT.get(key, { onlyIf: request.headers });
+  if (!obj) return error(404, 'Not found');
+  const type = obj.httpMetadata?.contentType || '';
+  if (!Object.values(IMAGE_TYPES).includes(type)) return error(404, 'Not found');
+  const headers = new Headers({
+    'Content-Type': type,
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'X-Content-Type-Options': 'nosniff',
+    'Content-Security-Policy': "default-src 'none'; sandbox",
+    'Cross-Origin-Resource-Policy': 'cross-origin',
+    'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+    ETag: obj.httpEtag,
+  });
+  if (!('body' in obj)) return new Response(null, { status: 304, headers });
+  return new Response(request.method === 'HEAD' ? null : (obj as R2ObjectBody).body, { headers });
+}
+
 async function handleShare(request: Request, env: Env, url: URL) {
   if (request.method !== 'GET' && request.method !== 'HEAD') return error(405, 'Method not allowed');
   const expired = () => html(pageHtml('Link expired', '<p>This share link is invalid or has expired. Ask the sender for a new one.</p>'), 410);
@@ -275,6 +360,7 @@ export default {
     try {
       if (url.pathname === '/vault' || url.pathname.startsWith('/vault/')) return await handleVault(request, env, url);
       if (url.pathname.startsWith('/s/')) return await handleShare(request, env, url);
+      if (url.pathname.startsWith('/media/')) return await handleMedia(request, env, url);
     } catch (err) {
       console.error(err);
       return error(500, 'Something went wrong');

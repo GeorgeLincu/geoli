@@ -88,6 +88,7 @@ const ui = {
     'contact.divider': 'or reach out directly',
     'footer.imprint':  'Legal notice',
     'footer.privacy':  'Privacy',
+    'footer.login':    'Login',
     'a11y.skip':       'Skip to content',
 
     'meta.title':       'George Lincu — AI Agents, RPA & Azure Consultant | GeoLi',
@@ -208,6 +209,7 @@ const ui = {
     'contact.divider': 'sau scrie-mi direct',
     'footer.imprint':  'Informații legale',
     'footer.privacy':  'Confidențialitate',
+    'footer.login':    'Autentificare',
     'a11y.skip':       'Sari la conținut',
 
     'meta.title':       'George Lincu — Consultant Agenți AI, RPA și Azure | GeoLi',

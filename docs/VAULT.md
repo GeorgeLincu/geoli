@@ -71,6 +71,30 @@ Workers Builds deploys it. Open `https://geoli.eu/vault/`, sign in with your e-m
 - **Write a hidden page**: upload a `notes.md` file; it opens as a styled page.
 - **Remove access**: delete their e-mail from the policy. To end active sessions immediately: Zero Trust → Access → *Revoke*.
 
+---
+
+## Writing and publishing articles (Articles tab)
+
+Admins get an **Articles** tab in the vault:
+
+- **New article**: title, URL, description (50–170 characters, it's the snippet Google shows), tags, date and the text in Markdown.
+- **Insert image**: uploads to R2 and inserts the Markdown. Images are public at `geoli.eu/media/…` immediately.
+- **Preview**: shows the rendered article before saving.
+- **Draft** (ticked): saved but not visible on the site. Untick it and press **Publish** to put it live.
+- Every save is a commit to GitHub (`src/content/blog/<slug>.md`). Cloudflare rebuilds the site and the article is live in about 1–2 minutes, including the sitemap, RSS feed, `llms.txt` and the Markdown copy for AI agents.
+
+### One-time setup: the GitHub token (secret `GITHUB_TOKEN`)
+
+1. GitHub → your avatar → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
+2. Fill in the token:
+   - **Name:** `geoli-vault-publishing`
+   - **Expiration:** 1 year (set a reminder to renew it)
+   - **Repository access:** *Only select repositories* → `GeorgeLincu/geoli`
+   - **Permissions → Repository permissions → Contents:** *Read and write*. Leave everything else at *No access*.
+3. **Generate token**. Save the value in `C:\Users\<you>\.secrets\github-publishing-token.txt` with the same hidden-input PowerShell command used for the Cloudflare token, then tell Claude. Or add it yourself: Cloudflare → Workers & Pages → geoli → Settings → **Variables and Secrets → Add → Secret**, name `GITHUB_TOKEN`.
+
+The token can only change files in this one repository. If it leaks, revoke it in the same GitHub page.
+
 ## Limits and safety notes
 
 - Uploads through the browser are limited to **100 MB per file** (Workers request limit).
