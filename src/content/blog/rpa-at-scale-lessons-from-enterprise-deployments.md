@@ -3,9 +3,8 @@ title: "RPA at Scale: Lessons from Enterprise Deployments"
 description: "What separates RPA pilots from production automation: governance models, a Centre of Excellence, exception handling and designing bots for maintainability."
 pubDate: 2026-10-08
 tags: ["RPA"]
-draft: true
+draft: false
 ---
-
 Robotic process automation (RPA) pilots are easy to get right. A motivated team picks a repetitive process, builds a bot in a few weeks, and demonstrates impressive time savings. The hard part comes afterwards, when organisations try to move from a handful of bots to dozens or hundreds running reliably in production. This article looks at what separates successful RPA programmes from stalled ones: governance, process selection, exception handling, and designing for long-term maintainability. The principles apply whether you use Power Automate, UiPath, Blue Prism or another platform.
 
 ## Why RPA Pilots Stall Before Production
