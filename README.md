@@ -24,7 +24,7 @@ Personal site of George Lincu — built with [Astro](https://astro.build), deplo
 
 ```
 src/
-  pages/            routes: /, /ro/, /blog/, /ro/blog/, /blog/<slug>/, /impressum/, /privacy/, 404, rss.xml, sitemap.xml
+  pages/            routes: /, /ro/, /blog/, /ro/blog/, /blog/<slug>/, /legal/, /privacy/ (+ /ro/ versions), 404, rss.xml, sitemap.xml
   components/       Home, Nav, Footer, BlogIndex
   layouts/Base.astro  <head>: SEO, hreflang, Open Graph, JSON-LD
   content/          blog + projects (Markdown)

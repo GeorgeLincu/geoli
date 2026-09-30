@@ -20,8 +20,8 @@ export async function GET({ site }: APIContext) {
     ...pair('/', '/ro/', today),
     ...pair('/blog/', '/ro/blog/', blogUpdated),
     ...posts.map(p => ({ loc: `/blog/${p.id}/`, lastmod: day(p.data.updatedDate ?? p.data.pubDate) })),
-    { loc: '/impressum/' },
-    { loc: '/privacy/' },
+    ...pair('/legal/', '/ro/legal/', today),
+    ...pair('/privacy/', '/ro/privacy/', today),
   ];
 
   const url = (e: Entry) => {

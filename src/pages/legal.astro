@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import { CONFIG } from '../config';
+---
+<Base lang="en" title="Legal notice — GeoLi" description="Who operates geoli.eu and how to get in touch." translated>
+  <div class="page">
+    <div class="container">
+      <p class="section__label">Legal</p>
+      <h1>Legal notice</h1>
+
+      <h2>Website operator</h2>
+      <p>
+        {CONFIG.name}<br />
+        Romania<br />
+        E-mail: <a href={`mailto:${CONFIG.email}`}>{CONFIG.email}</a>
+      </p>
+      <p>
+        geoli.eu is the personal professional profile and blog of {CONFIG.name}, run as a private individual.
+        It is not operated on behalf of any employer, and the opinions expressed here are my own.
+      </p>
+
+      <h2>Content and liability</h2>
+      <p>
+        The content of this site is written with care, but I can't guarantee that it is complete, accurate
+        or up to date. The articles are general information, not professional advice for a specific situation.
+        Links to external websites are provided for convenience. Their operators alone are responsible for their content.
+      </p>
+
+      <h2>Copyright</h2>
+      <p>
+        Text and images on this site are © {CONFIG.name} unless stated otherwise. You're welcome to quote and
+        summarise them with a link to the source ("{CONFIG.name}, geoli.eu"). Please ask before republishing
+        full articles.
+      </p>
+
+      <h2>Security</h2>
+      <p>
+        If you find a security issue, please report it to <a href={`mailto:${CONFIG.email}`}>{CONFIG.email}</a>
+        (see also <a href="/.well-known/security.txt">security.txt</a>).
+      </p>
+
+      <h2>Data protection</h2>
+      <p>How personal data is handled is described in the <a href="/privacy/">privacy policy</a>.</p>
+    </div>
+  </div>
+</Base>

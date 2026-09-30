@@ -14,8 +14,8 @@ const year = new Date().getFullYear();
       <span>© {year} {CONFIG.name} · {CONFIG.domain}</span>
       <nav class="footer__links" aria-label="Legal">
         <a href="/rss.xml">RSS</a>
-        <a href="/impressum/" hreflang="de">{t('footer.imprint')}</a>
-        <a href="/privacy/" hreflang="en">{t('footer.privacy')}</a>
+        <a href={localizePath('/legal/', lang)}>{t('footer.imprint')}</a>
+        <a href={localizePath('/privacy/', lang)}>{t('footer.privacy')}</a>
       </nav>
     </div>
   </div>

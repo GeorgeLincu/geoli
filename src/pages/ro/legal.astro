@@ -1,0 +1,46 @@
+---
+import Base from '../../layouts/Base.astro';
+import { CONFIG } from '../../config';
+---
+<Base lang="ro" title="Informații legale — GeoLi" description="Cine administrează geoli.eu și cum poți lua legătura." translated>
+  <div class="page">
+    <div class="container">
+      <p class="section__label">Legal</p>
+      <h1>Informații legale</h1>
+
+      <h2>Administratorul site-ului</h2>
+      <p>
+        {CONFIG.name}<br />
+        România<br />
+        E-mail: <a href={`mailto:${CONFIG.email}`}>{CONFIG.email}</a>
+      </p>
+      <p>
+        geoli.eu este profilul profesional și blogul personal al lui {CONFIG.name}, administrat în nume propriu,
+        ca persoană fizică. Site-ul nu este administrat în numele vreunui angajator, iar opiniile exprimate aici îmi aparțin.
+      </p>
+
+      <h2>Conținut și răspundere</h2>
+      <p>
+        Conținutul acestui site este scris cu grijă, însă nu pot garanta că este complet, exact sau actualizat.
+        Articolele au caracter informativ general și nu reprezintă consultanță pentru o situație anume.
+        Linkurile către alte site-uri sunt oferite pentru comoditate; de conținutul acestora răspund exclusiv operatorii lor.
+      </p>
+
+      <h2>Drepturi de autor</h2>
+      <p>
+        Textele și imaginile de pe acest site sunt © {CONFIG.name}, dacă nu se specifică altfel. Le poți cita și
+        rezuma cu trimitere la sursă („{CONFIG.name}, geoli.eu"). Pentru republicarea integrală a unui articol,
+        te rog să mă întrebi înainte.
+      </p>
+
+      <h2>Securitate</h2>
+      <p>
+        Dacă descoperi o problemă de securitate, te rog să o raportezi la <a href={`mailto:${CONFIG.email}`}>{CONFIG.email}</a>
+        (vezi și <a href="/.well-known/security.txt">security.txt</a>).
+      </p>
+
+      <h2>Protecția datelor</h2>
+      <p>Modul în care sunt prelucrate datele personale este descris în <a href="/ro/privacy/">politica de confidențialitate</a>.</p>
+    </div>
+  </div>
+</Base>

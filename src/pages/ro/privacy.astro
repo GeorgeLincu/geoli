@@ -1,0 +1,84 @@
+---
+import Base from '../../layouts/Base.astro';
+import { CONFIG } from '../../config';
+const mail = CONFIG.email;
+---
+<Base lang="ro" title="Politica de confidențialitate — GeoLi" description="Cum prelucrează geoli.eu datele personale, conform GDPR." translated>
+  <div class="page">
+    <div class="container">
+      <p class="section__label">Legal</p>
+      <h1>Politica de confidențialitate</h1>
+      <p>Ultima actualizare: 30 septembrie 2026</p>
+
+      <h2>1. Cine răspunde de date</h2>
+      <p>
+        Operatorul de date, în sensul Regulamentului general privind protecția datelor (GDPR, Regulamentul (UE) 2016/679),
+        este {CONFIG.name}, persoană fizică din România. E-mail: <a href={`mailto:${mail}`}>{mail}</a>.
+      </p>
+
+      <h2>2. Găzduire și livrare (Cloudflare)</h2>
+      <p>
+        Site-ul este găzduit și livrat de Cloudflare, Inc. (101 Townsend St, San Francisco, CA 94107, SUA). La fiecare
+        vizită, Cloudflare prelucrează date tehnice precum adresa IP, tipul de browser, pagina accesată și ora accesului,
+        pentru a livra site-ul și a-l proteja împotriva atacurilor. Temei legal: art. 6 alin. (1) lit. f) GDPR (interesul
+        legitim pentru un site sigur și funcțional). Cloudflare este certificat în cadrul EU–US Data Privacy Framework.
+        Detalii: <a href="https://www.cloudflare.com/privacypolicy/" rel="noopener noreferrer">cloudflare.com/privacypolicy</a>.
+      </p>
+
+      <h2>3. Statistici (Cloudflare Web Analytics)</h2>
+      <p>
+        Dacă este activat, site-ul folosește Cloudflare Web Analytics pentru a număra vizualizările paginilor. Serviciul
+        <strong>nu folosește cookie-uri</strong>, nu stochează nimic pe dispozitivul tău și nu creează profiluri între site-uri.
+        Temei legal: art. 6 alin. (1) lit. f) GDPR.
+      </p>
+
+      <h2>4. Formularul de contact (Web3Forms) și e-mailul</h2>
+      <p>
+        Când folosești formularul de contact, numele, adresa de e-mail și mesajul introduse sunt trimise prin serviciul
+        Web3Forms în căsuța mea de e-mail, exclusiv pentru a-ți răspunde. E-mailurile trimise la {mail} îmi sunt
+        redirecționate prin Cloudflare Email Routing. Temei legal: art. 6 alin. (1) lit. b) GDPR (demersuri înaintea unui
+        eventual contract) și lit. f) (răspunsul la solicitări). Mesajele sunt șterse când nu mai sunt necesare, cel târziu
+        după 24 de luni. Politica Web3Forms: <a href="https://web3forms.com/privacy" rel="noopener noreferrer">web3forms.com/privacy</a>.
+      </p>
+
+      <h2>5. Zona privată (/vault)</h2>
+      <p>
+        Zona privată este accesibilă doar persoanelor invitate de mine. Autentificarea se face prin Cloudflare Zero Trust
+        Access (un cod unic trimis pe e-mail). Cloudflare prelucrează adresa ta de e-mail și evenimentele de autentificare
+        și setează un cookie de sesiune strict necesar pentru autentificare. Fișierele partajate sunt stocate în
+        Cloudflare R2, în Europa de Vest. Temei legal: art. 6 alin. (1) lit. b) și f) GDPR.
+      </p>
+
+      <h2>6. Cookie-uri și stocare locală</h2>
+      <p>
+        Vizitatorii site-ului public <strong>nu primesc cookie-uri</strong>. Dacă alegi tema deschisă sau închisă,
+        alegerea este memorată în stocarea locală a browserului tău. Aceasta este strict necesară pentru funcția pe care
+        ai cerut-o (art. 4 alin. (5) din Legea nr. 506/2004) și nu părăsește dispozitivul tău.
+      </p>
+
+      <h2>7. Fonturi și conținut extern</h2>
+      <p>
+        Toate fonturile sunt găzduite pe acest server, deci nu se face nicio conexiune la Google Fonts sau la alți furnizori.
+        Linkurile către LinkedIn sunt linkuri obișnuite; LinkedIn primește date doar dacă dai click pe ele.
+      </p>
+
+      <h2>8. Transferuri în afara UE</h2>
+      <p>
+        Cloudflare și Web3Forms pot prelucra date în afara Spațiului Economic European. Aceste transferuri au la bază
+        EU–US Data Privacy Framework sau clauzele contractuale standard ale Comisiei Europene (art. 45–46 GDPR).
+      </p>
+
+      <h2>9. Drepturile tale</h2>
+      <ul>
+        <li>Dreptul de acces (art. 15), de rectificare (art. 16), de ștergere (art. 17) și la restricționarea prelucrării (art. 18)</li>
+        <li>Dreptul la portabilitatea datelor (art. 20) și dreptul de opoziție la prelucrarea bazată pe interes legitim (art. 21)</li>
+        <li>
+          Dreptul de a depune plângere la <strong>ANSPDCP</strong>, Autoritatea Națională de Supraveghere a Prelucrării
+          Datelor cu Caracter Personal, B-dul G-ral. Gheorghe Magheru nr. 28–30, sector 1, București,
+          <a href="https://www.dataprotection.ro" rel="noopener noreferrer">dataprotection.ro</a>
+        </li>
+      </ul>
+      <p>Pentru a-ți exercita oricare dintre aceste drepturi, scrie-mi la <a href={`mailto:${mail}`}>{mail}</a>.</p>
+    </div>
+  </div>
+</Base>
