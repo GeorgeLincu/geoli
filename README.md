@@ -16,6 +16,7 @@ Personal site of George Lincu — built with [Astro](https://astro.build), deplo
 | **Add a "Book a call" button** | Set `bookingUrl` in `src/config.ts` (e.g. a free Cal.com link) |
 | **Turn on the contact form** | Put your Web3Forms key in `web3formsKey` in `src/config.ts` |
 | **Change any text** | `src/i18n/ui.ts` — every key exists in English and Romanian |
+| **Harden Cloudflare / DNS, boost visibility** | Follow [docs/CLOUDFLARE-SETUP.md](docs/CLOUDFLARE-SETUP.md) |
 | **Test exactly like production** | `npm run preview` (builds, then serves with Cloudflare's headers/redirects via wrangler) |
 
 ## Structure
