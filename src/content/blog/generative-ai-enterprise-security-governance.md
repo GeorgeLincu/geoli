@@ -3,7 +3,7 @@ title: "Generative AI in Enterprise: Security, Governance & Guardrails"
 description: "How to deploy generative AI safely at scale. Security architecture, data handling, policy frameworks, and the non-negotiable guardrails enterprises need."
 pubDate: 2026-10-01
 tags: ["AI", "Security", "Enterprise"]
-draft: false
+draft: true
 ---
 
 By mid-2026, almost every enterprise has a generative AI pilot or two running. What most don't have is a coherent framework for what can be built, who can use it, and where data goes. I've seen organisations ship AI agents that bypass their own compliance rules, teams building LLM wrappers around sensitive databases without thinking about output filtering, and executives genuinely surprised when their usage bills spike 300% because nobody set guardrails on API calls.

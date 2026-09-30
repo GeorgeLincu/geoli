@@ -123,24 +123,6 @@ const ui = {
     'nf.title':   "This page doesn't exist.",
     'nf.body':    'The link may be broken or the page may have moved.',
     'nf.back':    'Back to geoli.eu',
-
-    'testimonials.label':   'Testimonials',
-    'testimonials.title':   'Trusted by teams across Europe',
-    'testimonials.quote1':  '"George brought clarity to our AI strategy. Within weeks, he helped us deploy a Copilot agent that handles 80% of customer inquiries. The impact on our support team was immediate."',
-    'testimonials.author1': 'Sarah van der Berg',
-    'testimonials.role1':   'VP Customer Success, Financial Services',
-    'testimonials.quote2':  '"We tried RPA alone for years. When George helped us add an intelligence layer on top, our process automation finally worked at the scale we needed. ROI was 3x what we projected."',
-    'testimonials.author2': 'Marcus Chen',
-    'testimonials.role2':   'Operations Director, Manufacturing',
-
-    'resources.label':      'Free Resources',
-    'resources.title':      'Learn & build faster',
-    'resources.subtitle':   'Practical guides and checklists to accelerate your automation journey.',
-    'resources.guide1':     'AI Agent Implementation Guide',
-    'resources.guide1-desc': 'Design patterns, prompt engineering tips, and deployment best practices for enterprise AI agents.',
-    'resources.checklist1':  'RPA Readiness Checklist',
-    'resources.checklist1-desc': 'Evaluate your processes and determine which are ready for automation.',
-    'resources.download':   'Download PDF',
   },
 
   ro: {
@@ -262,24 +244,6 @@ const ui = {
     'nf.title':   'Această pagină nu există.',
     'nf.body':    'Linkul poate fi greșit sau pagina a fost mutată.',
     'nf.back':    'Înapoi la geoli.eu',
-
-    'testimonials.label':   'Mărturii',
-    'testimonials.title':   'De încredere din echipele din toată Europa',
-    'testimonials.quote1':  '"George a adus claritate în strategia noastră de AI. În câteva săptămâni, ne-a ajutat să implementez un agent Copilot care rezolvă 80% din întrebările clienților. Impactul pe echipa noastră de suport a fost imediat."',
-    'testimonials.author1': 'Sarah van der Berg',
-    'testimonials.role1':   'VP Customer Success, Financial Services',
-    'testimonials.quote2':  '"Am încercat RPA singur ani de zile. Când George ne-a ajutat să adăugăm un strat de inteligență deasupra, automatizarea noastră de proces a funcționat în sfârșit la scara de care aveam nevoie. ROI-ul a fost 3x mai mare decât am proiectat."',
-    'testimonials.author2': 'Marcus Chen',
-    'testimonials.role2':   'Operations Director, Manufacturing',
-
-    'resources.label':      'Resurse Gratuite',
-    'resources.title':      'Învață și construiește mai rapid',
-    'resources.subtitle':   'Ghiduri practice și liste de verificare pentru a accelera călătoria ta de automatizare.',
-    'resources.guide1':     'Ghid de Implementare Agenți AI',
-    'resources.guide1-desc': 'Design patterns, sfaturi de prompt engineering, și bune practici de desfășurare pentru agenți de IA enterprise.',
-    'resources.checklist1':  'Lista de Verificare Gata RPA',
-    'resources.checklist1-desc': 'Evaluează procesele tale și determină care sunt gata de automatizare.',
-    'resources.download':   'Descarcă PDF',
   },
 } as const;
 

@@ -3,7 +3,7 @@ title: "De la RPA la Hyperautomatizare: Viitorul Multi-Agent"
 description: "Cum evoluează RPA în hyperautomatizare cu agenți AI. Orkestrație de procese, intelligence decizional, și modelele care funcționează la scară."
 pubDate: 2026-10-05
 tags: ["RPA", "Automatizare", "AI"]
-draft: false
+draft: true
 ---
 
 Acum cinci ani, conversația era simplă: *Putem automatiza procesul asta cu RPA?* Vânzătorii de RPA vindeau roboți software care dădeau click pe ecrane și mutau date între sisteme. Funcționau. Încă mai funcționează.

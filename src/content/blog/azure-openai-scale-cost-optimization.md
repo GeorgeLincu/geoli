@@ -3,7 +3,7 @@ title: "Azure OpenAI at Scale: Real-World Cost Optimization"
 description: "How to manage Azure OpenAI costs when you have multiple agents and high usage. Smart quotas, model selection, and the tactics that actually work."
 pubDate: 2026-10-08
 tags: ["Azure", "Cost Optimization", "AI"]
-draft: false
+draft: true
 ---
 
 A customer called with a problem. They'd built a Copilot Studio agent three months ago. It was generating real value—handling vendor inquiries, reducing support ticket volume. Then they looked at the bill.
