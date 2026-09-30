@@ -5,7 +5,7 @@
   "name": "geoli",
   "compatibility_date": "2026-09-30",
   "assets": {
-    "directory": ".",
+    "directory": "./public",
     // Serve /404.html with a real 404 status for unknown URLs
     "not_found_handling": "404-page",
     // /impressum -> /impressum/ (serves impressum/index.html)

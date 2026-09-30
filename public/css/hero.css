@@ -87,4 +87,6 @@
 /* Mobile */
 @media (max-width: 640px) {
   .hero__title { font-size: clamp(2.8rem, 11vw, 4.5rem); }
+  /* "Automatizând" is one long word — size it to fit narrow phones */
+  html[lang="ro"] .hero__title { font-size: clamp(1.6rem, 7.2vw, 4.5rem); }
 }
