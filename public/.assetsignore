@@ -1,0 +1,6 @@
+# Files under public/ that must not be served
+_headers
+_redirects
+.assetsignore
+assets/cv-placeholder.txt
+css/style.css

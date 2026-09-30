@@ -1,0 +1,6 @@
+# Redirects for Cloudflare Workers static assets
+# https://developers.cloudflare.com/workers/static-assets/redirects/
+/imprint       /impressum/  301
+/datenschutz   /privacy/    301
+/privacy-policy /privacy/   301
+/cv            /assets/george-lincu-cv.pdf 302
