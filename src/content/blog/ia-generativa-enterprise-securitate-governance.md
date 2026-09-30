@@ -3,7 +3,7 @@ title: "IA Generativă în Enterprise: Securitate, Governance și Guardrails"
 description: "Cum să implementezi IA generativă în siguranță la scară largă. Arhitectură de securitate, gestionarea datelor, politici și guardrails non-negociabile pentru enterprise."
 pubDate: 2026-10-01
 tags: ["AI", "Securitate", "Enterprise"]
-draft: false
+draft: true
 ---
 
 Către jumătatea anului 2026, aproape fiecare enterprise are cel puțin unu, doi piloti cu IA generativă în desfășurare. Ceea ce nu au, de obicei, este un cadru coerent pentru ceea ce poate fi construit, cine poate folosi sistemele și unde merge datele. Am văzut organizații care au lansat agenți de IA care ocolesc propriile reguli de conformitate, echipe care construiesc LLM wrappers peste baze de date sensibile fără să se gândească la filtrarea output-urilor, și executivi surprinși sincer când facturile de utilizare se triplează pentru că nimeni n-a pus guardrails pe apeluri API.

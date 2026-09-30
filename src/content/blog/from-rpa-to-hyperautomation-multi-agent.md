@@ -3,7 +3,7 @@ title: "From RPA to Hyperautomation: The Multi-Agent Future"
 description: "How RPA is evolving into hyperautomation with AI agents. Process orchestration, decision intelligence, and the patterns that actually work at scale."
 pubDate: 2026-10-05
 tags: ["RPA", "Automation", "AI"]
-draft: false
+draft: true
 ---
 
 Five years ago, the conversation was simple: *Can we automate this process with RPA?* RPA vendors sold software robots that clicked screens and moved data between systems. They worked. They still do.

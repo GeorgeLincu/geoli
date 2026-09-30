@@ -3,7 +3,7 @@ title: "Azure OpenAI la Scară: Optimizare Reală a Costurilor"
 description: "Cum să gestionezi costurile Azure OpenAI când ai multipli agenți și utilizare mare. Cote inteligente, selecție model, și tactici care chiar funcționează."
 pubDate: 2026-10-08
 tags: ["Azure", "Optimizare Costuri", "AI"]
-draft: false
+draft: true
 ---
 
 Un client a sunat cu o problemă. Construise un agent Copilot Studio acum trei luni. Genera valoare reală—răspundea la întrebări de vânzător, reducea volum de tichet de suport. Apoi au privit factura.

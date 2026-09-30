@@ -7,24 +7,6 @@ const { lang } = Astro.props;
 const t = useTranslations(lang);
 const year = new Date().getFullYear();
 ---
-
-<!-- NEWSLETTER SIGNUP -->
-<section class="newsletter" style="background: var(--bg-card); border-top: 1px solid var(--border); padding: 3rem 0;">
-  <div class="container" style="max-width: 500px;">
-    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem; font-family: var(--font-head);">{lang === 'en' ? 'Stay updated' : 'Rămâi actualizat'}</h3>
-    <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">{lang === 'en' ? 'Get articles on AI agents, RPA, and automation delivered to your inbox.' : 'Primește articole despre agenți de IA, RPA și automatizare în inbox-ul tău.'}</p>
-    <form action="https://www.web3forms.com/submit" method="POST" style="display: flex; gap: 0.5rem;">
-      <input type="hidden" name="access_key" value="b7aacbc0-d4cc-41f0-9e5b-3d29f91d0c50" />
-      <input type="hidden" name="subject" value="New newsletter subscriber" />
-      <input type="hidden" name="from_name" value="geoli.eu" />
-      <input type="email" name="email" placeholder={lang === 'en' ? 'Your email' : 'Email-ul tău'} required style="flex: 1; padding: 0.7rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 0.9rem;" />
-      <button type="submit" style="padding: 0.7rem 1.2rem; background: var(--indigo); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; white-space: nowrap;">
-        {lang === 'en' ? 'Subscribe' : 'Abonează-te'}
-      </button>
-    </form>
-  </div>
-</section>
-
 <footer class="footer">
   <div class="container">
     <div class="footer__inner">
