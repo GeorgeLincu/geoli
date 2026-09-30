@@ -86,7 +86,7 @@ const ui = {
     'form.sending': 'Sending…',
 
     'contact.divider': 'or reach out directly',
-    'footer.imprint':  'Imprint',
+    'footer.imprint':  'Legal notice',
     'footer.privacy':  'Privacy',
     'a11y.skip':       'Skip to content',
 
@@ -206,7 +206,7 @@ const ui = {
     'form.sending': 'Se trimite…',
 
     'contact.divider': 'sau scrie-mi direct',
-    'footer.imprint':  'Impressum',
+    'footer.imprint':  'Informații legale',
     'footer.privacy':  'Confidențialitate',
     'a11y.skip':       'Sari la conținut',
 

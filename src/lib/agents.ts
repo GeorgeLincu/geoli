@@ -90,7 +90,7 @@ export function llmsTxt(posts: CollectionEntry<'blog'>[]) {
     `- [Everything on one page](${site}/llms-full.txt): profile plus the full text of every article`,
     `- [RSS feed](${site}/rss.xml)`,
     `- [Sitemap](${site}/sitemap.xml)`,
-    `- [Imprint](${site}/impressum/) and [privacy policy](${site}/privacy/)`,
+    `- [Legal notice](${site}/legal/) and [privacy policy](${site}/privacy/)`,
     '',
   ].join('\n');
 }
