@@ -1,0 +1,4 @@
+# Copy to .dev.vars (git-ignored) for `npm run preview` / `wrangler dev`.
+# DEV_EMAIL only works on localhost — it pretends you are signed in via Cloudflare Access.
+DEV_EMAIL=george.lincu@gmail.com
+SHARE_SECRET=local-dev-secret-at-least-32-characters-long
