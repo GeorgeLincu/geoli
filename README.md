@@ -16,6 +16,7 @@ Personal site of George Lincu — built with [Astro](https://astro.build), deplo
 | **Add a "Book a call" button** | Set `bookingUrl` in `src/config.ts` (e.g. a free Cal.com link) |
 | **Turn on the contact form** | Put your Web3Forms key in `web3formsKey` in `src/config.ts` |
 | **Change any text** | `src/i18n/ui.ts` — every key exists in English and Romanian |
+| **Share files privately** | Use **geoli.eu/vault** — see [docs/VAULT.md](docs/VAULT.md) for setup and everyday use |
 | **Harden Cloudflare / DNS, boost visibility** | Follow [docs/CLOUDFLARE-SETUP.md](docs/CLOUDFLARE-SETUP.md) |
 | **Test exactly like production** | `npm run preview` (builds, then serves with Cloudflare's headers/redirects via wrangler) |
 
@@ -34,8 +35,9 @@ public/
   _headers          security headers (CSP!) + caching — applied by Cloudflare
   _redirects        short links (/cv, /imprint, /datenschutz)
   assets/           fonts, icons, images, og/ social cards
+worker/             Cloudflare Worker: private /vault (Access login + R2 files) and /s/ share links
 scripts/og-images.mjs  renders social cards with local Edge/Chrome
-wrangler.jsonc      Cloudflare config (build command, 404 handling)
+wrangler.jsonc      Cloudflare config (build command, 404 handling, R2 binding, Access settings)
 ```
 
 ## Rules that keep the site secure

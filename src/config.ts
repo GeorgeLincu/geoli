@@ -5,7 +5,7 @@ export const CONFIG = {
   company:  'BearingPoint GmbH',
   site:     'https://geoli.eu',
   domain:   'geoli.eu',
-  email:    'george.lincu@gmail.com',
+  email:    'contact@geoli.eu',  // Cloudflare Email Routing → forwards to Gmail
   linkedin: 'https://www.linkedin.com/in/georgelincu',
 
   // These appear automatically once the file exists in public/ (checked at build time)

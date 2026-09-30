@@ -3,14 +3,40 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "geoli",
+  "main": "worker/index.ts",
   "compatibility_date": "2026-09-30",
   // Workers Builds installs npm dependencies; wrangler then runs this before deploying
   "build": { "command": "npm run build" },
+
+  // Only reachable via geoli.eu — the workers.dev and preview URLs are not covered by Cloudflare Access
+  "workers_dev": false,
+  "preview_urls": false,
+
   "assets": {
     "directory": "./dist",
+    "binding": "ASSETS",
     // Serve /404.html with a real 404 status for unknown URLs
     "not_found_handling": "404-page",
     // /impressum -> /impressum/ (serves impressum/index.html)
-    "html_handling": "auto-trailing-slash"
-  }
+    "html_handling": "auto-trailing-slash",
+    // The Worker handles only these paths; everything else is served straight from ./dist
+    "run_worker_first": ["/vault", "/vault/*", "/s/*"]
+  },
+
+  // Private file storage (create it first: Cloudflare dashboard → R2 → Create bucket "geoli-vault")
+  "r2_buckets": [
+    { "binding": "VAULT", "bucket_name": "geoli-vault" }
+  ],
+
+  "vars": {
+    // Zero Trust → Settings → Custom Pages shows your team domain, e.g. "geoli.cloudflareaccess.com"
+    "ACCESS_TEAM_DOMAIN": "plain-block-9dbd.cloudflareaccess.com",
+    // Zero Trust → Access → Applications → (vault app) → Overview → "Application Audience (AUD) Tag"
+    "ACCESS_AUD": "64b5884a826bec9037c5770c596afc84636c3243add35748fe16b33ad97a4574",
+    // Who may upload, delete and create share links
+    "ADMIN_EMAILS": "george.lincu@gmail.com"
+  },
+  // Secret (not in git): SHARE_SECRET — set with `npx wrangler secret put SHARE_SECRET`
+
+  "observability": { "enabled": true }
 }
