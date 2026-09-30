@@ -1,0 +1,12 @@
+# Files in the repo that must NOT be published as website assets
+.git
+.github
+.claude
+.gitignore
+.assetsignore
+wrangler.jsonc
+wrangler.toml
+staticwebapp.config.json
+node_modules
+README.md
+*.md

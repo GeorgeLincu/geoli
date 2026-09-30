@@ -1,4 +1,5 @@
-# Cloudflare Pages response headers — https://developers.cloudflare.com/pages/configuration/headers/
+# Response headers for Cloudflare Workers static assets
+# https://developers.cloudflare.com/workers/static-assets/headers/
 # (This replaces staticwebapp.config.json, which Cloudflare ignores.)
 
 /*
@@ -11,10 +12,8 @@
   Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), browsing-topics=()
   Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.web3forms.com https://cloudflareinsights.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests
 
-# Preview / branch deployments must never be indexed by Google
-https://:project.pages.dev/*
-  X-Robots-Tag: noindex
-https://:version.:project.pages.dev/*
+# workers.dev and preview URLs must never be indexed by Google (only geoli.eu)
+https://:worker.:account.workers.dev/*
   X-Robots-Tag: noindex
 
 # Caching — fonts never change under the same name; code/images revalidate regularly
