@@ -1,4 +1,4 @@
-Contact: mailto:george.lincu@gmail.com
+Contact: mailto:contact@geoli.eu
 Expires: 2027-09-30T00:00:00.000Z
 Preferred-Languages: en, ro, de
 Canonical: https://geoli.eu/.well-known/security.txt

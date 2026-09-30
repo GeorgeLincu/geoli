@@ -30,9 +30,9 @@
 
   "vars": {
     // Zero Trust → Settings → Custom Pages shows your team domain, e.g. "geoli.cloudflareaccess.com"
-    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_TEAM_DOMAIN": "plain-block-9dbd.cloudflareaccess.com",
     // Zero Trust → Access → Applications → (vault app) → Overview → "Application Audience (AUD) Tag"
-    "ACCESS_AUD": "",
+    "ACCESS_AUD": "64b5884a826bec9037c5770c596afc84636c3243add35748fe16b33ad97a4574",
     // Who may upload, delete and create share links
     "ADMIN_EMAILS": "george.lincu@gmail.com"
   },
