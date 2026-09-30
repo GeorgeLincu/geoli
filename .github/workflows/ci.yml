@@ -1,0 +1,47 @@
+# Checks every pull request (and main) — deployment itself is done by Cloudflare Workers Builds.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Type-check, build & Lighthouse
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type-check
+        run: npx astro check
+
+      - name: Build
+        run: npm run build
+
+      - name: Guard — no inline scripts/styles (the CSP would block them)
+        run: |
+          if grep -rEl ' style="|<style|<script>|<script type="module">' dist --include='*.html'; then
+            echo "::error::Inline <script>/<style> or style=\"\" found — the Content-Security-Policy will block it."
+            exit 1
+          fi
+
+      - name: Lighthouse
+        run: npx --yes @lhci/cli@0.15.x autorun
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.head_ref || github.ref_name }}

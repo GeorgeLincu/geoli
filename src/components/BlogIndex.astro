@@ -1,0 +1,34 @@
+---
+import { useTranslations, type Lang } from '../i18n/ui';
+import { getPosts, formatDate, readingMinutes } from '../lib/site';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const posts = await getPosts();
+const note = t('blog.enOnly');
+---
+<div class="page">
+  <div class="container container--wide">
+    <p class="section__label">{t('blog.label')}</p>
+    <h1>{t('blog.title')}</h1>
+    <p class="section__subtitle">{t('blog.subtitle')}</p>
+    {note && <p class="blog__note">{note}</p>}
+
+    {posts.length === 0 && <p>{t('blog.empty')}</p>}
+    <div class="blog__grid">
+      {posts.map(post => (
+        <article class="blog__card glass">
+          <div class="blog__card-top">
+            <span class="blog__tag">{post.data.tags[0]}</span>
+            <time class="blog__date" datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate, lang)}</time>
+          </div>
+          <h2><a href={`/blog/${post.id}/`} class="blog__link" hreflang="en">{post.data.title}</a></h2>
+          <p>{post.data.description}</p>
+          <span class="blog__read">{readingMinutes(post.body)} {t('blog.minRead')}</span>
+        </article>
+      ))}
+    </div>
+    <p class="blog__all"><a href="/rss.xml">{t('blog.rss')}</a></p>
+  </div>
+</div>

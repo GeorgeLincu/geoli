@@ -1,0 +1,24 @@
+{
+  "name": "geoli",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "npm run build && wrangler dev",
+    "check": "astro check",
+    "deploy": "wrangler deploy",
+    "og": "node scripts/og-images.mjs"
+  },
+  "dependencies": {
+    "@astrojs/rss": "^4",
+    "astro": "^7.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/node": "^24.19.0",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.145.0"
+  }
+}

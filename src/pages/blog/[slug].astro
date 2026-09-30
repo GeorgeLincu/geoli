@@ -1,0 +1,48 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { getPosts, formatDate, readingMinutes, publicFileExists } from '../../lib/site';
+import { postJsonLd } from '../../lib/seo';
+import { useTranslations } from '../../i18n/ui';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map(post => ({ params: { slug: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const t = useTranslations('en');
+const updated = post.data.updatedDate;
+const ogImage = publicFileExists(`/assets/og/${post.id}.png`) ? `/assets/og/${post.id}.png` : '/assets/og-image.png';
+---
+<Base lang="en" type="article" title={`${post.data.title} | GeoLi`} ogTitle={post.data.title}
+      description={post.data.description} ogImage={ogImage}
+      publishedTime={post.data.pubDate} modifiedTime={updated} jsonLd={postJsonLd(post, ogImage)}>
+  <article class="page post">
+    <div class="container">
+      <nav class="post__crumbs" aria-label="Breadcrumb"><a href="/blog/">{t('blog.back')}</a></nav>
+      <header class="post__header">
+        <div class="post__tags">{post.data.tags.map(tag => <span class="tag">{tag}</span>)}</div>
+        <h1>{post.data.title}</h1>
+        <p class="post__lead">{post.data.description}</p>
+        <p class="post__meta">
+          {[
+            'George Lincu',
+            formatDate(post.data.pubDate, 'en'),
+            updated && `${t('blog.updated')} ${formatDate(updated, 'en')}`,
+            `${readingMinutes(post.body)} ${t('blog.minRead')}`,
+          ].filter(Boolean).join(' · ')}
+        </p>
+      </header>
+      <div class="prose">
+        <Content />
+      </div>
+      <aside class="post__cta glass">
+        <h2>{t('blog.cta.title')}</h2>
+        <p>{t('blog.cta.body')}</p>
+        <a href="/#contact" class="btn btn--primary">{t('nav.cta')}</a>
+      </aside>
+    </div>
+  </article>
+</Base>

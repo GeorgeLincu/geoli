@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import { useTranslations } from '../i18n/ui';
+const t = useTranslations('en');
+const ro = useTranslations('ro');
+---
+<Base lang="en" title="Page not found — GeoLi" description="This page does not exist." noindex>
+  <div class="page page--center">
+    <div class="container">
+      <p class="section__label">404</p>
+      <h1>{t('nf.title')}</h1>
+      <p>{t('nf.body')}</p>
+      <p lang="ro">{ro('nf.title')} {ro('nf.body')}</p>
+      <a href="/" class="btn btn--primary">{t('nf.back')}</a>
+    </div>
+  </div>
+</Base>

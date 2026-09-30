@@ -1,0 +1,22 @@
+---
+import { CONFIG } from '../config';
+import { useTranslations, localizePath, type Lang } from '../i18n/ui';
+
+interface Props { lang: Lang }
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+const year = new Date().getFullYear();
+---
+<footer class="footer">
+  <div class="container">
+    <div class="footer__inner">
+      <a href={localizePath('/', lang)} class="nav__logo">GeoLi<span class="dot">.</span></a>
+      <span>© {year} {CONFIG.name} · {CONFIG.domain}</span>
+      <nav class="footer__links" aria-label="Legal">
+        <a href="/rss.xml">RSS</a>
+        <a href="/impressum/" hreflang="de">{t('footer.imprint')}</a>
+        <a href="/privacy/" hreflang="en">{t('footer.privacy')}</a>
+      </nav>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,40 @@
+---
+import { useTranslations, localizePath, languages, type Lang } from '../i18n/ui';
+
+interface Props { lang: Lang; home?: boolean; translated?: boolean }
+const { lang, home = false, translated = false } = Astro.props;
+const t = useTranslations(lang);
+const homePath = localizePath('/', lang);
+const anchor = (id: string) => (home ? `#${id}` : `${homePath}#${id}`);
+const path = Astro.url.pathname;
+// Language switch keeps you on the same page when a translation exists
+const langHref = (l: Lang) => localizePath(translated ? path : '/', l);
+---
+<nav class="nav" id="nav" aria-label="Main">
+  <div class="nav__inner">
+    <a href={home ? '#hero' : homePath} class="nav__logo" aria-label={`GeoLi — ${t('nav.home')}`}>GeoLi<span class="dot">.</span></a>
+    <ul class="nav__links" id="navLinks">
+      <li><a href={anchor('about')}>{t('nav.about')}</a></li>
+      <li><a href={anchor('services')}>{t('nav.services')}</a></li>
+      <li><a href={anchor('stack')}>{t('nav.stack')}</a></li>
+      <li><a href={localizePath('/blog/', lang)} aria-current={path.includes('/blog/') ? 'page' : undefined}>{t('nav.blog')}</a></li>
+      <li><a href={anchor('contact')} class="btn btn--primary btn--sm">{t('nav.cta')}</a></li>
+    </ul>
+    <div class="nav__right">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label={t('theme.toggle')} title={t('theme.toggle')}>
+        <svg class="theme-toggle__sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg class="theme-toggle__moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="lang-toggle" data-active={lang} role="group" aria-label={t('lang.label')}>
+        <span class="lang-slider" aria-hidden="true"></span>
+        {(Object.keys(languages) as Lang[]).map(l => (
+          <a class:list={['lang-btn', { active: l === lang }]} href={langHref(l)} hreflang={l} lang={l}
+             aria-current={l === lang ? 'true' : undefined}>{languages[l]}</a>
+        ))}
+      </div>
+      <button class="nav__burger" id="burger" type="button" aria-label={t('nav.menu')} aria-expanded="false" aria-controls="navLinks">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
