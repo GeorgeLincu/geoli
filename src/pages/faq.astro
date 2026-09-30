@@ -1,0 +1,290 @@
+---
+import Base from '../layouts/Base.astro';
+import { useTranslations } from '../i18n/ui';
+const lang = 'en';
+const t = useTranslations(lang);
+---
+<Base lang="en" title="FAQ — George Lincu | AI Agents & RPA Consultant" description="Frequently asked questions about AI agent development, RPA, and automation consulting.">
+  <style>
+    .faq-container {
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+    .faq-container h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-head);
+    }
+    .faq-intro {
+      font-size: 1.05rem;
+      color: var(--text-soft);
+      margin-bottom: 3rem;
+      line-height: 1.7;
+    }
+    .faq-section {
+      margin: 3rem 0;
+    }
+    .faq-section h2 {
+      font-size: 1.3rem;
+      font-family: var(--font-head);
+      margin: 2rem 0 1.5rem 0;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .faq-item {
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border-left: 4px solid var(--indigo);
+      transition: border-color var(--trans);
+    }
+    .faq-item:hover {
+      border-left-color: var(--cyan);
+    }
+    .faq-item h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .faq-item h3::before {
+      content: '▸';
+      color: var(--accent-text);
+      font-size: 1.2rem;
+      transition: transform var(--trans);
+    }
+    .faq-item.open h3::before {
+      transform: rotate(90deg);
+    }
+    .faq-answer {
+      color: var(--text-muted);
+      line-height: 1.8;
+      display: none;
+    }
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+    .faq-answer p {
+      margin-bottom: 1rem;
+    }
+    .faq-answer ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .faq-answer li {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+
+  <div class="faq-container">
+    <h1>Frequently Asked Questions</h1>
+    <p class="faq-intro">
+      Find answers to common questions about AI agents, robotic process automation, Azure solutions, and how we work together.
+    </p>
+
+    <!-- AI AGENTS SECTION -->
+    <div class="faq-section">
+      <h2>AI Agents & Copilot Studio</h2>
+
+      <div class="faq-item">
+        <h3>What's the difference between a chatbot and an AI agent?</h3>
+        <div class="faq-answer">
+          <p>A chatbot answers questions from training data or a knowledge base. An AI agent goes further—it can take actions, call external systems, make decisions, and orchestrate workflows. Copilot Studio agents, for example, can read from SAP, write approvals to Power Automate, and route conversations to humans based on rules you define.</p>
+          <p>Think of it this way: a chatbot is a reference desk. An agent is a workflow automation platform that also talks.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>How long does it take to build an AI agent?</h3>
+        <div class="faq-answer">
+          <p>A functional prototype: 2-4 weeks. A production-ready agent with testing, knowledge base curation, and documentation: 6-12 weeks.</p>
+          <p>The timeline depends on:</p>
+          <ul>
+            <li>Clarity of scope (clear = faster)</li>
+            <li>Knowledge base size (more content = more time to curate)</li>
+            <li>System integrations needed (more systems = more complexity)</li>
+            <li>Testing rigor (thorough testing takes time but prevents costly post-launch issues)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>What should our knowledge base contain?</h3>
+        <div class="faq-answer">
+          <p>The best knowledge bases are curated, current, and specific. Include:</p>
+          <ul>
+            <li>Official documentation (product specs, policy handbooks)</li>
+            <li>FAQs (the actual questions you get)</li>
+            <li>Approved decision trees (when to escalate, which path to take)</li>
+            <li>Examples and scenarios</li>
+          </ul>
+          <p>Avoid: drafts, internal notes, outdated content, and contradictory information. A smaller, high-quality knowledge base beats a large one full of noise.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Can an AI agent replace a human team?</h3>
+        <div class="faq-answer">
+          <p>No, and it shouldn't be the goal. The right goal is: "The agent handles routine, high-volume work so the team focuses on complex, high-value decisions."</p>
+          <p>Realistically, a well-built agent resolves 70-85% of requests without human involvement. The team handles the remaining 15-30%—the cases that need judgment, creativity, or emotional intelligence. This is more valuable work.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RPA SECTION -->
+    <div class="faq-section">
+      <h2>RPA & Process Automation</h2>
+
+      <div class="faq-item">
+        <h3>What processes are good candidates for RPA?</h3>
+        <div class="faq-answer">
+          <p>RPA works best for processes that are:</p>
+          <ul>
+            <li><strong>Repetitive</strong>: 100+ instances per month</li>
+            <li><strong>Rule-based</strong>: Clear if-then logic, minimal judgment</li>
+            <li><strong>Deterministic</strong>: Same input → same output, predictably</li>
+            <li><strong>Stable</strong>: Haven't changed significantly in 6+ months</li>
+            <li><strong>Structured data</strong>: Forms, databases, spreadsheets (not just PDFs and images)</li>
+          </ul>
+          <p>Poor candidates: processes requiring human judgment, frequently changing, or involving only a few instances per month.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>How much does RPA cost?</h3>
+        <div class="faq-answer">
+          <p>It depends on complexity and tooling:</p>
+          <ul>
+            <li><strong>Simple bot (3-5 systems, rule-based):</strong> $20-40k to build, $3-8k/year to maintain</li>
+            <li><strong>Complex bot (10+ systems, decision logic):</strong> $60-120k to build, $10-20k/year to maintain</li>
+            <li><strong>Hyperautomation (RPA + AI + integrations):</strong> $100-300k initial, $20-50k/year maintenance</li>
+          </ul>
+          <p>ROI is typically 18-36 months if you save 10+ FTEs of work. Earlier break-even if you have high-volume processes with clear rules.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>What happens when a bot encounters something it wasn't trained for?</h3>
+        <div class="faq-answer">
+          <p>Good bots are built to handle this. Design options:</p>
+          <ul>
+            <li><strong>Escalate to a human</strong> for review and decision</li>
+            <li><strong>Flag the exception</strong> in a dashboard so someone can investigate</li>
+            <li><strong>Pause the process</strong> and wait for manual input</li>
+            <li><strong>Route to a specialist</strong> based on the type of exception</li>
+          </ul>
+          <p>The bot should never silently fail or make a wrong decision. Transparency and escalation are the marks of a well-designed bot.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AZURE SECTION -->
+    <div class="faq-section">
+      <h2>Azure & Cloud Architecture</h2>
+
+      <div class="faq-item">
+        <h3>Should we use Azure OpenAI or a third-party LLM provider?</h3>
+        <div class="faq-answer">
+          <p>Azure OpenAI is a good choice if:</p>
+          <ul>
+            <li>You're already on Microsoft Azure</li>
+            <li>You need data residency (EU data stays in EU)</li>
+            <li>You want integration with Copilot Studio, Power Platform</li>
+            <li>You need compliance support (HIPAA, GDPR) built in</li>
+          </ul>
+          <p>Consider alternatives if you need very specific model versions, multi-model support, or are price-sensitive and don't need Microsoft integration.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do we keep Azure costs reasonable?</h3>
+        <div class="faq-answer">
+          <p>The key is visibility and guardrails:</p>
+          <ul>
+            <li><strong>Monitor costs daily</strong> in Azure Monitor or cost management</li>
+            <li><strong>Set budgets and alerts</strong> at 70%, 85%, and 95% of expected spend</li>
+            <li><strong>Choose the right model</strong> (GPT-3.5-turbo is 20x cheaper than GPT-4; test which is "good enough")</li>
+            <li><strong>Limit context</strong> (don't pull 10,000 tokens of knowledge when 1,000 suffices)</li>
+            <li><strong>Cache prompts</strong> if you're reusing the same long content</li>
+          </ul>
+          <p>Without these controls, costs can spike quickly. With them, you can scale predictably.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENGAGEMENT SECTION -->
+    <div class="faq-section">
+      <h2>Working Together</h2>
+
+      <div class="faq-item">
+        <h3>What's your typical engagement model?</h3>
+        <div class="faq-answer">
+          <p>It depends on what you need:</p>
+          <ul>
+            <li><strong>Advisory (4-8 weeks):</strong> Assess processes, recommend roadmap, identify quick wins</li>
+            <li><strong>Build (8-16 weeks):</strong> Design and deploy 1-2 agents or bots end-to-end</li>
+            <li><strong>Build + Operate (ongoing):</strong> Build agents + maintain, monitor, and improve them over time</li>
+            <li><strong>Hybrid team</strong>: You own one part (knowledge curation, testing); I own another (architecture, deployment)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Do you work with existing platforms or recommend switching?</h3>
+        <div class="faq-answer">
+          <p>I work with what you have. If you're on UiPath, Power Automate, Automation Anywhere, or cloud-native stacks, we can build effectively within those constraints.</p>
+          <p>I'll recommend switching only if your current platform is blocking your goals—not for the sake of "better" tooling. Switching costs time, money, and knowledge loss. It's a big decision and should be rare.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>What if the project doesn't go as planned?</h3>
+        <div class="faq-answer">
+          <p>We pivot. If an agent isn't performing as expected, we:</p>
+          <ul>
+            <li>Identify the root cause (knowledge base? prompts? scope?)</li>
+            <li>Decide: tune, retrain, or redesign</li>
+            <li>Adjust the timeline and expectations accordingly</li>
+            <li>Keep you informed every step</li>
+          </ul>
+          <p>Projects rarely go perfectly. What matters is transparency, adaptation, and staying focused on your actual business goals.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>How do we measure success?</h3>
+        <div class="faq-answer">
+          <p>We define metrics upfront. Common ones:</p>
+          <ul>
+            <li><strong>Operational:</strong> Time saved per transaction, error rate reduction, manual work eliminated</li>
+            <li><strong>Financial:</strong> Cost savings, ROI, break-even timeline</li>
+            <li><strong>Quality:</strong> Resolution rate without escalation, user satisfaction, accuracy</li>
+            <li><strong>Strategic:</strong> Team capacity freed up for higher-value work</li>
+          </ul>
+          <p>If we can't measure it, we don't build it.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="margin-top: 4rem; text-align: center;">
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Didn't find an answer?</p>
+      <a href="#contact" style="display: inline-block; padding: 0.8rem 1.5rem; background: var(--indigo); color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
+        Send me a message
+      </a>
+    </section>
+  </div>
+
+  <script>
+    document.querySelectorAll('.faq-item h3').forEach(button => {
+      button.addEventListener('click', () => {
+        const item = button.closest('.faq-item');
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+</Base>

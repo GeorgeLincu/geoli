@@ -243,6 +243,61 @@ const downloadIcon = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none
   </div>
 </section>
 
+<!-- TESTIMONIALS -->
+<section class="section testimonials" id="testimonials" aria-labelledby="testimonials-title">
+  <div class="container">
+    <p class="section__label">{t('testimonials.label')}</p>
+    <h2 class="section__title" id="testimonials-title">{t('testimonials.title')}</h2>
+    <div class="testimonials__grid">
+      <article class="testimonial__card glass reveal">
+        <div class="testimonial__quote">{t('testimonials.quote1')}</div>
+        <div class="testimonial__author">
+          <strong>{t('testimonials.author1')}</strong>
+          <span>{t('testimonials.role1')}</span>
+        </div>
+      </article>
+      <article class="testimonial__card glass reveal">
+        <div class="testimonial__quote">{t('testimonials.quote2')}</div>
+        <div class="testimonial__author">
+          <strong>{t('testimonials.author2')}</strong>
+          <span>{t('testimonials.role2')}</span>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- RESOURCES -->
+<section class="section resources" id="resources" aria-labelledby="resources-title">
+  <div class="container">
+    <p class="section__label">{t('resources.label')}</p>
+    <h2 class="section__title" id="resources-title">{t('resources.title')}</h2>
+    <p class="section__subtitle">{t('resources.subtitle')}</p>
+    <div class="resources__grid">
+      <article class="resource__card glass reveal">
+        <div class="resource__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h3.75M9 15h3.75M9 18h3.75m3-8.25H18a2.25 2.25 0 012.25 2.25v6A2.25 2.25 0 0118 20.25H6A2.25 2.25 0 013.75 18v-6A2.25 2.25 0 016 9.75h.003"/></svg>
+        </div>
+        <h3>{t('resources.guide1')}</h3>
+        <p>{t('resources.guide1-desc')}</p>
+        <a href="/resources/ai-agent-guide/" class="btn btn--sm btn--ghost">
+          {t('resources.download')} →
+        </a>
+      </article>
+      <article class="resource__card glass reveal">
+        <div class="resource__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0013.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.25A2.25 2.25 0 003 2.25v19.5A2.25 2.25 0 005.25 24h13.5A2.25 2.25 0 0021 21.75V9.375a9 9 0 00-9-9z"/></svg>
+        </div>
+        <h3>{t('resources.checklist1')}</h3>
+        <p>{t('resources.checklist1-desc')}</p>
+        <a href="/resources/rpa-checklist/" class="btn btn--sm btn--ghost">
+          {t('resources.download')} →
+        </a>
+      </article>
+    </div>
+  </div>
+</section>
+
 <!-- CONTACT -->
 <section class="section contact" id="contact" aria-labelledby="contact-title">
   <div class="container">
