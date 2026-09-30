@@ -469,7 +469,11 @@ function initEditor() {
   $('#fTitle').addEventListener('input', () => { if (!slugTouched && !current) $('#fSlug').value = slugify($('#fTitle').value); sync(); });
   $('#fSlug').addEventListener('input', () => { slugTouched = true; $('#fSlug').value = slugify($('#fSlug').value).slice(0, 90) || $('#fSlug').value.toLowerCase(); sync(); });
   $('#fDesc').addEventListener('input', sync);
-  $('#fDraft').addEventListener('change', sync);
+  $('#fDraft').addEventListener('change', () => {
+    // Publishing a draft that was planned for later: publish it as of today
+    if (!$('#fDraft').checked && (!current || current.draft) && $('#fDate').value > today()) $('#fDate').value = today();
+    sync();
+  });
 
   $('#previewBtn').onclick = async () => {
     const showing = !$('#previewPane').hidden;
@@ -512,14 +516,38 @@ function initEditor() {
     try {
       const r = await api('/vault/api/posts/' + encodeURIComponent(slug), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       current = { slug, sha: r.sha, draft: r.draft };
+      if (r.pubDate) $('#fDate').value = r.pubDate;
       $('#fSlug').readOnly = true; $('#deleteBtn').hidden = false; $('#editorTitle').textContent = 'Edit article';
       if (location.hash !== '#!edit/' + encodeURIComponent(slug)) history.replaceState(null, '', '#!edit/' + encodeURIComponent(slug));
-      $('#saveStatus').textContent = r.draft ? 'Draft saved.' : 'Published — the site is rebuilding, live in about 1–2 minutes at geoli.eu/blog/' + slug + '/';
       sync();
+      if (r.draft) { $('#saveStatus').textContent = 'Draft saved (not visible on the site).'; }
+      else waitUntilLive(slug, r.commitSha);
     } catch (err) {
       $('#saveStatus').textContent = err.message;
     } finally { $('#saveBtn').disabled = false; }
   };
+
+  // After publishing: poll /version.json until the site runs the commit we just made
+  let waitToken = 0;
+  async function waitUntilLive(slug, commitSha) {
+    const mine = ++waitToken;
+    const status = $('#saveStatus');
+    const started = Date.now();
+    status.replaceChildren('Saved ✓ — the site is rebuilding (usually 1–2 minutes)…');
+    while (mine === waitToken && Date.now() - started < 6 * 60 * 1000) {
+      await new Promise(r => setTimeout(r, 8000));
+      try {
+        const v = await fetch('/version.json?t=' + Date.now(), { cache: 'no-store' }).then(res => res.json());
+        if (commitSha && v.commit === commitSha) {
+          status.replaceChildren('Live now ✓ ', el('a', { href: '/blog/' + slug + '/', target: '_blank', rel: 'noopener', textContent: 'View article ↗' }));
+          return;
+        }
+      } catch { /* keep waiting */ }
+      const s = Math.round((Date.now() - started) / 1000);
+      status.replaceChildren('Saved ✓ — the site is rebuilding… (' + s + ' s)');
+    }
+    if (mine === waitToken) status.replaceChildren('Saved ✓ — it should be live by now: ', el('a', { href: '/blog/' + slug + '/', target: '_blank', rel: 'noopener', textContent: 'View article ↗' }));
+  }
 
   $('#deleteBtn').onclick = async () => {
     if (!current || !confirm('Delete "' + $('#fTitle').value + '" permanently? (It stays in the Git history.)')) return;

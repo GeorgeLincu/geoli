@@ -51,3 +51,7 @@ https://:worker.:account.workers.dev/*
   Access-Control-Allow-Origin: *
   X-Robots-Tag: noindex
 # Per-article rules for /blog/<slug>.md are appended at build time by scripts/postbuild.mjs
+
+/version.json
+  Cache-Control: no-store
+  X-Robots-Tag: noindex

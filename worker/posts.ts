@@ -165,9 +165,14 @@ export async function savePost(env: Env, post: PostInput, by: string) {
   if (existing && !post.sha) throw new HttpError(409, 'An article with this URL already exists — open it from the list to edit it');
   if (existing && post.sha && existing.sha !== post.sha) throw new HttpError(409, 'This article was changed elsewhere — reload it before saving');
 
-  // Mark "updated" only when an already-published article changes again
   const today = new Date().toISOString().slice(0, 10);
-  const updatedDate = existing && !existing.draft && !post.draft && existing.pubDate !== today ? today : existing?.updatedDate;
+  const firstPublish = !post.draft && (!existing || existing.draft);
+  // A draft's planned date may lie in the future — publishing makes it "today" so Google never sees a future date
+  if (firstPublish && post.pubDate > today) post.pubDate = today;
+  // "Updated" only for later edits of an already-published article, and never before the publish date
+  let updatedDate = firstPublish ? undefined : existing?.updatedDate;
+  if (existing && !existing.draft && !post.draft && today > post.pubDate) updatedDate = today;
+  if (updatedDate && updatedDate <= post.pubDate) updatedDate = undefined;
   const verb = existing ? (post.draft ? 'Update draft' : existing.draft ? 'Publish' : 'Update') : (post.draft ? 'Add draft' : 'Publish');
 
   const res = (await gh(env, `/contents/${BLOG_DIR}/${post.slug}.md`, {
@@ -178,8 +183,8 @@ export async function savePost(env: Env, post: PostInput, by: string) {
       branch: branch(env),
       ...(existing ? { sha: existing.sha } : {}),
     }),
-  })) as { content?: { sha: string }; commit?: { html_url: string } };
-  return { sha: res?.content?.sha, commit: res?.commit?.html_url, draft: post.draft };
+  })) as { content?: { sha: string }; commit?: { sha: string; html_url: string } };
+  return { sha: res?.content?.sha, commit: res?.commit?.html_url, commitSha: res?.commit?.sha, draft: post.draft, pubDate: post.pubDate };
 }
 
 export async function deletePost(env: Env, slug: string, sha: string, by: string) {
