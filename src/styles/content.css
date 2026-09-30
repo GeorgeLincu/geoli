@@ -137,3 +137,4 @@ a.lang-btn { text-decoration: none; }
   .nav__right { gap: 0.5rem; }
   .lang-btn { padding: 0.3rem 0.7rem; }
 }
+.footer__login { display: inline-flex; align-items: center; gap: 0.35rem; }

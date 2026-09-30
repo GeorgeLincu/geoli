@@ -20,7 +20,7 @@
     // /impressum -> /impressum/ (serves impressum/index.html)
     "html_handling": "auto-trailing-slash",
     // The Worker handles only these paths; everything else is served straight from ./dist
-    "run_worker_first": ["/vault", "/vault/*", "/s/*"]
+    "run_worker_first": ["/vault", "/vault/*", "/s/*", "/media/*"]
   },
 
   // Private file storage (create it first: Cloudflare dashboard → R2 → Create bucket "geoli-vault")
@@ -36,7 +36,8 @@
     // Who may upload, delete and create share links
     "ADMIN_EMAILS": "george.lincu@gmail.com"
   },
-  // Secret (not in git): SHARE_SECRET — set with `npx wrangler secret put SHARE_SECRET`
+  // Secrets (not in git): SHARE_SECRET (share links) and GITHUB_TOKEN (article publishing:
+  // fine-grained token for GeorgeLincu/geoli only, "Contents: Read and write")
 
   "observability": { "enabled": true }
 }
