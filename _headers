@@ -1,0 +1,35 @@
+# Cloudflare Pages response headers — https://developers.cloudflare.com/pages/configuration/headers/
+# (This replaces staticwebapp.config.json, which Cloudflare ignores.)
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), browsing-topics=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.web3forms.com https://cloudflareinsights.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; manifest-src 'self'; upgrade-insecure-requests
+
+# Preview / branch deployments must never be indexed by Google
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+# Caching — fonts never change under the same name; code/images revalidate regularly
+/assets/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+/css/*
+  Cache-Control: public, max-age=14400, stale-while-revalidate=86400
+/js/*
+  Cache-Control: public, max-age=14400, stale-while-revalidate=86400
+/assets/*
+  Cache-Control: public, max-age=604800
+
+# The OG image is fetched by LinkedIn/X/Facebook crawlers from other origins
+/assets/og-image.png
+  Cross-Origin-Resource-Policy: cross-origin
+
+/.well-known/security.txt
+  Content-Type: text/plain; charset=utf-8

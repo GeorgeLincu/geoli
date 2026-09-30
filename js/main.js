@@ -17,8 +17,20 @@ function populateContacts() {
   document.querySelectorAll('[data-contact="footer-copy"]').forEach(el => {
     el.textContent = `© ${CONFIG.year} ${CONFIG.name} · ${CONFIG.domain}`;
   });
+}
+
+// CV buttons stay hidden until the PDF actually exists on the server
+async function revealCv() {
+  if (!CONFIG.cvPath) return;
+  try {
+    const res = await fetch(CONFIG.cvPath, { method: 'HEAD' });
+    const type = res.headers.get('content-type') || '';
+    if (!res.ok || !type.includes('pdf')) return;
+  } catch { return; }
+
   document.querySelectorAll('[data-contact="cv"]').forEach(el => {
     if (el.tagName === 'A') el.href = CONFIG.cvPath;
+    el.hidden = false;
   });
 }
 
@@ -27,3 +39,4 @@ initAnimations();
 populateContacts();
 initForm();
 initLang();
+revealCv();

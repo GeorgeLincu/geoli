@@ -2,64 +2,109 @@
 <html lang="en" data-lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- SEO -->
-  <title>GeoLi — Technology · AI · RPA</title>
-  <meta name="description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation. Based in Europe." />
-  <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://geoli.eu" />
+  <title>George Lincu — AI Agents, RPA &amp; Azure Consultant | GeoLi</title>
+  <meta name="description" content="George Lincu — technology consultant specialising in AI agents (Copilot Studio, Azure OpenAI), robotic process automation and Azure cloud architecture. Based in Europe." />
+  <meta name="author" content="George Lincu" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#08090f" />
+  <link rel="canonical" href="https://geoli.eu/" />
 
   <!-- Open Graph -->
-  <meta property="og:type"        content="website" />
-  <meta property="og:url"         content="https://geoli.eu" />
-  <meta property="og:title"       content="GeoLi — Technology · AI · RPA" />
-  <meta property="og:description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation." />
-  <meta property="og:image"       content="https://geoli.eu/assets/og-image.svg" />
-  <meta property="og:locale"      content="en_GB" />
+  <meta property="og:type"         content="website" />
+  <meta property="og:site_name"    content="GeoLi" />
+  <meta property="og:url"          content="https://geoli.eu/" />
+  <meta property="og:title"        content="George Lincu — AI Agents, RPA &amp; Azure Consultant" />
+  <meta property="og:description"  content="Technology consultant specialising in AI agents, RPA, and digital transformation." />
+  <meta property="og:image"        content="https://geoli.eu/assets/og-image.png" />
+  <meta property="og:image:width"  content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt"    content="George Lincu — Technology · AI · RPA" />
+  <meta property="og:locale"       content="en_GB" />
+  <meta property="og:locale:alternate" content="ro_RO" />
 
   <!-- Twitter / X card -->
   <meta name="twitter:card"        content="summary_large_image" />
-  <meta name="twitter:title"       content="GeoLi — Technology · AI · RPA" />
-  <meta name="twitter:description" content="George Lincu — Technology consultant specialising in AI agents, RPA, and digital transformation." />
-  <meta name="twitter:image"       content="https://geoli.eu/assets/og-image.svg" />
+  <meta name="twitter:title"       content="George Lincu — AI Agents, RPA &amp; Azure Consultant" />
+  <meta name="twitter:description" content="Technology consultant specialising in AI agents, RPA, and digital transformation." />
+  <meta name="twitter:image"       content="https://geoli.eu/assets/og-image.png" />
 
-  <!-- Favicon -->
+  <!-- Icons -->
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="anonymous" />
-  <link rel="preconnect" href="https://fonts.gstatic.com"    crossorigin="anonymous" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <!-- Fonts (self-hosted — no Google Fonts request, GDPR-friendly) -->
+  <link rel="preload" href="/assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="/assets/fonts/syne.woff2"  as="font" type="font/woff2" crossorigin />
 
   <!-- CSS modules -->
-  <link rel="stylesheet" href="css/base.css" />
-  <link rel="stylesheet" href="css/components.css" />
-  <link rel="stylesheet" href="css/nav.css" />
-  <link rel="stylesheet" href="css/hero.css" />
-  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/nav.css" />
+  <link rel="stylesheet" href="/css/hero.css" />
+  <link rel="stylesheet" href="/css/sections.css" />
 
-  <!-- Cloudflare Web Analytics
-       Enable in Cloudflare dashboard → Analytics → Web Analytics → your site
-       then replace YOUR_TOKEN below with the token they give you -->
-  <!-- <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
-          data-cf-beacon='{"token":"YOUR_CF_ANALYTICS_TOKEN"}'></script> -->
+  <!-- Structured data for Google (Person + ProfessionalService) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Person",
+        "@id": "https://geoli.eu/#person",
+        "name": "George Lincu",
+        "url": "https://geoli.eu/",
+        "image": "https://geoli.eu/assets/og-image.png",
+        "jobTitle": "Technology Consultant",
+        "worksFor": { "@type": "Organization", "name": "BearingPoint" },
+        "sameAs": ["https://www.linkedin.com/in/georgelincu"],
+        "knowsAbout": ["Artificial Intelligence", "AI Agents", "Microsoft Copilot Studio", "Azure OpenAI", "Robotic Process Automation", "Power Platform", "Process Mining", "Microsoft Azure", "Digital Transformation"],
+        "knowsLanguage": ["en", "ro"]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://geoli.eu/#website",
+        "url": "https://geoli.eu/",
+        "name": "GeoLi",
+        "inLanguage": ["en", "ro"],
+        "publisher": { "@id": "https://geoli.eu/#person" }
+      },
+      {
+        "@type": "ProfessionalService",
+        "@id": "https://geoli.eu/#service",
+        "name": "GeoLi — AI & Automation Consulting",
+        "url": "https://geoli.eu/",
+        "image": "https://geoli.eu/assets/og-image.png",
+        "founder": { "@id": "https://geoli.eu/#person" },
+        "areaServed": "Europe",
+        "serviceType": ["AI Agent Development", "Robotic Process Automation", "Cloud & Azure Architecture", "Digital Transformation Strategy"]
+      }
+    ]
+  }
+  </script>
+  <!-- Analytics: enable Cloudflare Web Analytics in the Pages dashboard
+       (Workers & Pages → geoli → Metrics → Web Analytics). It is injected
+       automatically — cookie-free, so no consent banner is needed. -->
 </head>
 <body>
 
+  <a href="#main" class="visually-hidden skip-link" data-i18n="a11y.skip">Skip to content</a>
   <div class="noise" aria-hidden="true"></div>
 
   <!-- NAV -->
-  <nav class="nav" id="nav">
+  <nav class="nav" id="nav" aria-label="Main">
     <div class="nav__inner">
-      <a href="#hero" class="nav__logo">GeoLi<span class="dot">.</span></a>
-      <ul class="nav__links" id="navLinks" role="menubar">
-        <li role="none"><a href="#about"    role="menuitem" data-i18n="nav.about">About</a></li>
-        <li role="none"><a href="#services" role="menuitem" data-i18n="nav.services">Services</a></li>
-        <li role="none"><a href="#stack"    role="menuitem" data-i18n="nav.stack">Stack</a></li>
-        <li role="none"><a href="#blog"     role="menuitem" data-i18n="blog.label">Insights</a></li>
-        <li role="none"><a href="#contact"  role="menuitem" class="btn btn--sm" data-i18n="nav.cta">Let's Talk</a></li>
+      <a href="#hero" class="nav__logo" aria-label="GeoLi — back to top">GeoLi<span class="dot">.</span></a>
+      <ul class="nav__links" id="navLinks">
+        <li><a href="#about"    data-i18n="nav.about">About</a></li>
+        <li><a href="#services" data-i18n="nav.services">Services</a></li>
+        <li><a href="#stack"    data-i18n="nav.stack">Stack</a></li>
+        <li><a href="#blog"     data-i18n="blog.label">Insights</a></li>
+        <li><a href="#contact"  class="btn btn--sm" data-i18n="nav.cta">Let's Talk</a></li>
       </ul>
       <div class="nav__right">
         <div class="lang-toggle" id="langToggle" role="group" aria-label="Language switcher">
@@ -73,6 +118,8 @@
       </div>
     </div>
   </nav>
+
+  <main id="main">
 
   <!-- HERO -->
   <section class="hero" id="hero" aria-label="Introduction">
@@ -98,7 +145,7 @@
       <div class="hero__cta">
         <a href="#services" class="btn btn--primary" data-i18n="hero.cta1">Explore Services</a>
         <a href="#contact"  class="btn btn--ghost"   data-i18n="hero.cta2">Get in Touch</a>
-        <a href="#" class="btn btn--ghost" data-contact="cv" download aria-label="Download CV">
+        <a href="#" class="btn btn--ghost" data-contact="cv" download hidden aria-label="Download CV">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
           <span data-i18n="about.cv">Download CV</span>
         </a>
@@ -162,7 +209,7 @@
             <span class="tag">Power Platform</span>
             <span class="tag">Process Mining</span>
           </div>
-          <a href="#" class="btn btn--ghost btn--sm" data-contact="cv" download>
+          <a href="#" class="btn btn--ghost btn--sm" data-contact="cv" download hidden>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
             <span data-i18n="about.cv">Download CV</span>
           </a>
@@ -296,7 +343,6 @@
         <article class="blog__card glass reveal">
           <div class="blog__card-top">
             <span class="blog__tag" data-i18n="b1.tag">AI Agents</span>
-            <span class="blog__date" data-i18n="b1.date">May 2026</span>
           </div>
           <h3 data-i18n="b1.title">Building Your First AI Agent with Copilot Studio</h3>
           <p data-i18n="b1.desc">A practical guide to designing and deploying conversational AI agents — from trigger design to multi-topic flows and generative answers.</p>
@@ -306,7 +352,6 @@
         <article class="blog__card glass reveal">
           <div class="blog__card-top">
             <span class="blog__tag" data-i18n="b2.tag">RPA</span>
-            <span class="blog__date" data-i18n="b2.date">April 2026</span>
           </div>
           <h3 data-i18n="b2.title">RPA at Scale: Lessons from Enterprise Deployments</h3>
           <p data-i18n="b2.desc">What separates RPA pilots from production-ready automation — governance models, exception handling, and building for long-term maintainability.</p>
@@ -316,7 +361,6 @@
         <article class="blog__card glass reveal">
           <div class="blog__card-top">
             <span class="blog__tag" data-i18n="b3.tag">Azure</span>
-            <span class="blog__date" data-i18n="b3.date">March 2026</span>
           </div>
           <h3 data-i18n="b3.title">Zero-Cost Azure Architecture for Modern Websites</h3>
           <p data-i18n="b3.desc">How to architect resilient, secure, globally distributed websites on Azure's free tier — Static Web Apps, serverless Functions, and Cloudflare working together.</p>
@@ -344,34 +388,32 @@
           id="contactForm"
           class="contact__form"
           novalidate
-          data-msg-success="Message sent — I'll get back to you shortly."
-          data-msg-error="Something went wrong. Please try again."
         >
           <input type="hidden" name="access_key" value="" />
           <input type="hidden" name="subject"    value="New message from geoli.eu" />
-          <input type="checkbox" name="botcheck" style="display:none" tabindex="-1" aria-hidden="true" />
+          <input type="checkbox" name="botcheck" class="honeypot" tabindex="-1" autocomplete="off" aria-hidden="true" />
 
           <div class="form__row">
             <div class="form__field">
               <label for="fname" data-i18n="form.name">Your name</label>
-              <input id="fname" type="text" name="name" autocomplete="name" required />
+              <input id="fname" type="text" name="name" autocomplete="name" maxlength="120" required />
             </div>
             <div class="form__field">
               <label for="femail" data-i18n="form.email">Your email</label>
-              <input id="femail" type="email" name="email" autocomplete="email" required />
+              <input id="femail" type="email" name="email" autocomplete="email" maxlength="200" required />
             </div>
           </div>
           <div class="form__field">
             <label for="fmsg" data-i18n="form.message">Your message</label>
-            <textarea id="fmsg" name="message" rows="5" required></textarea>
+            <textarea id="fmsg" name="message" rows="5" maxlength="5000" required></textarea>
           </div>
           <button type="submit" class="btn btn--primary form__submit" data-form="submit" data-i18n="form.send">
             Send message
           </button>
-          <div id="formStatus" class="form__status" hidden role="alert"></div>
+          <div id="formStatus" class="form__status" hidden role="status" aria-live="polite"></div>
         </form>
 
-        <div class="contact__divider">or reach out directly</div>
+        <div class="contact__divider" data-i18n="contact.divider">or reach out directly</div>
 
         <div class="contact__links">
           <a href="#" class="contact__link glass" data-contact="email" rel="noopener noreferrer">
@@ -387,13 +429,18 @@
     </div>
   </section>
 
+  </main>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="container">
       <div class="footer__inner">
         <a href="#hero" class="nav__logo">GeoLi<span class="dot">.</span></a>
         <span data-contact="footer-copy">© 2026 George Lincu · geoli.eu</span>
-        <span data-i18n="footer.tagline">Technology · AI · RPA</span>
+        <nav class="footer__links" aria-label="Legal">
+          <a href="/impressum/" data-i18n="footer.imprint">Imprint</a>
+          <a href="/privacy/" data-i18n="footer.privacy">Privacy</a>
+        </nav>
       </div>
     </div>
   </footer>

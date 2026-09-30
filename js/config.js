@@ -5,7 +5,7 @@ export const CONFIG = Object.freeze({
   email:          'george.lincu@gmail.com',
   linkedin:       'https://www.linkedin.com/in/georgelincu',
   domain:         'geoli.eu',
-  year:           '2026',
+  year:           String(new Date().getFullYear()),
   storageKey:     'geoli-lang',
   defaultLang:    'en',
   supportedLangs: ['en', 'ro'],
@@ -13,6 +13,7 @@ export const CONFIG = Object.freeze({
   // CV: place george-lincu-cv.pdf in /assets/ and this link will work
   cvPath:         '/assets/george-lincu-cv.pdf',
 
-  // Web3Forms: get your free key at web3forms.com (enter your email, confirm it)
+  // Web3Forms access key (public by design — it only lets people send you mail).
+  // Get it free at web3forms.com. Until set, the form falls back to mailto:.
   web3formsKey:   'YOUR_WEB3FORMS_KEY',
 });

@@ -74,17 +74,14 @@ const translations = Object.freeze({
     'b1.tag':   'AI Agents',
     'b1.title': 'Building Your First AI Agent with Copilot Studio',
     'b1.desc':  'A practical guide to designing and deploying conversational AI agents — from trigger design to multi-topic flows and generative answers.',
-    'b1.date':  'May 2026',
 
     'b2.tag':   'RPA',
     'b2.title': 'RPA at Scale: Lessons from Enterprise Deployments',
     'b2.desc':  'What separates RPA pilots from production-ready automation — governance models, exception handling, and building for long-term maintainability.',
-    'b2.date':  'April 2026',
 
     'b3.tag':   'Azure',
     'b3.title': 'Zero-Cost Azure Architecture for Modern Websites',
     'b3.desc':  'How to architect resilient, secure, globally distributed websites on Azure\'s free tier — Static Web Apps, serverless Functions, and Cloudflare working together.',
-    'b3.date':  'March 2026',
 
     'form.name':    'Your name',
     'form.email':   'Your email',
@@ -92,6 +89,13 @@ const translations = Object.freeze({
     'form.send':    'Send message',
     'form.success': "Message sent — I'll get back to you shortly.",
     'form.error':   'Something went wrong. Please try again.',
+    'form.invalid': 'Please fill in your name, a valid email and a message (at least 10 characters).',
+    'form.sending': 'Sending…',
+
+    'contact.divider': 'or reach out directly',
+    'footer.imprint':  'Imprint',
+    'footer.privacy':  'Privacy',
+    'a11y.skip':       'Skip to content',
   },
 
   ro: {
@@ -167,17 +171,14 @@ const translations = Object.freeze({
     'b1.tag':   'Agenți AI',
     'b1.title': 'Construiește Primul Tău Agent AI cu Copilot Studio',
     'b1.desc':  'Un ghid practic pentru proiectarea și implementarea agenților AI conversaționali — de la design-ul triggerelor la fluxuri multi-topic și răspunsuri generative.',
-    'b1.date':  'Mai 2026',
 
     'b2.tag':   'RPA',
     'b2.title': 'RPA la Scară Largă: Lecții din Implementări Enterprise',
     'b2.desc':  'Ce separă piloții RPA de automatizarea gata pentru producție — modele de guvernanță, gestionarea excepțiilor și mentenabilitate pe termen lung.',
-    'b2.date':  'Aprilie 2026',
 
     'b3.tag':   'Azure',
     'b3.title': 'Arhitectură Azure Fără Cost pentru Site-uri Moderne',
     'b3.desc':  'Cum să arhitecturezi site-uri web reziliente, sigure și distribuite global pe nivelul gratuit Azure — Static Web Apps, Functions și Cloudflare lucrând împreună.',
-    'b3.date':  'Martie 2026',
 
     'form.name':    'Numele tău',
     'form.email':   'Email-ul tău',
@@ -185,8 +186,22 @@ const translations = Object.freeze({
     'form.send':    'Trimite mesajul',
     'form.success': 'Mesaj trimis — îți voi răspunde în scurt timp.',
     'form.error':   'Ceva a mers greșit. Te rog încearcă din nou.',
+    'form.invalid': 'Te rog completează numele, un email valid și un mesaj (minim 10 caractere).',
+    'form.sending': 'Se trimite…',
+
+    'contact.divider': 'sau scrie-mi direct',
+    'footer.imprint':  'Impressum',
+    'footer.privacy':  'Confidențialitate',
+    'a11y.skip':       'Sari la conținut',
   },
 });
+
+let current = CONFIG.defaultLang;
+
+// Look up a string in the active language (falls back to English, then the key)
+export function t(key) {
+  return translations[current]?.[key] ?? translations.en[key] ?? key;
+}
 
 function isValidLang(lang) {
   return CONFIG.supportedLangs.includes(lang);
@@ -194,6 +209,7 @@ function isValidLang(lang) {
 
 export function setLang(lang) {
   if (!isValidLang(lang)) return;
+  current = lang;
 
   const html = document.documentElement;
   html.setAttribute('lang', lang);

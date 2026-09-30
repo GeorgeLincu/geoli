@@ -1,0 +1,13 @@
+{
+  "name": "GeoLi — George Lincu",
+  "short_name": "GeoLi",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#08090f",
+  "theme_color": "#08090f",
+  "icons": [
+    { "src": "/assets/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+    { "src": "/assets/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/assets/icon-512.png", "type": "image/png", "sizes": "512x512" }
+  ]
+}
