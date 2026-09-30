@@ -26,11 +26,13 @@ interface Props {
   home?: boolean;
   /** Override <html lang> (e.g. "de" for the Impressum) */
   htmlLang?: string;
+  /** Markdown twin of this page for AI agents */
+  markdown?: string;
 }
 
 const {
   lang, title, description, translated = false, ogImage = '/assets/og-image.png',
-  ogTitle = title, type = 'website', noindex = false, jsonLd, publishedTime, modifiedTime, home = false, htmlLang,
+  ogTitle = title, type = 'website', noindex = false, jsonLd, publishedTime, modifiedTime, home = false, htmlLang, markdown,
 } = Astro.props;
 
 const t         = useTranslations(lang);
@@ -57,6 +59,8 @@ const alternates = translated
   {alternates.map(a => <link rel="alternate" hreflang={a.lang} href={a.href} />)}
   {translated && <link rel="alternate" hreflang="x-default" href={alternates[0].href} />}
   <link rel="alternate" type="application/rss+xml" title="GeoLi — Insights" href="/rss.xml" />
+  {markdown && <link rel="alternate" type="text/markdown" href={markdown} />}
+  <link rel="help" type="text/plain" href="/llms.txt" title="Site summary for AI agents" />
 
   <!-- Open Graph / social cards -->
   <meta property="og:type"         content={type} />

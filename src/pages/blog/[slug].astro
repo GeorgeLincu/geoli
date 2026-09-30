@@ -18,7 +18,7 @@ const ogImage = publicFileExists(`/assets/og/${post.id}.png`) ? `/assets/og/${po
 ---
 <Base lang="en" type="article" title={`${post.data.title} | GeoLi`} ogTitle={post.data.title}
       description={post.data.description} ogImage={ogImage}
-      publishedTime={post.data.pubDate} modifiedTime={updated} jsonLd={postJsonLd(post, ogImage)}>
+      publishedTime={post.data.pubDate} modifiedTime={updated} jsonLd={postJsonLd(post, ogImage)} markdown={`/blog/${post.id}.md`}>
   <article class="page post">
     <div class="container">
       <nav class="post__crumbs" aria-label="Breadcrumb"><a href="/blog/">{t('blog.back')}</a></nav>

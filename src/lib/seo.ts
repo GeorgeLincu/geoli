@@ -22,6 +22,24 @@ export function homeJsonLd(lang: Lang) {
         knowsAbout: ['Artificial Intelligence', 'AI Agents', 'Microsoft Copilot Studio', 'Azure OpenAI',
           'Robotic Process Automation', 'Power Platform', 'Process Mining', 'Microsoft Azure', 'Digital Transformation'],
         knowsLanguage: ['en', 'ro'],
+        hasOccupation: {
+          '@type': 'Occupation',
+          name: 'Technology Consultant',
+          occupationalCategory: '15-1299.08 Computer Systems Engineers/Architects',
+          skills: 'AI agents, Microsoft Copilot Studio, Azure OpenAI, Robotic Process Automation, Power Platform, Azure architecture',
+        },
+        subjectOf: { '@id': `${site}/#website` },
+      },
+      {
+        // Tells Google this page is the profile of a person (eligible for profile rich results)
+        '@type': 'ProfilePage',
+        '@id': `${url}#profile`,
+        url,
+        name: `${CONFIG.name} — ${CONFIG.role}`,
+        inLanguage: lang,
+        mainEntity: person,
+        isPartOf: { '@id': `${site}/#website` },
+        dateModified: new Date().toISOString(),
       },
       {
         '@type': 'WebSite',
