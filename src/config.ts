@@ -13,7 +13,7 @@ export const CONFIG = {
   photo:  '/assets/george.jpg',          // square, ~800×800
 
   // Free booking page, e.g. 'https://cal.com/georgelincu/30min' — shows a "Book a call" button
-  bookingUrl: '',
+  bookingUrl: 'https://cal.com/georgelincu/30min',
 
   // Web3Forms access key (public by design — it only lets people send you mail).
   // Get it free at web3forms.com. Until set, the form falls back to mailto:.

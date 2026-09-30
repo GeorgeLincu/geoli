@@ -1,0 +1,290 @@
+---
+import Base from '../../layouts/Base.astro';
+import { useTranslations } from '../../i18n/ui';
+const lang = 'ro';
+const t = useTranslations(lang);
+---
+<Base lang="ro" title="FAQ — George Lincu | Consultant Agenți AI și RPA" description="Întrebări frecvente despre dezvoltarea agenților AI, RPA și consultanță în automatizare.">
+  <style>
+    .faq-container {
+      max-width: 900px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+    .faq-container h1 {
+      font-size: 2.2rem;
+      margin-bottom: 0.5rem;
+      font-family: var(--font-head);
+    }
+    .faq-intro {
+      font-size: 1.05rem;
+      color: var(--text-soft);
+      margin-bottom: 3rem;
+      line-height: 1.7;
+    }
+    .faq-section {
+      margin: 3rem 0;
+    }
+    .faq-section h2 {
+      font-size: 1.3rem;
+      font-family: var(--font-head);
+      margin: 2rem 0 1.5rem 0;
+      padding-bottom: 0.8rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .faq-item {
+      margin: 1.5rem 0;
+      background: var(--bg-card);
+      border-radius: 12px;
+      padding: 1.5rem;
+      border-left: 4px solid var(--indigo);
+      transition: border-color var(--trans);
+    }
+    .faq-item:hover {
+      border-left-color: var(--cyan);
+    }
+    .faq-item h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .faq-item h3::before {
+      content: '▸';
+      color: var(--accent-text);
+      font-size: 1.2rem;
+      transition: transform var(--trans);
+    }
+    .faq-item.open h3::before {
+      transform: rotate(90deg);
+    }
+    .faq-answer {
+      color: var(--text-muted);
+      line-height: 1.8;
+      display: none;
+    }
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+    .faq-answer p {
+      margin-bottom: 1rem;
+    }
+    .faq-answer ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .faq-answer li {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+
+  <div class="faq-container">
+    <h1>Întrebări Frecvente</h1>
+    <p class="faq-intro">
+      Găsești răspunsuri la întrebări obișnuite despre agenții de IA, automatizare robotizată a proceselor, soluții Azure și cum lucrăm împreună.
+    </p>
+
+    <!-- AI AGENTS SECTION -->
+    <div class="faq-section">
+      <h2>Agenți de IA & Copilot Studio</h2>
+
+      <div class="faq-item">
+        <h3>Care-i diferența între un chatbot și un agent de IA?</h3>
+        <div class="faq-answer">
+          <p>Un chatbot răspunde la întrebări din datele de antrenament sau o bază de cunoștințe. Un agent de IA merge mai departe—poate lua acțiuni, apela sisteme externe, lua decizii și orchestra fluxuri de lucru. Agenții Copilot Studio, de exemplu, pot citi din SAP, scrie aprobări la Power Automate, și ruta conversații la oameni pe bază de reguli pe care le definești.</p>
+          <p>Gândește-te la asta în felul asta: un chatbot e o mese de referință. Un agent e o platformă de automatizare a fluxurilor de lucru care și vorbește.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Cât timp durează să construiești un agent de IA?</h3>
+        <div class="faq-answer">
+          <p>Prototip funcțional: 2-4 săptămâni. Un agent gata de producție cu testare, curare de bază de cunoștințe și documentație: 6-12 săptămâni.</p>
+          <p>Cronograma depinde de:</p>
+          <ul>
+            <li>Claritate scopului (clar = mai repede)</li>
+            <li>Mărime bază de cunoștințe (mai mult conținut = mai mult timp de curare)</li>
+            <li>Integrări de sisteme necesare (mai multe sisteme = mai multă complexitate)</li>
+            <li>Rigoare testare (testare temeinică durează dar previne probleme costisitoare post-lansare)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Ce ar trebui să conțină baza noastră de cunoștințe?</h3>
+        <div class="faq-answer">
+          <p>Cele mai bune baze de cunoștințe-s curate, actuale și specifice. Include:</p>
+          <ul>
+            <li>Documentație oficială (specificații produs, manuale de politici)</li>
+            <li>FAQ-uri (întrebările reale pe care le primești)</li>
+            <li>Arbori decizionali aprobați (când să escaladeze, ce cale să ia)</li>
+            <li>Exemple și scenarii</li>
+          </ul>
+          <p>Evită: proiecte, note interne, conținut învechit, și informații contradictorii. O bază de cunoștințe mai mică, de înaltă calitate bate una mare plină de zgomot.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Poate un agent de IA înlocui o echipă umană?</h3>
+        <div class="faq-answer">
+          <p>Nu, și nu ar trebui să fie scopul. Scopul corect e: "Agentul mânâncă munca rutinară, volum mare pentru ca echipa să se focuseze pe decizii complexe, cu valoare înaltă."</p>
+          <p>Realist, un agent bine construit rezolvă 70-85% din cereri fără implicare umană. Echipa mânâncă 15-30% rămase—cazurile care necesită judecată, creativitate, sau inteligență emoțională. Asta-i muncă mai valoroasă.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RPA SECTION -->
+    <div class="faq-section">
+      <h2>RPA & Automatizare de Procese</h2>
+
+      <div class="faq-item">
+        <h3>Ce procese sunt candidați buni pentru RPA?</h3>
+        <div class="faq-answer">
+          <p>RPA funcționează cel mai bine pentru procese care-s:</p>
+          <ul>
+            <li><strong>Repetitive</strong>: 100+ instanțe pe lună</li>
+            <li><strong>Pe bază de reguli</strong>: Logică clară if-then, judecată minimă</li>
+            <li><strong>Deterministe</strong>: Același input → același output, previzibil</li>
+            <li><strong>Stabile</strong>: Nu s-au schimbat semnificativ în 6+ luni</li>
+            <li><strong>Date structurate</strong>: Forme, baze de date, foi de calcul (nu doar PDF-uri și imagini)</li>
+          </ul>
+          <p>Candidați slabi: procese care necesită judecată umană, care se schimbă frecvent, sau care implică doar câteva instanțe pe lună.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Cât costă RPA?</h3>
+        <div class="faq-answer">
+          <p>Depinde de complexitate și tooling:</p>
+          <ul>
+            <li><strong>Bot simplu (3-5 sisteme, pe bază de reguli):</strong> 20-40k$ construire, 3-8k$/an mentenanță</li>
+            <li><strong>Bot complex (10+ sisteme, logică decizională):</strong> 60-120k$ construire, 10-20k$/an mentenanță</li>
+            <li><strong>Hyperautomatizare (RPA + AI + integrări):</strong> 100-300k$ inițial, 20-50k$/an mentenanță</li>
+          </ul>
+          <p>ROI-ul e de obicei 18-36 de luni dacă economisești 10+ FTE-uri de muncă. Break-even mai devreme dacă ai procese volum mare cu reguli clare.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Ce se întâmplă când un bot întâlnește ceva pentru care nu a fost antrenat?</h3>
+        <div class="faq-answer">
+          <p>Boții buni sunt construiți pentru a mânânca asta. Opțiuni de design:</p>
+          <ul>
+            <li><strong>Escaladează către om</strong> pentru revizuire și decizie</li>
+            <li><strong>Marchează excepția</strong> într-un dashboard pentru ca cineva să investigheze</li>
+            <li><strong>Pauzează procesul</strong> și așteaptă input manual</li>
+            <li><strong>Rutează către specialist</strong> pe bază de tip excepție</li>
+          </ul>
+          <p>Botul nu ar trebui niciodată să eșueze în tăcere sau să ia o decizie greșită. Transparență și escaladare-s marcile unui bot bine proiectat.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- AZURE SECTION -->
+    <div class="faq-section">
+      <h2>Azure & Arhitectură Cloud</h2>
+
+      <div class="faq-item">
+        <h3>Ar trebui să folosim Azure OpenAI sau furnizor LLM terță parte?</h3>
+        <div class="faq-answer">
+          <p>Azure OpenAI-i o alegere bună dacă:</p>
+          <ul>
+            <li>Ești deja pe Microsoft Azure</li>
+            <li>Ai nevoie de rezidență date (datele EU rămân în EU)</li>
+            <li>Vrei integrare cu Copilot Studio, Power Platform</li>
+            <li>Ai nevoie de suport conformitate (HIPAA, GDPR) încorporat</li>
+          </ul>
+          <p>Consideră alternative dacă ai nevoie de versiuni de model foarte specifice, suport multi-model, sau ești sensibil la preț și nu ai nevoie de integrare Microsoft.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Cum păstrezi costurile Azure rezonabile?</h3>
+        <div class="faq-answer">
+          <p>Cheia-i vizibilitate și guardrails:</p>
+          <ul>
+            <li><strong>Monitorizează costurile zilnic</strong> în Azure Monitor sau cost management</li>
+            <li><strong>Setează bugete și alerte</strong> la 70%, 85%, și 95% din cheltuiala așteptată</li>
+            <li><strong>Alege modelul corect</strong> (GPT-3.5-turbo-i 20x mai ieftin decât GPT-4; testează care-i "destul de bun")</li>
+            <li><strong>Limitează context</strong> (nu trage 10.000 de tokeni de cunoștințe când 1.000 e destul)</li>
+            <li><strong>Cache prompt-uri</strong> dacă reutilizezi același conținut lung</li>
+          </ul>
+          <p>Fără aceste controluri, costurile pot spike rapid. Cu ele, poți scala previzibil.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ENGAGEMENT SECTION -->
+    <div class="faq-section">
+      <h2>Lucru Împreună</h2>
+
+      <div class="faq-item">
+        <h3>Care-i modelul tău tipic de implicare?</h3>
+        <div class="faq-answer">
+          <p>Depinde de ceea ce ai nevoie:</p>
+          <ul>
+            <li><strong>Consultanță (4-8 săptămâni):</strong> Evaluează procese, recomandă foaie de parcurs, identifică victorii rapide</li>
+            <li><strong>Construieste (8-16 săptămâni):</strong> Proiectează și implementează 1-2 agenți sau boți de la cap la coadă</li>
+            <li><strong>Construieste + Operează (continuu):</strong> Construieste agenți + menține, monitorizează, și îmbunătățește-i în timp</li>
+            <li><strong>Echipă hibridă</strong>: Tu posezi o parte (curare de cunoștințe, testare); eu posedin alta (arhitectură, desfășurare)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Lucrezi cu platforme existente sau recomanzi schimbarea?</h3>
+        <div class="faq-answer">
+          <p>Lucrez cu ce ai. Dacă ești pe UiPath, Power Automate, Automation Anywhere, sau stacks native cloud, putem construi eficient în acele constrângeri.</p>
+          <p>Voi recomanda schimbarea doar dacă platforma ta actuală blochează scopurile tale—nu pentru bine de tooling "mai bun". Schimbarea costă timp, bani, și pierdere de cunoștințe. E decizie mare și ar trebui să fie rară.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Ce se întâmplă dacă proiectul nu merge cum e planificat?</h3>
+        <div class="faq-answer">
+          <p>Ne pivotăm. Dacă un agent nu performează cum se așteptau,:</p>
+          <ul>
+            <li>Identificăm cauza rădăcinii (bază de cunoștințe? prompt-uri? scop?)</li>
+            <li>Decidem: ajustează, re-antrenează, sau redesenează</li>
+            <li>Ajustăm cronograma și așteptări corespunzător</li>
+            <li>Te țin informat la fiecare pas</li>
+          </ul>
+          <p>Proiectele rareori merg perfect. Ce contează-i transparență, adaptare, și rămânere focusă pe scopurile reale ale businessului tău.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <h3>Cum măsurăm succesul?</h3>
+        <div class="faq-answer">
+          <p>Definim metrici dinainte. Cele obișnuite:</p>
+          <ul>
+            <li><strong>Operațional:</strong> Timp economisit per tranzacție, scădere rată eroare, muncă manuală eliminată</li>
+            <li><strong>Financiar:</strong> Economii cost, ROI, cronogramă break-even</li>
+            <li><strong>Calitate:</strong> Rată rezolvare fără escaladare, satisfacție utilizator, acuratețe</li>
+            <li><strong>Strategic:</strong> Capacitate echipă eliberată pentru muncă cu valoare mai înaltă</li>
+          </ul>
+          <p>Dacă nu putem măsura, nu construim.</p>
+        </div>
+      </div>
+    </div>
+
+    <section style="margin-top: 4rem; text-align: center;">
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Nu ai găsit un răspuns?</p>
+      <a href="#contact" style="display: inline-block; padding: 0.8rem 1.5rem; background: var(--indigo); color: white; border-radius: 8px; text-decoration: none; font-weight: 500;">
+        Trimite-mi un mesaj
+      </a>
+    </section>
+  </div>
+
+  <script>
+    document.querySelectorAll('.faq-item h3').forEach(button => {
+      button.addEventListener('click', () => {
+        const item = button.closest('.faq-item');
+        item.classList.toggle('open');
+      });
+    });
+  </script>
+</Base>
