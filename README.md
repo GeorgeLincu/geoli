@@ -7,7 +7,7 @@ Personal site of George Lincu — built with [Astro](https://astro.build), deplo
 | I want to… | Do this |
 |---|---|
 | **Run the site locally** | `npm install` once, then `npm run dev` → <http://localhost:4321> (drafts are visible here) |
-| **Write an article** | Add `src/content/blog/my-slug.md` (copy the frontmatter of an existing post). Keep `draft: true` while writing |
+| **Write an article** | Easiest: **geoli.eu/vault → Articles → New article** (see [docs/VAULT.md](docs/VAULT.md)). Or add `src/content/blog/my-slug.md` by hand |
 | **Publish an article** | Set `draft: false`, then `npm run og` to create its social-media image, commit and push |
 | **Preview drafts in a production build** | `PREVIEW_DRAFTS=1 npm run build` (never set this in Cloudflare) |
 | **Add a case study** | Copy `src/content/projects/_template.md` to e.g. `invoice-bot.md`, fill it in, set `draft: false`. The *Projects* section appears automatically |
