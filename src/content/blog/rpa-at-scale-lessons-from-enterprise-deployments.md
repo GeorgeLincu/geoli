@@ -2,6 +2,7 @@
 title: "RPA at Scale: Lessons from Enterprise Deployments"
 description: "What separates RPA pilots from production automation: governance models, a Centre of Excellence, exception handling and designing bots for maintainability."
 pubDate: 2026-10-08
+updatedDate: 2026-09-30
 tags: ["RPA"]
 draft: false
 ---
