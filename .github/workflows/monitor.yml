@@ -1,0 +1,83 @@
+# Hourly health + security check of the live site. On failure it opens (or updates) a GitHub issue,
+# which GitHub e-mails to you. When everything is green again the issue is closed automatically.
+name: Site monitor
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check geoli.eu
+        id: check
+        shell: bash
+        run: |
+          set -u
+          SITE=https://geoli.eu
+          UA="geoli-monitor/1.0 (+https://github.com/${GITHUB_REPOSITORY})"
+          fail=()
+          code() { curl -s -o /dev/null -w '%{http_code}' -A "$UA" --max-time 20 "$1"; }
+
+          body=$(curl -s -A "$UA" --max-time 20 -D headers.txt "$SITE/") || fail+=("homepage unreachable")
+          grep -q "George Lincu" <<<"$body" || fail+=("homepage content missing")
+          grep -qi '^content-security-policy:' headers.txt || fail+=("Content-Security-Policy header missing")
+          grep -qi '^strict-transport-security:' headers.txt || fail+=("HSTS header missing")
+
+          for p in /ro/ /blog/ /robots.txt /sitemap.xml /llms.txt /rss.xml; do
+            c=$(code "$SITE$p"); [ "$c" = 200 ] || fail+=("$p returned $c")
+          done
+          # Files that must never be public
+          for p in /.git/config /.git/HEAD /wrangler.jsonc /package.json /_headers /.dev.vars; do
+            c=$(code "$SITE$p"); [ "$c" = 404 ] || fail+=("$p is exposed (HTTP $c)")
+          done
+          # Vault must never be open without sign-in
+          c=$(code "$SITE/vault/api/me"); case "$c" in 200) fail+=("/vault/api/me answered 200 without sign-in");; esac
+
+          # TLS certificate must be valid for at least 14 more days
+          end=$(echo | openssl s_client -servername geoli.eu -connect geoli.eu:443 2>/dev/null | openssl x509 -noout -enddate | cut -d= -f2)
+          if [ -n "$end" ]; then
+            days=$(( ( $(date -d "$end" +%s) - $(date +%s) ) / 86400 ))
+            [ "$days" -ge 14 ] || fail+=("TLS certificate expires in $days days")
+          else
+            fail+=("could not read TLS certificate")
+          fi
+
+          if [ ${#fail[@]} -gt 0 ]; then
+            printf -- '- %s\n' "${fail[@]}" > problems.md
+            echo "failed=true" >> "$GITHUB_OUTPUT"
+            cat problems.md
+          else
+            echo "failed=false" >> "$GITHUB_OUTPUT"
+            echo "All checks passed"
+          fi
+
+      - name: Open or update issue
+        if: steps.check.outputs.failed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          body="$(printf 'The hourly check of https://geoli.eu failed at %s UTC:\n\n%s\n\n[Workflow run](%s/%s/actions/runs/%s)' "$(date -u '+%F %H:%M')" "$(cat problems.md)" "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")"
+          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label site-monitor --json number -q '.[0].number')
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --repo "$GITHUB_REPOSITORY" --body "$body"
+          else
+            gh label create site-monitor --repo "$GITHUB_REPOSITORY" --color B60205 --description "Automatic site health alerts" 2>/dev/null || true
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "🚨 geoli.eu health check failing" --label site-monitor --body "$body"
+          fi
+          exit 1
+
+      - name: Close resolved issue
+        if: steps.check.outputs.failed == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          num=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --label site-monitor --json number -q '.[0].number')
+          [ -z "$num" ] || gh issue close "$num" --repo "$GITHUB_REPOSITORY" --comment "✅ All checks are passing again."

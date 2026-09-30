@@ -1,0 +1,11 @@
+---
+import Base from '../../layouts/Base.astro';
+import Home from '../../components/Home.astro';
+import { useTranslations } from '../../i18n/ui';
+import { homeJsonLd } from '../../lib/seo';
+const t = useTranslations('ro');
+---
+<Base lang="ro" title={t('meta.title')} description={t('meta.description')} ogTitle={t('meta.ogTitle')}
+      translated home markdown="/index.md" jsonLd={homeJsonLd('ro')}>
+  <Home lang="ro" />
+</Base>

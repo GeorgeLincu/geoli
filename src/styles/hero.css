@@ -1,0 +1,95 @@
+/* ─── Hero ──────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Aurora blobs */
+.hero__aurora { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: var(--aurora-opacity);
+  animation: float 12s ease-in-out infinite;
+}
+.aurora--1 { width: 60vw; height: 60vw; background: var(--indigo); top: -20%; left: -10%; animation-delay: 0s; }
+.aurora--2 { width: 50vw; height: 50vw; background: var(--cyan);   top: 10%;  right: -15%; animation-delay: -4s; }
+.aurora--3 { width: 40vw; height: 40vw; background: var(--purple); bottom: -10%; left: 30%; animation-delay: -8s; }
+
+/* Perspective grid */
+.hero__grid-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
+}
+
+/* Content */
+.hero__content {
+  position: relative;
+  z-index: 1;
+  padding: 9rem 0 6rem;
+  max-width: 820px;
+}
+.hero__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.25);
+  border-radius: var(--radius-full);
+  padding: 0.4rem 1rem;
+  font-size: 0.78rem;
+  color: var(--accent-soft);
+  margin-bottom: 1.75rem;
+}
+.hero__title {
+  font-family: var(--font-head);
+  font-size: clamp(3.2rem, 7.5vw, 6rem);
+  font-weight: 800;
+  line-height: 1.05;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+}
+.hero__subtitle {
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: var(--text-muted);
+  max-width: 520px;
+  margin-bottom: 2.5rem;
+  line-height: 1.75;
+}
+.hero__cta  { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 3rem; }
+.hero__chips { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+/* Scroll indicator */
+.hero__scroll {
+  position: absolute;
+  bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  color: var(--text-muted);
+  transition: color var(--trans);
+  animation: bounce 2s ease-in-out infinite;
+}
+.hero__scroll svg { width: 24px; height: 24px; }
+.hero__scroll:hover { color: var(--text); }
+
+/* Mobile */
+@media (max-width: 640px) {
+  /* Static, lighter aurora on phones: large animated blurs are the costliest paint on the page */
+  .aurora { animation: none; filter: blur(50px); }
+  .aurora--3 { display: none; }
+  .hero__title { font-size: clamp(2.8rem, 11vw, 4.5rem); }
+  /* "Automatizând" is one long word — size it to fit narrow phones */
+  html[lang="ro"] .hero__title { font-size: clamp(1.3rem, 7.2vw, 4.5rem); }
+}
