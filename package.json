@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && node scripts/postbuild.mjs",
     "preview": "npm run build && wrangler dev",
     "check": "astro check",
     "deploy": "wrangler deploy",

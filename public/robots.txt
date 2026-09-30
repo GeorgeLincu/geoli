@@ -1,5 +1,18 @@
+# geoli.eu — search engines and AI assistants are welcome.
+# A plain-text summary for AI agents: https://geoli.eu/llms.txt
+#
+# Content signals (https://contentsignals.org):
+#   search   = may be indexed and shown in search results
+#   ai-input = may be used to answer questions in AI assistants (RAG, grounding)
+#   ai-train = may be used to train AI models
 User-agent: *
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
 Allow: /
 Disallow: /vault/
+Disallow: /s/
+
+# Known for ignoring crawl etiquette and hammering small sites
+User-agent: Bytespider
+Disallow: /
 
 Sitemap: https://geoli.eu/sitemap.xml
