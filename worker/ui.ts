@@ -355,7 +355,7 @@ function openShare(key) {
 
 async function init() {
   try { me = await api('/vault/api/me'); } catch { $('#rows').replaceChildren(el('tr', {}, el('td', { colSpan: 4, className: 'v-empty', textContent: 'Please sign in again.' }))); return; }
-  $('#user').textContent = me.email + (me.admin ? ' · admin' : '');
+  $('#user').textContent = me.email + (me.role && me.role !== 'guest' ? ' · ' + me.role : '');
   if (me.admin) {
     $('#adminBar').hidden = false;
     $('#fileInput').onchange = (e) => { uploadAll([...e.target.files]); e.target.value = ''; };
@@ -437,7 +437,7 @@ function fill(p) {
   $('#fDraft').checked = p.draft !== false;
   $('#fBody').value = p.body || '';
   $('#fSlug').readOnly = !!current;
-  $('#deleteBtn').hidden = !current;
+  $('#deleteBtn').hidden = !current || !me.admin;
   $('#editorTitle').textContent = current ? 'Edit article' : 'New article';
   $('#previewPane').hidden = true; $('#fBody').hidden = false; $('#previewBtn').textContent = 'Preview';
   $('#saveStatus').textContent = '';
@@ -517,7 +517,7 @@ function initEditor() {
       const r = await api('/vault/api/posts/' + encodeURIComponent(slug), { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       current = { slug, sha: r.sha, draft: r.draft };
       if (r.pubDate) $('#fDate').value = r.pubDate;
-      $('#fSlug').readOnly = true; $('#deleteBtn').hidden = false; $('#editorTitle').textContent = 'Edit article';
+      $('#fSlug').readOnly = true; $('#deleteBtn').hidden = !me.admin; $('#editorTitle').textContent = 'Edit article';
       if (location.hash !== '#!edit/' + encodeURIComponent(slug)) history.replaceState(null, '', '#!edit/' + encodeURIComponent(slug));
       sync();
       if (r.draft) { $('#saveStatus').textContent = 'Draft saved (not visible on the site).'; }

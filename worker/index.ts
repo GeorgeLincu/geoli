@@ -9,6 +9,8 @@
 //   - any signed-in user may browse and download everything EXCEPT people/<email>/ folders
 //   - people/<email>/ is visible only to that person (and admins) — use it for per-person sharing
 //   - only ADMIN_EMAILS may upload, delete, create folders and create share links
+//   - EDITOR_EMAILS (and admins) may write, publish and unpublish articles and add images to them;
+//     deleting an article is admin-only. For files, editors are like invited guests.
 import { marked } from 'marked';
 import { getUser, type User } from './auth';
 import { createShareToken, verifyShareToken, MAX_SHARE_HOURS } from './share';
@@ -21,6 +23,7 @@ export interface Env {
   ACCESS_TEAM_DOMAIN: string; // e.g. "geoli.cloudflareaccess.com"
   ACCESS_AUD: string;         // Access application "Audience (AUD) tag"
   ADMIN_EMAILS: string;       // comma-separated
+  EDITOR_EMAILS?: string;     // comma-separated — article writers
   SHARE_SECRET?: string;      // secret — `wrangler secret put SHARE_SECRET`
   DEV_EMAIL?: string;         // local development only (.dev.vars)
   GITHUB_TOKEN?: string;      // secret — fine-grained token: this repo only, Contents read/write
@@ -188,11 +191,14 @@ async function handleVault(request: Request, env: Env, url: URL) {
   if (path === '/vault/app.css') return respond(APP_CSS, { headers: { 'Content-Type': 'text/css; charset=utf-8' } });
   if (path === '/vault/app.js')  return respond(APP_JS,  { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
 
-  if (path === '/vault/api/me') return json({ email: user.email, admin: user.admin, sharing: !!env.SHARE_SECRET, publishing: user.admin && !!env.GITHUB_TOKEN });
+  if (path === '/vault/api/me') {
+    const role = user.admin ? 'admin' : user.editor ? 'editor' : 'guest';
+    return json({ email: user.email, role, admin: user.admin, sharing: !!env.SHARE_SECRET, publishing: user.editor && !!env.GITHUB_TOKEN });
+  }
 
   // ─── Article publishing (admin) ───
   if (path.startsWith('/vault/api/posts') || path === '/vault/api/preview' || path.startsWith('/vault/api/media/')) {
-    if (!user.admin) return error(403, 'Only admins can manage articles');
+    if (!user.editor) return error(403, 'Only editors and admins can manage articles');
     try {
       return await handlePublishing(request, env, url, user);
     } catch (e) {
@@ -316,6 +322,7 @@ async function handlePublishing(request: Request, env: Env, url: URL, user: User
     return json({ ok: true, ...(await savePost(env, post, user.email)) });
   }
   if (method === 'DELETE') {
+    if (!user.admin) return error(403, 'Only admins can delete articles — unpublish it instead (tick Draft)');
     await deletePost(env, slug, url.searchParams.get('sha') || '', user.email);
     return json({ ok: true });
   }

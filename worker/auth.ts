@@ -6,6 +6,8 @@ import type { Env } from './index';
 export interface User {
   email: string;
   admin: boolean;
+  /** May write and publish articles (admins can too) — otherwise like an invited guest */
+  editor: boolean;
 }
 
 interface Jwk extends JsonWebKey { kid: string }
@@ -59,8 +61,12 @@ async function verifyAccessJwt(token: string, env: Env): Promise<Record<string, 
   return payload;
 }
 
-const adminList = (env: Env) =>
-  (env.ADMIN_EMAILS || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+const emailList = (v?: string) => (v || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+
+function userFor(email: string, env: Env): User {
+  const admin = emailList(env.ADMIN_EMAILS).includes(email);
+  return { email, admin, editor: admin || emailList(env.EDITOR_EMAILS).includes(email) };
+}
 
 /** Returns the signed-in user, or null. Fails closed when Access isn't configured. */
 export async function getUser(request: Request, env: Env): Promise<User | null> {
@@ -68,8 +74,7 @@ export async function getUser(request: Request, env: Env): Promise<User | null> 
 
   // Local development only: `wrangler dev` on localhost with DEV_EMAIL in .dev.vars
   if (env.DEV_EMAIL && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
-    const email = env.DEV_EMAIL.toLowerCase();
-    return { email, admin: adminList(env).includes(email) };
+    return userFor(env.DEV_EMAIL.toLowerCase(), env);
   }
 
   if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) return null;
@@ -79,5 +84,5 @@ export async function getUser(request: Request, env: Env): Promise<User | null> 
   const claims = await verifyAccessJwt(token, env).catch(() => null);
   const email = typeof claims?.email === 'string' ? claims.email.toLowerCase() : '';
   if (!email) return null;
-  return { email, admin: adminList(env).includes(email) };
+  return userFor(email, env);
 }
