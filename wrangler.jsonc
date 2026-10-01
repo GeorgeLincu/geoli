@@ -34,7 +34,9 @@
     // Zero Trust → Access → Applications → (vault app) → Overview → "Application Audience (AUD) Tag"
     "ACCESS_AUD": "64b5884a826bec9037c5770c596afc84636c3243add35748fe16b33ad97a4574",
     // Who may upload, delete and create share links
-    "ADMIN_EMAILS": "george.lincu@gmail.com"
+    "ADMIN_EMAILS": "george.lincu@gmail.com",
+    // Who may write and publish articles (besides admins). Also add them to the Access policy so they can sign in.
+    "EDITOR_EMAILS": "volonci.madalina@gmail.com"
   },
   // Secrets (not in git): SHARE_SECRET (share links) and GITHUB_TOKEN (article publishing:
   // fine-grained token for GeorgeLincu/geoli only, "Contents: Read and write")

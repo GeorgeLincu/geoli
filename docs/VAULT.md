@@ -10,7 +10,8 @@
 
 Who can do what:
 
-- **Admins** (`ADMIN_EMAILS` in `wrangler.jsonc`): upload, create folders, delete, create share links.
+- **Admins** (`ADMIN_EMAILS` in `wrangler.jsonc`): everything — files, share links, articles.
+- **Editors** (`EDITOR_EMAILS`): write, edit, publish and unpublish articles and add images to them. For files they're like invited people (view and download only). Only admins can delete an article.
 - **Invited people**: browse and download everything **except** other people's `people/<email>/` folders.
 - **`people/<email>/`**: visible only to that person and admins, which makes it the place for one-person handovers.
 - **Share links** (`geoli.eu/s/…`): anyone with the link can download that one file until it expires (1 hour to 30 days). No sign-in needed.
