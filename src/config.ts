@@ -15,7 +15,4 @@ export const CONFIG = {
   // Free booking page, e.g. 'https://cal.com/georgelincu/30min' — shows a "Book a call" button
   bookingUrl: '',
 
-  // Web3Forms access key (public by design — it only lets people send you mail).
-  // Get it free at web3forms.com. Until set, the form falls back to mailto:.
-  web3formsKey: 'YOUR_WEB3FORMS_KEY',
 } as const;

@@ -20,10 +20,16 @@
     // /impressum -> /impressum/ (serves impressum/index.html)
     "html_handling": "auto-trailing-slash",
     // The Worker handles only these paths; everything else is served straight from ./dist
-    "run_worker_first": ["/vault", "/vault/*", "/s/*", "/media/*"]
+    "run_worker_first": ["/vault", "/vault/*", "/s/*", "/media/*", "/api/*"]
   },
 
   // Private file storage (create it first: Cloudflare dashboard → R2 → Create bucket "geoli-vault")
+  // Contact form: the Worker e-mails messages through Cloudflare Email Routing (free, no third party).
+  // The destination must be a verified Email Routing destination address.
+  "send_email": [
+    { "name": "CONTACT_EMAIL", "destination_address": "george.lincu@gmail.com" }
+  ],
+
   "r2_buckets": [
     { "binding": "VAULT", "bucket_name": "geoli-vault" }
   ],
@@ -36,7 +42,10 @@
     // Who may upload, delete and create share links
     "ADMIN_EMAILS": "george.lincu@gmail.com",
     // Who may write and publish articles (besides admins). Also add them to the Access policy so they can sign in.
-    "EDITOR_EMAILS": "volonci.madalina@gmail.com"
+    "EDITOR_EMAILS": "volonci.madalina@gmail.com",
+    // Contact form sender/recipient
+    "CONTACT_FROM": "formular@geoli.eu",
+    "CONTACT_TO": "george.lincu@gmail.com"
   },
   // Secrets (not in git): SHARE_SECRET (share links) and GITHUB_TOKEN (article publishing:
   // fine-grained token for GeorgeLincu/geoli only, "Contents: Read and write")
