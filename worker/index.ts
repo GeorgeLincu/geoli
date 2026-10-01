@@ -2,6 +2,7 @@
 //
 //   /vault/*  private area behind Cloudflare Access (login) — files live in the R2 bucket VAULT
 //   /s/<tok>  public, time-limited share links signed with SHARE_SECRET
+//   /api/contact  contact form → e-mail via Cloudflare Email Routing (send_email binding)
 //   /media/*  public images for articles (uploaded from the vault's article editor, stored in R2 under media/)
 //   anything else → static assets (the Worker only runs for the paths in wrangler.jsonc "run_worker_first")
 //
@@ -16,6 +17,7 @@ import { getUser, type User } from './auth';
 import { createShareToken, verifyShareToken, MAX_SHARE_HOURS } from './share';
 import { APP_HTML, APP_CSS, APP_JS, pageHtml } from './ui';
 import { listPosts, getPost, savePost, deletePost, validate, HttpError } from './posts';
+import { handleContact } from './contact';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -29,6 +31,9 @@ export interface Env {
   GITHUB_TOKEN?: string;      // secret — fine-grained token: this repo only, Contents read/write
   GITHUB_REPO?: string;       // default GeorgeLincu/geoli
   GITHUB_BRANCH?: string;     // default main
+  CONTACT_EMAIL?: SendEmail;  // send_email binding (destination must be a verified Email Routing address)
+  CONTACT_FROM?: string;      // sender on geoli.eu, e.g. formular@geoli.eu
+  CONTACT_TO?: string;        // where messages go
 }
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // Workers request-body limit on the free plan
@@ -368,6 +373,7 @@ export default {
       if (url.pathname === '/vault' || url.pathname.startsWith('/vault/')) return await handleVault(request, env, url);
       if (url.pathname.startsWith('/s/')) return await handleShare(request, env, url);
       if (url.pathname.startsWith('/media/')) return await handleMedia(request, env, url);
+      if (url.pathname === '/api/contact') return await handleContact(request, env, url);
     } catch (err) {
       console.error(err);
       return error(500, 'Something went wrong');

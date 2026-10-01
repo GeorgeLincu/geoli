@@ -1,6 +1,6 @@
-const ENDPOINT    = 'https://api.web3forms.com/submit';
-const EMAIL_RE    = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_FILL_MS = 3000; // humans take longer than this to fill the form
+// Contact form → POST /api/contact (our Worker e-mails it via Cloudflare Email Routing)
+const ENDPOINT = '/api/contact';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export function initForm() {
   const form = document.getElementById('contactForm') as HTMLFormElement | null;
@@ -15,15 +15,7 @@ export function initForm() {
     e.preventDefault();
     status.hidden = true;
 
-    const data = new FormData(form);
-
-    // Bots: honeypot ticked or submitted implausibly fast — pretend success
-    if (data.get('botcheck') || Date.now() - loadedAt < MIN_FILL_MS) {
-      form.reset();
-      showStatus('success', msg.msgSuccess);
-      return;
-    }
-
+    const data    = new FormData(form);
     const name    = String(data.get('name')    || '').trim();
     const email   = String(data.get('email')   || '').trim();
     const message = String(data.get('message') || '').trim();
@@ -32,22 +24,24 @@ export function initForm() {
       return;
     }
 
-    // Form not configured yet — fall back to the visitor's mail client
-    if (msg.configured !== 'true') {
-      const subject = encodeURIComponent(`Message from ${name} via ${msg.domain}`);
-      const body    = encodeURIComponent(`${message}\n\n— ${name} <${email}>`);
-      window.location.href = `mailto:${msg.email}?subject=${subject}&body=${body}`;
-      return;
-    }
-
     submitBtn.disabled = true;
     const originalText = submitBtn.textContent;
     submitBtn.textContent = msg.msgSending;
 
     try {
-      const res  = await fetch(ENDPOINT, { method: 'POST', headers: { Accept: 'application/json' }, body: data });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.message);
+      const res = await fetch(ENDPOINT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name, email, message,
+          lang: document.documentElement.lang,
+          botcheck: data.get('botcheck') ? 'on' : '',
+          elapsed: Date.now() - loadedAt,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 400) { showStatus('error', msg.msgInvalid); return; }
+      if (!res.ok || !json.ok) throw new Error(json.error || res.statusText);
       form.reset();
       showStatus('success', msg.msgSuccess);
     } catch {
