@@ -34,9 +34,9 @@ jobs:
           for p in /ro/ /blog/ /robots.txt /sitemap.xml /llms.txt /rss.xml; do
             c=$(code "$SITE$p"); [ "$c" = 200 ] || fail+=("$p returned $c")
           done
-          # Files that must never be public
+          # Files that must never be public (404 from the site, or 403 when the WAF blocks the path first)
           for p in /.git/config /.git/HEAD /wrangler.jsonc /package.json /_headers /.dev.vars; do
-            c=$(code "$SITE$p"); [ "$c" = 404 ] || fail+=("$p is exposed (HTTP $c)")
+            c=$(code "$SITE$p"); case "$c" in 403|404) ;; *) fail+=("$p is exposed (HTTP $c)");; esac
           done
           # Vault must never be open without sign-in
           c=$(code "$SITE/vault/api/me"); case "$c" in 200) fail+=("/vault/api/me answered 200 without sign-in");; esac
