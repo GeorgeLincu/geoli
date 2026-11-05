@@ -7,6 +7,13 @@ updates:
     groups:
       all-npm:
         patterns: ["*"]
+    ignore:
+      # Keep Node types on the Node major we run (see .node-version)
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # @astrojs/check doesn't support TypeScript 7 yet — revisit when it does
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     open-pull-requests-limit: 3
 
   - package-ecosystem: github-actions
