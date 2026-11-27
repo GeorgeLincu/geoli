@@ -110,3 +110,12 @@
 .jr-year { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem; }
 .rp-links { display: grid; gap: 0.35rem; }
 .rp-links a { color: var(--accent-text); }
+.rp-edit input[type="date"] {
+  width: 100%; min-width: 0; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid var(--border-h);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 0.92rem; color-scheme: light dark;
+}
+.rp-table input[type="text"] { max-width: 6.5rem; text-align: right; }
+/* Grid children may shrink below their content (wide tables scroll inside .rp-table-wrap instead of widening the page) */
+.inv-main > *, .rp-body > *, .rp-grid-2 > *, .db-grid > * { min-width: 0; }
+.bp-line { display: grid; gap: 0.15rem; }
+.bp-line span { color: var(--text-muted); font-size: 0.88rem; }

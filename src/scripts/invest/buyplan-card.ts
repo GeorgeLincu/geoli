@@ -10,6 +10,7 @@ import { portfolioAt } from '../../lib/invest/report';
 import { buyPlan, lineName } from '../../lib/invest/buyplan';
 import { eur, NF0, el, byId } from './report-ui';
 
+const NF2 = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const NF4 = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 4 });
 
 (async () => {
@@ -34,7 +35,10 @@ const NF4 = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 4 });
     const priceEur = (id: string) => {
       const q = prices.price(id, today);
       const i = insts.get(id);
-      return q && i ? convert(fx, q.price, i.currency, 'EUR', today) : null;
+      if (!i) return null;
+      // No market price: government bonds (Tezaur/Fidelis) are bought at face value
+      const p = q?.price ?? i.faceValue;
+      return p === undefined ? null : convert(fx, p, i.currency, 'EUR', today);
     };
 
     const ipsAmount = ipsDoc?.exists ? activeIpsRules(ipsDoc.doc)?.rules.contribution?.amount : undefined;
@@ -47,10 +51,10 @@ const NF4 = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 4 });
       if (!(amount > 0)) { state.textContent = 'Scrie suma pe care o investești luna asta (EUR).'; list.replaceChildren(); return; }
       const plan = buyPlan(point.holdings, data.targets, amount, priceEur, { fractional: frac.checked });
       list.replaceChildren(...plan.lines.map(l => {
-        const li = el('li', null, 'db-alert');
+        const li = el('li', null, 'bp-line');
         const name = lineName(l, data.instruments);
         if (l.units > 0) {
-          li.append(el('strong', `${frac.checked ? NF4.format(l.units) : NF0.format(l.units)} × ${name}`), el('span', `≈ ${eur(l.costEur)} la ${l.priceEur === null ? '—' : eur(l.priceEur).replace(' €', '')} € · rândul „${l.target.label}”`));
+          li.append(el('strong', `${frac.checked ? NF4.format(l.units) : NF0.format(l.units)} × ${name}`), el('span', `≈ ${eur(l.costEur)} · preț ${l.priceEur === null ? '—' : `${NF2.format(l.priceEur)} €`} · rândul „${l.target.label}”`));
         } else {
           li.append(el('strong', `${name}: ${eur(l.amountEur)}`), el('span', l.priceEur === null
             ? `fără preț${l.instrumentId ? '' : ' și fără instrument ales pentru rândul „' + l.target.label + '”'} — cumpără manual`

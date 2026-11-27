@@ -18,6 +18,9 @@ let loaded: Loaded<'data'>;
 let fx: FxSource;
 let point: PortfolioPoint;
 const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+const NF2 = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+/** Small percentages (costs) with two decimals */
+const pct2 = (x: number | null) => (x === null ? '—' : `${NF2.format(x * 100)}%`);
 /** Decimal → percent text for an input (0.0022 → "0,22") */
 const pctInput = (x: number) => String(Math.round(x * 1e6) / 1e4).replace('.', ',');
 const num = (s: string) => { const t = s.replace(/\s/g, '').replace(',', '.'); return t === '' ? null : Number(t); };
@@ -33,10 +36,10 @@ function render() {
   const costRate = (point.eur > 0 ? ter.costEur / point.eur : 0) + feeRate;
 
   byId('coKpis')!.replaceChildren(
-    kpi('Cost fonduri pe an', eur(ter.costEur), { hero: true, note: ter.weightedTer === null ? 'notează TER-urile mai jos' : `TER mediu ${pct(ter.weightedTer)} pe ${eur(ter.knownValue)}` }),
-    kpi(`Comisioane ${year - 1}`, eur(lastFull), { note: feeRate ? `${pct(feeRate)} din portofoliu` : undefined }),
+    kpi('Cost fonduri pe an', eur(ter.costEur), { hero: true, note: ter.weightedTer === null ? 'notează TER-urile mai jos' : `TER mediu ${pct2(ter.weightedTer)} pe ${eur(ter.knownValue)}` }),
+    kpi(`Comisioane ${year - 1}`, eur(lastFull), { note: feeRate ? `${pct2(feeRate)} din portofoliu` : undefined }),
     kpi(`Comisioane ${year}`, eur(fees.get(year)?.eur ?? 0), { note: 'până azi' }),
-    kpi('Cost total pe an', pct(costRate), { note: 'TER + comisioane anul trecut, ca % din portofoliu' }),
+    kpi('Cost total pe an', pct2(costRate), { note: 'TER + comisioane anul trecut, ca % din portofoliu' }),
   );
 
   const insts = new Map(data.instruments.map(i => [i.id, i]));
@@ -71,7 +74,7 @@ function drag() {
   const note = byId('coDragNote')!;
   if (!(years > 0 && years <= 60) || ret === null) { note.textContent = 'Completează anii (1–60) și randamentul real așteptat.'; return; }
   const d = costDrag({ start: point.eur, monthly, years, realReturn: ret / 100, costRate: cost / 100 });
-  note.textContent = `În ${years} ani, costurile de ${NF1.format(cost)}% pe an iau ≈ ${eur(d.lost)} (${pct(d.lostShare)} din valoarea finală, în banii de azi). Randamentul real devine ${pct(d.netReturn)}. Ipotezele sunt cele din Plan; schimbă-le aici ca să compari.`;
+  note.textContent = `În ${years} ani, costurile de ${NF2.format(cost)}% pe an iau ≈ ${eur(d.lost)} (${pct(d.lostShare)} din valoarea finală, în banii de azi). Randamentul real devine ${pct(d.netReturn)}. Ipotezele sunt cele din Plan; schimbă-le aici ca să compari.`;
   const labels = d.gross.map((_, i) => String(i));
   chartIn(byId('coChart')!, (t: ChartTheme): EChartsCoreOption => ({
     legend: { top: 0, data: ['Fără costuri', 'Cu costuri'] },

@@ -102,6 +102,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [x] 7 Rapoarte anuale & Panou — `/vault/invest/rapoarte/` (listă) și `/vault/invest/rapoarte/<an>/` (raport pe an, tipărire/PDF), instantanee la 31 dec. în `invest/snapshots/` (automate, corectabile, cu inflația anului), `returns.ts` (XIRR, TWR, real), Panou refăcut (cifrele importante sus, alerte comune, avere netă pe clase în timp), navigație pe grupuri, grafice uniformizate. Detalii: secțiunea „Rapoarte anuale & Panou (faza 7)”
 - [ ] 8 Întărire
+- [x] Extra (după faza 7): indice de referință, rezumat lunar pe e-mail, jurnal de decizii, „Ce-ar fi dacă” (retragere), Costuri (comisioane + TER), „Ce cumpăr luna asta”, aplicație pe ecranul telefonului. Detalii: secțiunea „Extra după faza 7”
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
 
@@ -199,6 +200,37 @@ serves the one built page `rapoarte/an/` for every `/vault/invest/rapoarte/<year
   Graphic components registered (empty states now render). Calendar kinds and drawdown levels no longer use series colours as text.
 - Tested locally on 2026-11-28 with invented data (owner; non-owner → 404 on pages and API; 375 px; dark; no CSP errors; print theme switch).
   Not tested: a real browser print dialog on a phone, real data volumes (hundreds of transactions × many years).
+
+## Extra după faza 7
+Logic (tested in `extras.test.ts`, invented data only): `report.ts` `benchmarkReturn`, `whatif.ts`, `costs.ts`, `buyplan.ts`, `monthly.ts`.
+New data (additive, validated): `settings.benchmarkInstrumentId`, `Instrument.ter` (decimal), `journal[]` (`JournalEntry`).
+- **Indice de referință** (Rapoarte → „Indice de referință”): any instrument with saved prices (needn't be held). Price change in EUR
+  (BNR rate of the price dates) from 31 Dec to 31 Dec, price only (exact for accumulating funds). Null when the series doesn't reach back
+  (first price > 14 days before the start). Shown as a column on Rapoarte and a KPI on the year page („tu: ±x pp față de referință”, TWR − benchmark).
+- **Rezumat lunar pe e-mail** (Rapoarte → „Rezumat lunar”, off by default): `worker/monthly.ts`, settings `invest/monthly.json`,
+  state `invest/monthly-state.json` (`lastSent`, last 24 sends). The existing cron calls `runMonthly` after the alerts; on the first run of a
+  month it mails last month: time-weighted return of the month (Modified Dietz), net worth change %, FI progress %, number of transactions; with
+  „Include sume” also net worth / portfolio values and money added. A failed send is retried at the next run. „Trimite acum un test” (2-minute cooldown).
+  Same `send_email` binding and owner address as the alerts. API: `GET /vault/api/invest/monthly`, `PUT …/settings`, `POST …/test`.
+- **Jurnal** `/vault/invest/jurnal/` (nav Planuri): date, title, text, optional linked transaction and instrument, „Cum a ieșit” (date of the review
+  kept). Entries of a year are listed on that year's report.
+- **Ce-ar fi dacă** `/vault/invest/simulare/` (nav Analize): withdrawal of X lei/EUR today, sold proportionally from the chosen account /
+  instrument (Pillar 2/3 never; Tezaur/Fidelis only when their account is chosen). Gain at the weighted-average cost; marginal tax + CASS with
+  `tax-ro.ts` `estimateSales` on top of this year's realised income (`taxResults`); Romanian-broker sales assumed long-held (the page says so).
+  Shows net received, portfolio after, allocation before/after vs bands, years to FI before/after. Nothing is saved.
+- **Costuri** `/vault/invest/costuri/` (nav Analize): broker fees per year (transaction fees + fee rows, EUR), TER per held instrument (typed by
+  George, saved on the instrument), yearly fund cost, total cost rate (TER cost + last full year's fees, ÷ portfolio), and value with/without that
+  cost over N years (plan inputs as defaults, editable): `costDrag` = same yearly growth as the plan with (1 + r)(1 − c) − 1.
+- **Ce cumpăr luna asta** (Panou card, `buyplan-card.ts`): amount = IPS contribution, else the plan's monthly contribution (editable). Split with
+  `rebalanceWithContribution` (most underweight rows first, nothing sold) → instrument per row (the row's own, else the largest holding in it) →
+  whole units at today's price (government bonds at face value), or fractional (4 decimals); leftover cash shown.
+- **Aplicație pe telefon**: `public/vault/invest/manifest.webmanifest` (served behind the owner check, `crossorigin="use-credentials"`), icons are
+  the public site icons, `apple-touch-icon` + theme colour in `Invest.astro`. No service worker: nothing is cached on the device. On iPhone the
+  home-screen app has its own cookies, so the Access login is asked once inside it.
+- Navigation: Planuri gains Jurnal; the last group is now „Analize” (Rapoarte, Taxe, Costuri, Ce-ar fi dacă); the phone/tablet menu is used up to 1180 px.
+- Charts: a chart's own legend/tooltip now extend the shared settings (scrolling legend on phones) instead of replacing them.
+- Tested locally on 2026-11-28 with invented data (owner; non-owner → 404 on the new pages, manifest and API; 375 px; dark; no console/CSP errors;
+  test e-mail written as .eml). Not tested: the monthly cron run on Cloudflare and real e-mail delivery; installing on a real phone.
 
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).

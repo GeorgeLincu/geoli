@@ -12,6 +12,8 @@ import type { FxYear } from '../../lib/invest/market';
 import type { FxSource } from '../../lib/invest/fx';
 import { eur, ron, pct, NF1, el, byId, kpi, row, chip } from './report-ui';
 
+const NF4 = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 4 });
+
 interface Ctx { data: InvestData; rules: TaxRules | null; fxDocs: FxYear[]; fx: FxSource; point: PortfolioPoint; today: string }
 let ctx: Ctx;
 const form = byId<HTMLFormElement>('wiForm')!;
@@ -41,7 +43,12 @@ function calculate() {
   const amountEur = convert(ctx.fx, amount, currency, 'EUR', ctx.today);
   if (amountEur === null) { byId('wiState')!.textContent = 'Lipsește cursul BNR de azi.'; return; }
   const filter = { accountId: sel('accountId').value || undefined, instrumentId: sel('instrumentId').value || undefined };
-  const plan = planWithdrawal(ctx.point.holdings, amountEur, filter, ctx.fx, ctx.today);
+  // Government bonds (Tezaur/Fidelis) aren't sold for a withdrawal unless their account is chosen explicitly
+  const govAcc = new Set(ctx.data.accounts.filter(a => a.type === 'gov_bonds').map(a => a.id));
+  const pool = filter.accountId ? ctx.point.holdings : ctx.point.holdings.filter(h => !govAcc.has(h.accountId));
+  const plan0 = planWithdrawal(pool, amountEur, filter, ctx.fx, ctx.today);
+  // Keep the unsellable holdings in the "after" picture
+  const plan = { ...plan0, after: [...plan0.after, ...ctx.point.holdings.filter(h => !pool.includes(h))] };
   if (!plan.lines.length) { byId('wiState')!.textContent = 'Nu există poziții de vândut în selecția aleasă.'; byId('wiOut')!.hidden = true; return; }
 
   // Tax: marginal on top of this year's realised income (same engine as the Taxe page)
@@ -83,7 +90,7 @@ function calculate() {
   warn.hidden = !warns.length;
 
   byId<HTMLTableElement>('wiSales')!.tBodies[0].replaceChildren(...plan.lines.map(l => {
-    const tr = row(instName(l.instrumentId), [accName(l.accountId), NF1.format(l.quantity), eur(l.valueEur), l.gainRon === null ? '—' : ron(l.gainRon)]);
+    const tr = row(instName(l.instrumentId), [accName(l.accountId), NF4.format(l.quantity), eur(l.valueEur), l.gainRon === null ? '—' : ron(l.gainRon)]);
     (tr.children[1] as HTMLElement).className = '';
     return tr;
   }));
