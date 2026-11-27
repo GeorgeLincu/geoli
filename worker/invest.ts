@@ -11,6 +11,7 @@ import { emailList } from './auth';
 import { baseHeaders, error, json } from './http';
 import { isDocName, validateDoc, MAX_DOC_BYTES } from '../src/lib/invest/validate';
 import { emptyDoc } from '../src/lib/invest/types';
+import { handleMarketApi } from './market';
 
 export const INVEST_PREFIX = 'invest/';
 const BACKUPS_KEPT = 50;
@@ -26,6 +27,9 @@ export async function handleInvest(request: Request, env: Env, url: URL, user: U
   const path = url.pathname;
   if (!isInvestOwner(user, env)) return error(404, 'Not found');
 
+  if (path === '/vault/api/invest/market' || path.startsWith('/vault/api/invest/market/')) {
+    return handleMarketApi(request, env, path.slice('/vault/api/invest/market'.length).replace(/^\//, ''));
+  }
   if (path.startsWith('/vault/api/invest/')) return handleApi(request, env, path.slice('/vault/api/invest/'.length));
 
   if (request.method !== 'GET' && request.method !== 'HEAD') return error(405, 'Method not allowed');

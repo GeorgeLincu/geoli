@@ -1,0 +1,30 @@
+/* Phase 3: prices & FX card on the investments dashboard. */
+.mk-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.mk-head .inv-h2 { margin-bottom: 0; }
+.mk-head .inv-btn[disabled] { opacity: 0.6; cursor: progress; }
+
+.mk-table-wrap { overflow-x: auto; }
+.mk-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.mk-table th, .mk-table td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.mk-table th { font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.mk-table .mk-num { text-align: right; }
+.mk-table td.mk-name { white-space: normal; min-width: 10rem; }
+.mk-table small { color: var(--text-muted); }
+
+.mk-badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid currentColor; }
+.mk-badge--ok { color: var(--ok-text); }
+.mk-badge--warn { color: var(--warn-text); }
+.mk-badge--err { color: var(--err-text); }
+.mk-badge--manual { color: var(--text-muted); }
+.mk-msg { display: block; font-size: 0.8rem; color: var(--text-muted); white-space: normal; max-width: 28ch; }
+
+.mk-override summary { cursor: pointer; font-weight: 500; }
+.mk-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-top: 0.75rem; align-items: end; }
+.mk-form label { display: grid; gap: 0.3rem; font-size: 0.85rem; color: var(--text-muted); }
+.mk-form input, .mk-form select {
+  font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface);
+  border: 1px solid var(--border-h); border-radius: 8px; padding: 0.45rem 0.6rem; min-width: 0;
+}
+.mk-form input:focus-visible, .mk-form select:focus-visible, .mk-override summary:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.mk-form__actions { display: flex; gap: 0.5rem; flex-wrap: wrap; grid-column: 1 / -1; }
+.mk-form > p { grid-column: 1 / -1; }

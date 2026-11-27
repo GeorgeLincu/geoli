@@ -93,7 +93,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 0 Fundație — owner gate, `/vault/api/invest/<doc>` (ETag + backups), layout, ECharts helper, `g i` shortcut, vitest
 - [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
 - [x] 2 Portofoliu — `/vault/invest/portofoliu/`: CRUD conturi/instrumente/tranzacții, `ledger.ts` (cost mediu ponderat, art. 97 alin. (8^2) Cod fiscal), `portfolio.ts` (evaluare, drift, rebalansare prin contribuții, scadențe), `fx.ts`/`prices.ts` (manual, interfață pentru Faza 3), Pilon 2/3 manual, export CSV
-- [ ] 3 Prețuri & cursuri
+- [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”
 - [ ] 4 Taxe RO
 - [ ] 5 Pensie & retragere
 - [ ] 6 IPS
@@ -101,6 +101,26 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [ ] 8 Întărire
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
+
+## Surse de date (faza 3)
+Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).
+
+| Data | Source | Used for | Limits |
+|---|---|---|---|
+| BNR reference rates | `https://curs.bnr.ro/nbrfxrates10days.xml` (daily run) and `https://curs.bnr.ro/files/xml/years/nbrfxrates<year>.xml` (backfill) | EUR, USD, GBP, CHF → RON | Official, free, no key. The old `www.bnr.ro/nbrfxrates.xml` URLs now redirect to the BNR home page (the Worker treats redirects as errors). Rates are published on business days around 13:00; weekends/holidays use the previous published rate (`rateOn`). |
+| Prices: Xetra, LSE, US, BVB (also Amsterdam, Milan, Paris, SIX) | Yahoo Finance chart API `query1/query2.finance.yahoo.com/v8/finance/chart/<symbol>` | Daily closes | **Unofficial**, free, no key; can change or rate-limit without notice (a call without a User-Agent got HTTP 429). Only the ticker symbol and a date range are sent, with a generic `User-Agent: Mozilla/5.0`. Some LSE lines are quoted in pence (`GBp`): converted to GBP. BVB quotes are delayed; the cron runs after the close, so the stored value is the close. One request per instrument per run; at most 20 instruments per run (free-plan limit of 50 subrequests). |
+| Rejected | Stooq (`stooq.com/q/l/`, `/q/d/l/`) | — | Now answers with a JavaScript bot check (or 404), unusable from a Worker. |
+| Rejected | Keyed APIs (Alpha Vantage, Twelve Data, EODHD, Finnhub) | — | Need an account and a secret; free tiers are small and most don't cover BVB. Kept as a fallback if Yahoo stops working. |
+
+How it works:
+- `Instrument.priceSource` = `<exchange>:<ticker>`: `xetra:VWCE` → `VWCE.DE`, `lse:VWRA` → `VWRA.L`, `us:AAPL`, `bvb:TLV` → `TLV.RO`, `ams:`, `mil:`, `par:`, `swx:`, or `yahoo:<exact symbol>`. Empty or `manual` = no automatic price.
+- Cron (`wrangler.jsonc` `triggers.crons`, weekdays, UTC): `45 17 * * 1-5` after the European close, `30 21 * * 1-5` after the US close. Each run: BNR last 10 days, BNR yearly file for missing years (years with transactions + current year, max 2 per run), then for each instrument the last 14 days (or everything since a week before its first transaction, the first time).
+- Storage: `invest/fx/<year>.json`, `invest/prices/<year>.json` (by instrument id; price in the listing currency), `invest/market-status.json` (last run, per-instrument result).
+- A failed fetch keeps the previous prices; the dashboard shows „preț vechi din <data>” when the latest price is more than 5 days old.
+- Manual price per instrument and date (`POST /vault/api/invest/market/override`, `close: null` removes it). Manual prices are never overwritten by the job.
+- „Actualizează acum”: `POST /vault/api/invest/market/refresh`, owner only, at most once every 5 minutes (HTTP 429 + `Retry-After`).
+- Pure logic and tests: `src/lib/invest/market.ts` (`parseBnrXml`, `parseYahooChart`, `rateOn`, `convert`, `latestPrice`, `isStale`…), fixtures in `src/lib/invest/__fixtures__/`.
+- Not tested live: the Cron Trigger on Cloudflare's network (only locally) and how Yahoo treats Cloudflare's egress IPs. If prices fail after deploy, the dashboard shows the error per instrument.
 
 ## Verificare (pentru fiecare fază)
 - `npm run check`, `npm run build`, `npx vitest run` verzi; CI verde (inclusiv garda anti-inline și Lighthouse).
