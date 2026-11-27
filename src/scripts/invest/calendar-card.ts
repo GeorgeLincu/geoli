@@ -13,11 +13,16 @@ async function run() {
   const list = document.getElementById('calNext');
   if (!state || !list) return;
   try {
-    const ctx = await loadCalendarContext();
+    const ctx = await loadCalendarContext(true);
     if (!ctx.data.exists) { state.textContent = 'Încă nu există date.'; return; }
     const win = windowFor(ctx.today, 0, 2);
     const items = upcoming(buildCalendar({ data: ctx.data.doc, rules: ctx.rules, today: ctx.today, from: win.from, to: win.to }), ctx.today, 30);
-    if (!items.length) { state.textContent = 'Nicio încasare așteptată în următoarele 30 de zile.'; return; }
+    const kpi = document.querySelector<HTMLElement>('[data-db="income"]');
+    if (!items.length) {
+      state.textContent = 'Nicio încasare așteptată în următoarele 30 de zile.';
+      if (kpi) kpi.textContent = '0 lei';
+      return;
+    }
     const conv = converterFor(ctx.fx, 'RON', ctx.today);
     let net = 0, principal = 0, missing = 0;
     list.replaceChildren(...items.map(i => {
@@ -32,6 +37,12 @@ async function run() {
       li.append(d, k, n, a);
       return li;
     }));
+    if (kpi) {
+      kpi.textContent = `${NF0.format(net)} lei`;
+      const small = document.createElement('small');
+      small.textContent = `${items.length} ${items.length === 1 ? 'încasare' : 'încasări'}, net estimat${principal ? ` · + ${NF0.format(principal)} lei scadențe` : ''}`;
+      kpi.append(small);
+    }
     state.textContent = `Venit net estimat: ${NF0.format(net)} RON${principal ? ` · scadențe: ${NF0.format(principal)} RON` : ''}${missing ? ` (${missing} fără curs)` : ''}.`;
   } catch (e) {
     state.textContent = (e as Error).message;

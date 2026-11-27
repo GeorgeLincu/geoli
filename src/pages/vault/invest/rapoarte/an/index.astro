@@ -1,0 +1,138 @@
+---
+// Served by the Worker for every /vault/invest/rapoarte/<year>/ (the year comes from the URL).
+import Invest from '../../../../../layouts/Invest.astro';
+import '../../../../../styles/invest-reports.css';
+---
+<Invest title="Raport anual" active="rapoarte">
+  <div class="rp-head">
+    <div>
+      <a class="rp-back" href="/vault/invest/rapoarte/">← Toate rapoartele</a>
+      <h1 class="inv-h1" id="rpTitle">Raport anual</h1>
+      <p class="inv-muted" id="rpSub"></p>
+    </div>
+    <div class="rp-actions">
+      <nav class="rp-years" id="rpYears" aria-label="Alege anul"></nav>
+      <button class="inv-btn" id="rpPrint" type="button">Tipărește / PDF</button>
+    </div>
+  </div>
+
+  <p class="inv-muted" id="rpState">Se calculează…</p>
+
+  <div class="rp-body" id="rpBody" hidden>
+    <section class="inv-card" aria-labelledby="sumTitle">
+      <h2 id="sumTitle" class="inv-h2">Pe scurt</h2>
+      <dl class="kpis" id="rpKpis"></dl>
+      <p class="rp-warn" id="rpWarn" hidden></p>
+    </section>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="wfTitle">
+        <h2 id="wfTitle" class="inv-h2">De la început la sfârșit de an</h2>
+        <div class="inv-chart" id="rpWaterfall" role="img" aria-label="Cascadă: valoarea de început, contribuții, dividende, impozit, comisioane, câștig de piață, valoarea de sfârșit"></div>
+      </section>
+      <section class="inv-card" aria-labelledby="figTitle">
+        <h2 id="figTitle" class="inv-h2">Cifrele anului</h2>
+        <div class="rp-table-wrap"><table class="rp-table" id="rpFigures"><tbody></tbody></table></div>
+      </section>
+    </div>
+
+    <section class="inv-card" aria-labelledby="hmTitle">
+      <h2 id="hmTitle" class="inv-h2">Randamente lunare</h2>
+      <p class="rp-note">Randament ponderat în timp pe fiecare lună (Modified Dietz), deci fără efectul contribuțiilor. Albastru = lună pe plus, roșu = pe minus.</p>
+      <div class="inv-chart" id="rpHeatmap" role="img" aria-label="Hartă termică a randamentelor lunare, pe ani și luni"></div>
+      <details class="rp-method rp-print-open">
+        <summary>Tabelul cu randamentele lunare</summary>
+        <div class="rp-table-wrap"><table class="rp-table" id="rpMonths"></table></div>
+      </details>
+    </section>
+
+    <section class="inv-card" aria-labelledby="ddTitle">
+      <h2 id="ddTitle" class="inv-h2">Scădere de la maxim</h2>
+      <p class="rp-note">Cât era portofoliul sub cel mai bun nivel atins până atunci (indice ponderat în timp, fără contribuții). Zona marcată e anul raportului.</p>
+      <div class="inv-chart inv-chart--short" id="rpDrawdown" role="img" aria-label="Scăderea portofoliului sub maximul anterior, lună de lună"></div>
+    </section>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="alTitle">
+        <h2 id="alTitle" class="inv-h2">Alocare la sfârșitul perioadei, față de țintă</h2>
+        <p class="inv-muted" id="rpAllocState"></p>
+        <div class="rp-table-wrap"><table class="rp-table" id="rpAlloc" hidden>
+          <thead><tr><th scope="col">Rând țintă</th><th scope="col" class="num">Valoare</th><th scope="col" class="num">Actual</th><th scope="col" class="num">Țintă</th><th scope="col">Stare</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <h3 class="inv-h2">Pe clase de active</h3>
+        <div class="rp-table-wrap"><table class="rp-table" id="rpClasses"><tbody></tbody></table></div>
+      </section>
+
+      <section class="inv-card" aria-labelledby="ipsTitle">
+        <h2 id="ipsTitle" class="inv-h2">Respectarea IPS</h2>
+        <p class="inv-muted" id="rpIpsState"></p>
+        <ul class="rp-checks" id="rpIps"></ul>
+      </section>
+    </div>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="fiTitle">
+        <h2 id="fiTitle" class="inv-h2">Progres FI și avere netă</h2>
+        <dl class="kpis" id="rpFi"></dl>
+        <p class="rp-note" id="rpFiNote"></p>
+      </section>
+      <section class="inv-card" aria-labelledby="taxTitle">
+        <h2 id="taxTitle" class="inv-h2">Impozite pentru venitul anului</h2>
+        <dl class="kpis" id="rpTax"></dl>
+        <p class="rp-note" id="rpTaxNote"></p>
+      </section>
+    </div>
+
+    <section class="inv-card no-print" aria-labelledby="snapTitle" id="rpSnapCard">
+      <h2 id="snapTitle" class="inv-h2">Instantaneu la 31 decembrie</h2>
+      <p class="inv-muted" id="rpSnapState"></p>
+      <form class="rp-edit" id="rpSnapForm" hidden>
+        <label>Valoarea portofoliului corectată (EUR) <small>gol = valoarea calculată</small>
+          <input type="text" name="portfolioEur" inputmode="decimal" autocomplete="off" />
+        </label>
+        <label>Avere netă corectată (EUR) <small>gol = valoarea calculată</small>
+          <input type="text" name="netWorthEur" inputmode="decimal" autocomplete="off" />
+        </label>
+        <label>Inflația anului (%) <small>pentru randamentul real</small>
+          <input type="text" name="inflationPct" inputmode="decimal" autocomplete="off" />
+        </label>
+        <label>Sursa inflației <small>ex. Eurostat HICP zona euro</small>
+          <input type="text" name="inflationSource" maxlength="500" autocomplete="off" />
+        </label>
+        <label class="rp-edit__wide">Notă
+          <textarea name="note" rows="2" maxlength="2000"></textarea>
+        </label>
+        <div class="rp-edit__actions">
+          <button class="inv-btn inv-btn--primary" type="submit">Salvează</button>
+          <button class="inv-btn" type="button" id="rpRecalc">Recalculează din registru</button>
+        </div>
+      </form>
+      <details class="rp-method">
+        <summary>De unde iei inflația?</summary>
+        <ul>
+          <li>Randamentul de aici e în EUR, deci se potrivește inflația zonei euro: Eurostat, HICP, rata anuală medie (setul de date „prc_hicp_aind”, „Euro area”), pe ec.europa.eu/eurostat.</li>
+          <li>Dacă vrei să compari cu prețurile din România: INS, „Indicele prețurilor de consum” (comunicatul din ianuarie: rata anuală decembrie față de decembrie, sau media anuală), pe insse.ro.</li>
+          <li>Scrie valoarea și sursa aleasă; aplicația nu o descarcă singură.</li>
+        </ul>
+      </details>
+    </section>
+
+    <details class="inv-card rp-method rp-print-open">
+      <summary><strong>Cum se calculează</strong></summary>
+      <ul>
+        <li>Perimetru: toate conturile, fără Pilon 2/3 (valorile lor sunt introduse manual, fără contribuții). Sume în EUR, la cursul BNR din ziua fiecărei tranzacții; valorile la sfârșit de lună cu ultimul preț salvat până la acea dată (fără preț: la cost).</li>
+        <li>Contribuții: la conturile cu depuneri/retrageri, depunerile și retragerile; la celelalte, cumpărările intră, vânzările ies. La conturile fără cash urmărit, dividendele și dobânzile ies din portofoliu („Venituri retrase”).</li>
+        <li>Câștig de piață = sfârșit − început − contribuții nete − dividende și dobânzi + impozit reținut + comisioane + venituri retrase. Adică doar schimbarea de preț și de curs.</li>
+        <li>TWR: randamentele lunare (Modified Dietz) înlănțuite; nu depinde de când ai pus bani. XIRR: randamentul ponderat cu banii (pentru un an incomplet, rata pe perioadă).</li>
+        <li>Randament real = (1 + TWR) / (1 + inflație) − 1, cu inflația notată de tine pentru acel an.</li>
+        <li>Alocarea e comparată cu ținta de azi din Portofoliu; regulile IPS sunt cele din versiunea în vigoare la sfârșitul perioadei. Progresul FI folosește numărul FI din Plan (setările de azi).</li>
+        <li>Impozitele vin din aceleași calcule ca pagina Taxe (parametrii pe anul respectiv). Nu e consultanță fiscală.</li>
+      </ul>
+    </details>
+  </div>
+</Invest>
+
+<script>
+  import '../../../../../scripts/invest/report-year';
+</script>

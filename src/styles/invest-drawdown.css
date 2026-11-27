@@ -1,9 +1,9 @@
 /* /vault/invest/oportunitati/ — "Scădere de la maxim" + e-mail alerts. Separate file to avoid conflicts in invest.css. */
 
 /* Level colours: shallow → deep. Text colours from base.css tokens (AA in both themes). */
-.dd-lvl-1 { --dd-c: var(--inv-c4); }
-.dd-lvl-2 { --dd-c: var(--inv-c6); }
-.dd-lvl-3 { --dd-c: var(--inv-c5); }
+/* Levels are severity (status colours), not series identity */
+.dd-lvl-1, .dd-lvl-2 { --dd-c: var(--warn-text); }
+.dd-lvl-3 { --dd-c: var(--err-text); }
 .dd-lvl-4, .dd-lvl-5 { --dd-c: var(--err-text); }
 
 .dd-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }

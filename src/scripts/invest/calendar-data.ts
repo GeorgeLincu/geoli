@@ -1,6 +1,6 @@
 // Loads what the income calendar needs (data.json, tax-rules.json, BNR rates) — shared by the
 // Calendar page and the dashboard card.
-import { loadDoc, loadMarket, type Loaded } from './api';
+import { loadDoc, loadMarket, loadDocOnce, loadMarketOnce, type Loaded } from './api';
 import { manualFx, chainFx, convert, type FxSource } from '../../lib/invest/fx';
 import { bnrFx, marketYears } from '../../lib/invest/market-sources';
 import type { Currency, TaxRules } from '../../lib/invest/types';
@@ -18,11 +18,13 @@ export interface CalendarContext {
   today: string;
 }
 
-export async function loadCalendarContext(): Promise<CalendarContext> {
+/** `shared`: read-only callers (dashboard) reuse the page-wide requests instead of fetching again. */
+export async function loadCalendarContext(shared = false): Promise<CalendarContext> {
   const today = todayIso();
-  const [data, rules] = await Promise.all([loadDoc('data'), loadDoc('tax-rules').catch(() => null)]);
+  const get = shared ? loadDocOnce : loadDoc;
+  const [data, rules] = await Promise.all([get('data'), get('tax-rules').catch(() => null)]);
   const years = marketYears(data.doc.transactions.map(t => t.date), today);
-  const market = await loadMarket(years).catch(() => ({ fx: [], prices: [] }));
+  const market = await (shared ? loadMarketOnce : loadMarket)(years).catch(() => ({ fx: [], prices: [] }));
   const fx = chainFx(bnrFx(market.fx), manualFx(data.doc.fxRates ?? []));
   return { data, rules: rules?.exists ? rules.doc : null, fx, today };
 }

@@ -161,12 +161,36 @@ export interface Scenario {
   createdAt: string;
 }
 
-/** Year-end snapshot (Phase 7). */
-export interface Snapshot {
+/**
+ * Year-end snapshot (Phase 7): invest/snapshots/<year>-12-31.json.
+ * `computed` is filled automatically from the ledger + prices (+ netWorthAt); the top-level fields are
+ * George's corrections and inputs, which win over the computed values in the reports.
+ */
+export interface YearSnapshot {
+  version: typeof SCHEMA_VERSION;
+  year: number;
+  /** Always `<year>-12-31` */
   date: string;
-  totalEur: number;
-  byAssetClass: Partial<Record<AssetClass, number>>;
-  contributionsYtd?: number;
+  createdAt: string;
+  updatedAt: string;
+  computed: {
+    computedAt: string;
+    /** Report scope: every account except Pillar 2/3 */
+    portfolioEur: number;
+    portfolioRon: number;
+    byAssetClass: Partial<Record<AssetClass, number>>;
+    netWorthEur: number;
+    netWorthRon: number;
+    /** Positions valued at cost (no price on 31 Dec) */
+    atCost: number;
+    missingFx: Currency[];
+  };
+  /** Corrected portfolio value (EUR) */
+  portfolioEur?: number;
+  /** Corrected net worth (EUR) */
+  netWorthEur?: number;
+  /** Inflation of that year as a decimal (0.051 = 5.1%), entered by George, with where it comes from */
+  inflation?: { rate: number; source?: string };
   note?: string;
 }
 

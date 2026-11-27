@@ -3,11 +3,93 @@ import Invest from '../../../layouts/Invest.astro';
 import '../../../styles/invest-market.css';
 import '../../../styles/invest-ips.css';
 import '../../../styles/invest-calendar.css';
-import '../../../styles/invest-networth.css';
+import '../../../styles/invest-reports.css';
 ---
 <Invest title="Panou" active="panou">
-  <h1 class="inv-h1">Panou</h1>
-  <p class="inv-lead">Secțiunea privată de investiții. Fundația e gata; paginile Portofoliu, Plan, Pensie, Taxe, IPS și Rapoarte vin pe rând.</p>
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Panou</h1>
+      <p class="inv-muted" id="dbDate"></p>
+    </div>
+    <div class="db-links">
+      <a href="/vault/invest/portofoliu/">+ Tranzacție</a>
+      <a href="/vault/invest/rapoarte/">Rapoarte anuale</a>
+    </div>
+  </div>
+
+  <section class="inv-card" aria-labelledby="dbKpiTitle">
+    <h2 id="dbKpiTitle" class="plan-sr">Cifrele principale</h2>
+    <dl class="kpis" id="dbKpis">
+      <div class="kpi kpi--hero"><dt>Avere netă</dt><dd data-db="networth">—</dd></div>
+      <div class="kpi"><dt>Portofoliu</dt><dd data-db="portfolio">—</dd></div>
+      <div class="kpi"><dt>Progres FI</dt><dd data-db="fi">—</dd></div>
+      <div class="kpi"><dt>Ani până la FI</dt><dd data-db="yearsFi">—</dd></div>
+      <div class="kpi"><dt>Randament de la 1 ianuarie</dt><dd data-db="ytd">—</dd></div>
+      <div class="kpi"><dt>Abatere de la țintă</dt><dd data-db="drift">—</dd></div>
+      <div class="kpi"><dt>Încasări în 30 de zile</dt><dd data-db="income">—</dd></div>
+      <div class="kpi"><dt>Prețuri actualizate</dt><dd data-db="prices">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="dbState">Se calculează…</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="dbAlertsTitle">
+    <h2 id="dbAlertsTitle" class="inv-h2">De verificat</h2>
+    <p class="inv-muted" id="dbAlertsState">Se verifică…</p>
+    <ul class="db-alerts" id="dbAlerts"></ul>
+  </section>
+
+  <section class="inv-card" aria-labelledby="dbNwTitle">
+    <h2 id="dbNwTitle" class="inv-h2">Avere netă în timp, pe clase de active</h2>
+    <div class="inv-chart inv-chart--tall" id="dbNwChart" role="img" aria-label="Averea netă la sfârșitul fiecărei luni, stivuită pe clase de active, cu datoriile sub zero și linia averii nete"></div>
+    <p class="rp-note" id="dbNwNote"></p>
+  </section>
+
+  <div class="db-grid">
+    <section class="inv-card" aria-labelledby="calTitle" id="calCard">
+      <h2 id="calTitle" class="inv-h2">Încasări în următoarele 30 de zile</h2>
+      <p class="inv-muted" id="calState">Se încarcă…</p>
+      <ul class="cal-next" id="calNext"></ul>
+      <a class="cal-link" href="/vault/invest/calendar/">Deschide calendarul →</a>
+    </section>
+
+    <section class="inv-card" aria-labelledby="marketTitle" id="market">
+      <div class="mk-head">
+        <h2 id="marketTitle" class="inv-h2">Prețuri și cursuri</h2>
+        <button class="inv-btn" id="refreshBtn" type="button">Actualizează acum</button>
+      </div>
+      <dl class="inv-stats">
+        <div><dt>Ultima actualizare</dt><dd data-mk="lastRun">—</dd></div>
+        <div><dt>EUR → RON (BNR)</dt><dd data-mk="eur">—</dd></div>
+        <div><dt>USD → RON (BNR)</dt><dd data-mk="usd">—</dd></div>
+      </dl>
+      <p class="inv-muted" id="mkState">Se încarcă…</p>
+      <details class="db-more">
+        <summary>Prețul fiecărui instrument</summary>
+        <div class="mk-table-wrap">
+          <table class="mk-table" id="mkTable" hidden>
+            <thead><tr><th scope="col">Instrument</th><th scope="col">Sursă</th><th scope="col" class="mk-num">Preț</th><th scope="col">Data</th><th scope="col">Stare</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="inv-muted">Prețurile se iau automat în zilele lucrătoare, după închiderea burselor (cursul BNR, apoi prețul de închidere). Se trimit doar simbolurile bursiere, nimic personal.</p>
+      </details>
+
+      <details class="mk-override" id="overrideBox" hidden>
+        <summary>Preț introdus manual</summary>
+        <form id="overrideForm" class="mk-form">
+          <label>Instrument <select name="instrumentId" required></select></label>
+          <label>Data <input type="date" name="date" required /></label>
+          <label>Preț <input type="number" name="close" step="any" min="0" inputmode="decimal" /></label>
+          <label>Moneda <select name="currency"><option>EUR</option><option>RON</option><option>USD</option><option>GBP</option><option>CHF</option></select></label>
+          <div class="mk-form__actions">
+            <button class="inv-btn inv-btn--primary" type="submit">Salvează prețul</button>
+            <button class="inv-btn" type="button" id="overrideRemove">Șterge prețul manual</button>
+          </div>
+          <p class="inv-muted">Prețul manual are prioritate și nu e suprascris de actualizarea automată. Lasă câmpul gol și apasă „Șterge” ca să revii la prețul automat.</p>
+        </form>
+      </details>
+    </section>
+  </div>
 
   <section class="inv-card" aria-labelledby="storeTitle">
     <h2 id="storeTitle" class="inv-h2">Datele tale</h2>
@@ -20,79 +102,10 @@ import '../../../styles/invest-networth.css';
     <p class="inv-muted" id="storeState">Se încarcă…</p>
     <button class="inv-btn inv-btn--primary" id="initBtn" type="button" hidden>Creează fișierul de date (gol)</button>
   </section>
-
-  <section class="inv-card" aria-labelledby="nwCardTitle" id="nwCard">
-    <h2 id="nwCardTitle" class="inv-h2">Avere netă</h2>
-    <dl class="inv-stats nw-stats">
-      <div class="nw-stat--main"><dt>Total (EUR)</dt><dd data-nwc="netEur">—</dd></div>
-      <div><dt>Total (RON)</dt><dd data-nwc="netRon">—</dd></div>
-      <div><dt>Fond de urgență</dt><dd data-nwc="ef">—</dd></div>
-      <div><dt>Datorii / active</dt><dd data-nwc="ratio">—</dd></div>
-    </dl>
-    <p class="inv-muted" id="nwCardState">Se calculează…</p>
-    <a class="nw-card-link" href="/vault/invest/avere/">Deschide Avere netă →</a>
-  </section>
-
-  <section class="inv-card" aria-labelledby="ipsTitle" id="ipsCard">
-    <h2 id="ipsTitle" class="inv-h2">Reguli IPS</h2>
-    <p class="inv-muted" id="ipsAlertsState">Se verifică…</p>
-    <ul class="ips-alerts" id="ipsAlerts"></ul>
-    <a class="ips-link" href="/vault/invest/ips/">Deschide IPS →</a>
-  </section>
-
-  <section class="inv-card" aria-labelledby="calTitle" id="calCard">
-    <h2 id="calTitle" class="inv-h2">Încasări în următoarele 30 de zile</h2>
-    <p class="inv-muted" id="calState">Se încarcă…</p>
-    <ul class="cal-next" id="calNext"></ul>
-    <a class="cal-link" href="/vault/invest/calendar/">Deschide calendarul →</a>
-  </section>
-
-  <section class="inv-card" aria-labelledby="marketTitle" id="market">
-    <div class="mk-head">
-      <h2 id="marketTitle" class="inv-h2">Prețuri și cursuri</h2>
-      <button class="inv-btn" id="refreshBtn" type="button">Actualizează acum</button>
-    </div>
-    <dl class="inv-stats">
-      <div><dt>Ultima actualizare</dt><dd data-mk="lastRun">—</dd></div>
-      <div><dt>EUR → RON (BNR)</dt><dd data-mk="eur">—</dd></div>
-      <div><dt>USD → RON (BNR)</dt><dd data-mk="usd">—</dd></div>
-    </dl>
-    <p class="inv-muted" id="mkState">Se încarcă…</p>
-    <div class="mk-table-wrap">
-      <table class="mk-table" id="mkTable" hidden>
-        <thead><tr><th scope="col">Instrument</th><th scope="col">Sursă</th><th scope="col" class="mk-num">Preț</th><th scope="col">Data</th><th scope="col">Stare</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <p class="inv-muted">Prețurile se iau automat în zilele lucrătoare, după închiderea burselor (cursul BNR, apoi prețul de închidere). Se trimit doar simbolurile bursiere, nimic personal.</p>
-
-    <details class="mk-override" id="overrideBox" hidden>
-      <summary>Preț introdus manual</summary>
-      <form id="overrideForm" class="mk-form">
-        <label>Instrument <select name="instrumentId" required></select></label>
-        <label>Data <input type="date" name="date" required /></label>
-        <label>Preț <input type="number" name="close" step="any" min="0" inputmode="decimal" /></label>
-        <label>Moneda <select name="currency"><option>EUR</option><option>RON</option><option>USD</option><option>GBP</option><option>CHF</option></select></label>
-        <div class="mk-form__actions">
-          <button class="inv-btn inv-btn--primary" type="submit">Salvează prețul</button>
-          <button class="inv-btn" type="button" id="overrideRemove">Șterge prețul manual</button>
-        </div>
-        <p class="inv-muted">Prețul manual are prioritate și nu e suprascris de actualizarea automată. Lasă câmpul gol și apasă „Șterge” ca să revii la prețul automat.</p>
-      </form>
-    </details>
-  </section>
-
-  <section class="inv-card" aria-labelledby="demoTitle">
-    <h2 id="demoTitle" class="inv-h2">Exemplu de grafic</h2>
-    <p class="inv-muted">Doar un exemplu de calcul (nu datele tale): 100 € pe lună timp de 30 de ani, la un randament real ipotetic de 5% pe an.</p>
-    <div class="inv-chart" id="demoChart" role="img" aria-label="Grafic exemplu: contribuții cumulate față de valoarea cu dobândă compusă"></div>
-  </section>
 </Invest>
 
 <script>
   import '../../../scripts/invest/dashboard';
   import '../../../scripts/invest/market';
-  import '../../../scripts/invest/ips-alerts';
   import '../../../scripts/invest/calendar-card';
-  import '../../../scripts/invest/networth-card';
 </script>

@@ -1,7 +1,8 @@
 // /vault/invest/ dashboard — Phase 6: alerts from the machine-checkable IPS rules.
 // Gathers the facts (valuation, drift, this month's contributions, drawdown) and hands them to ips-checks.
-import { loadDoc, loadMarket } from './api';
-import { activeIpsRules, latestIpsVersion, ipsAlerts, monthContributions, drawdownFromCloses, type IpsFacts } from '../../lib/invest/ips-checks';
+// Phase 7: the dashboard calls collectIpsAlerts() and shows them with the other alerts.
+import { loadDocOnce as loadDoc, loadMarketOnce as loadMarket } from './api';
+import { activeIpsRules, latestIpsVersion, ipsAlerts, monthContributions, drawdownFromCloses, type IpsFacts, type IpsAlert } from '../../lib/invest/ips-checks';
 import { computeLedger } from '../../lib/invest/ledger';
 import { manualFx, chainFx, convert } from '../../lib/invest/fx';
 import { manualPrices, chainPrices } from '../../lib/invest/prices';
@@ -11,44 +12,22 @@ import { valuePortfolio, computeDrift } from '../../lib/invest/portfolio';
 /** Same fallback band as the Portofoliu page (rows without their own band). */
 const DEFAULT_BAND = 0.05;
 
-const $ = <T extends HTMLElement = HTMLElement>(sel: string) => document.querySelector(sel) as T;
-
 function todayIso() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function li(level: string, title: string, detail?: string, href?: string) {
-  const el = document.createElement('li');
-  el.className = `ips-alert ips-alert--${level}`;
-  const t = document.createElement('strong');
-  t.textContent = title;
-  el.append(t);
-  if (detail) { const d = document.createElement('span'); d.textContent = detail; el.append(d); }
-  if (href && href !== location.pathname) {
-    const a = document.createElement('a');
-    a.href = href;
-    a.textContent = href.includes('/ips/') ? 'Vezi IPS →' : href.includes('/portofoliu/') ? 'Vezi portofoliul →' : 'Deschide →';
-    el.append(a);
-  }
-  return el;
-}
+export interface IpsAlertsResult { alerts: IpsAlert[]; summary: string }
 
-const warnCount = (n: number) => (n === 0 ? 'Doar informări' : n === 1 ? 'O alertă de verificat' : `${n} alerte de verificat`);
-
-async function run() {
-  const state = $('#ipsAlertsState');
-  const list = $('#ipsAlerts');
-  if (!state || !list) return;
-  try {
+/** IPS alerts for today, with a one-line summary (which version, or why there are none). */
+export async function collectIpsAlerts(): Promise<IpsAlertsResult> {
     const ips = await loadDoc('ips');
     const active = ips.exists ? activeIpsRules(ips.doc) : null;
     if (!active) {
       const v = ips.exists ? latestIpsVersion(ips.doc) : null;
-      state.textContent = v
+      return { alerts: [], summary: v
         ? 'IPS-ul tău nu are reguli verificabile. Le poți adăuga în IPS (opțional), apoi salvezi o versiune nouă.'
-        : 'Nu ai salvat încă un IPS. După prima versiune, regulile verificabile apar aici.';
-      return;
+        : 'Nu ai salvat încă un IPS. După prima versiune, regulile verificabile apar aici.' };
     }
     const { rules } = active;
     const today = todayIso();
@@ -91,13 +70,6 @@ async function run() {
     }
 
     const alerts = ipsAlerts(ips.doc, facts);
-    list.replaceChildren(...alerts.map(a => li(a.level, a.title, a.detail, a.href)));
-    state.textContent = alerts.length
-      ? `${warnCount(alerts.filter(a => a.level === 'warn').length)}, conform IPS-ului din ${active.version.date.split('-').reverse().join('.')}.`
-      : `Totul e în regulă conform IPS-ului din ${active.version.date.split('-').reverse().join('.')}.`;
-  } catch (e) {
-    state.textContent = `Regulile IPS nu au putut fi verificate: ${(e as Error).message}`;
-  }
+    const when = active.version.date.split('-').reverse().join('.');
+    return { alerts, summary: alerts.length ? `Conform IPS-ului din ${when}.` : `Regulile IPS sunt respectate (IPS-ul din ${when}).` };
 }
-
-void run();
