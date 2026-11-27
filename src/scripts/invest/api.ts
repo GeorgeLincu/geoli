@@ -1,5 +1,6 @@
 // Client for /vault/api/invest/<doc>. Optimistic concurrency: every save sends the ETag it loaded.
 import type { DocName, InvestData, TaxRules, IpsDoc } from '../../lib/invest/types';
+import type { FxYear, PricesYear } from '../../lib/invest/market';
 
 type DocMap = { data: InvestData; 'tax-rules': TaxRules; ips: IpsDoc };
 
@@ -40,4 +41,30 @@ export async function saveDoc<N extends DocName>(name: N, loaded: Loaded<N>, doc
   if (!res.ok) return fail(res);
   const body = (await res.json()) as { saved: string };
   return { doc, exists: true, etag: res.headers.get('ETag'), saved: body.saved };
+}
+
+// ─── Market data (Phase 3 store) ───
+
+async function getYear<T>(kind: 'fx' | 'prices', year: number): Promise<T | null> {
+  const res = await fetch(`/vault/api/invest/market/${kind}/${year}`, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+  if (!res.ok) return fail(res);
+  const body = (await res.json()) as T & { missing?: boolean };
+  return body.missing ? null : body;
+}
+
+/** BNR rates and price documents for the given years (missing years are skipped). */
+export async function loadMarket(years: number[]): Promise<{ fx: FxYear[]; prices: PricesYear[] }> {
+  const [fx, prices] = await Promise.all([
+    Promise.all(years.map(y => getYear<FxYear>('fx', y))),
+    Promise.all(years.map(y => getYear<PricesYear>('prices', y))),
+  ]);
+  return { fx: fx.filter((d): d is FxYear => !!d), prices: prices.filter((d): d is PricesYear => !!d) };
+}
+
+/** Sets (close > 0) or removes (close = null) a manual price in the price store. */
+export async function setManualPrice(body: { instrumentId: string; date: string; close: number | null; currency: string }) {
+  const res = await fetch('/vault/api/invest/market/override', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
+  if (!res.ok) return fail(res);
 }

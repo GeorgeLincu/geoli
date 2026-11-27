@@ -4,14 +4,16 @@
 import * as echarts from 'echarts/core';
 import type { EChartsCoreOption } from 'echarts/core';
 import { SunburstChart, ScatterChart } from 'echarts/charts';
-import { loadDoc, saveDoc, type Loaded } from './api';
+import { loadDoc, saveDoc, loadMarket, setManualPrice, type Loaded } from './api';
 import { mountChart, axisStyle, type ChartTheme } from './charts';
 import { toast } from './common';
 import { validateDoc } from '../../lib/invest/validate';
 import { emptyData, type InvestData, type Transaction, type Account, type Instrument, type TargetAllocation, type Currency, type TxType, type AccountType, type AssetClass, type Region } from '../../lib/invest/types';
 import { computeLedger, yearTotals, type Ledger } from '../../lib/invest/ledger';
-import { manualFx, type FxSource } from '../../lib/invest/fx';
-import { manualPrices, type PriceSource } from '../../lib/invest/prices';
+import { manualFx, chainFx, type FxSource } from '../../lib/invest/fx';
+import { manualPrices, chainPrices, type PriceSource } from '../../lib/invest/prices';
+import { bnrFx, storePrices, manualPriceRows, marketYears } from '../../lib/invest/market-sources';
+import { latestFx, type FxYear, type PricesYear } from '../../lib/invest/market';
 import { valuePortfolio, allocationTree, computeDrift, rebalanceWithContribution, bondLadder, type Valuation, type Holding } from '../../lib/invest/portfolio';
 import { transactionsCsv } from '../../lib/invest/csv';
 import { ACCOUNT_TYPE_LABEL, ASSET_CLASS_LABEL, REGION_LABEL, TX_TYPE_LABEL } from '../../lib/invest/labels';
@@ -94,16 +96,38 @@ let fx: FxSource;
 let prices: PriceSource;
 let valuation: Valuation;
 let asOf = todayIso();
+/** Phase 3 market store: BNR rates and prices (automatic closes + manual corrections) */
+let fxDocs: FxYear[] = [];
+let priceDocs: PricesYear[] = [];
+let marketKey = '';
 
 const accName = (id?: string) => data.accounts.find(a => a.id === id)?.name ?? '—';
 const instById = (id?: string) => data.instruments.find(i => i.id === id);
 const instName = (id?: string) => { const i = instById(id); return i ? (i.ticker ? `${i.ticker} · ${i.name}` : i.name) : '—'; };
 
 function recompute() {
-  fx = manualFx(data.fxRates ?? []);
-  prices = manualPrices(data.prices ?? []);
+  // BNR first, manual rates only where BNR has nothing. Price store (manual corrections + automatic closes) first,
+  // older manual prices kept in data.json last.
+  fx = chainFx(bnrFx(fxDocs), manualFx(data.fxRates ?? []));
+  prices = chainPrices(storePrices(priceDocs, data.instruments, fx), manualPrices(data.prices ?? []));
   ledger = computeLedger(data, fx, asOf);
   valuation = valuePortfolio(data, ledger, prices, fx, asOf);
+}
+
+/** Loads BNR rates and prices for every year with a transaction (and the current one), then re-renders. */
+async function refreshMarket(force = false) {
+  const years = marketYears(data.transactions.map(t => t.date), todayIso());
+  const key = years.join(',');
+  if (!force && key === marketKey) return;
+  try {
+    const m = await loadMarket(years);
+    fxDocs = m.fx;
+    priceDocs = m.prices;
+    marketKey = key;
+    renderAll();
+  } catch (e) {
+    toast(`Cursurile BNR și prețurile automate nu s-au încărcat: ${(e as Error).message}`, 'err');
+  }
 }
 
 /** Applies a change to a copy of the data, validates, saves (ETag) and re-renders. */
@@ -118,6 +142,7 @@ async function commit(mutate: (d: InvestData) => void, okMessage: string): Promi
     data = next;
     renderAll();
     toast(okMessage);
+    void refreshMarket(); // a transaction in a new year needs that year's rates
     return true;
   } catch (e) {
     toast((e as Error).message, 'err');
@@ -219,7 +244,7 @@ function renderSummary() {
   set('income', money0(y.divRon - y.divTaxRon + y.intRon - y.intTaxRon, 'lei'));
 
   const msgs: string[] = [];
-  if (valuation.missingFx.length) msgs.push(`Lipsesc cursuri valutare pentru: ${valuation.missingFx.join(', ')} (la ${fmtDate(asOf)} sau înainte). Adaugă-le în „Cursuri & prețuri”; până atunci acele valori nu intră în total.`);
+  if (valuation.missingFx.length) msgs.push(`Lipsesc cursuri valutare pentru: ${valuation.missingFx.join(', ')} (la ${fmtDate(asOf)} sau înainte). Cursurile BNR se iau automat în zilele lucrătoare (sau apasă „Actualizează acum” în Panou); altfel adaugă-le în „Cursuri & prețuri”. Până atunci acele valori nu intră în total.`);
   const noPrice = valuation.holdings.filter(x => x.basis === 'cost').length;
   if (noPrice) msgs.push(`${noPrice} ${noPrice === 1 ? 'poziție nu are' : 'poziții nu au'} preț; sunt evaluate la cost.`);
   const txWarn = new Map<string, number>();
@@ -462,11 +487,17 @@ function renderFx() {
       actionButtons(null, () => { void commit(d => { d.fxRates = (d.fxRates ?? []).filter(x => !(x.date === r.date && x.currency === r.currency)); }, 'Cursul a fost șters.'); }, `cursul ${r.currency} din ${fmtDate(r.date)}`))),
     'Niciun curs introdus.');
 
-  const pts = [...(data.prices ?? [])].sort((a, b) => b.date.localeCompare(a.date));
-  table($('#priceTable'), ['Data', 'Instrument', ['Preț', 'num'], 'Notă', ''],
-    pts.slice(0, 300).map(p => h('tr', {}, td(fmtDate(p.date)), td(instName(p.instrumentId)), num(money(p.price, instById(p.instrumentId)?.currency)), h('td', { class: 'pf-note' }, p.note ?? ''),
-      actionButtons(null, () => { void commit(d => { d.prices = (d.prices ?? []).filter(x => !(x.date === p.date && x.instrumentId === p.instrumentId)); }, 'Prețul a fost șters.'); }, `prețul din ${fmtDate(p.date)}`))),
-    'Niciun preț introdus.');
+  const bnr = latestFx(fxDocs);
+  $('#bnrInfo').textContent = bnr
+    ? `Ultimul curs BNR (${fmtDate(bnr.date)}): ${Object.entries(bnr.rates).map(([c, r]) => `${c} ${nf(4, 4).format(r ?? 0)}`).join(' · ')}`
+    : 'Încă nu există cursuri BNR salvate. Se iau automat în zilele lucrătoare sau cu „Actualizează acum” din Panou.';
+
+  // Manual corrections live in the price store; prices in data.json are older entries kept as a fallback
+  const store = manualPriceRows(priceDocs).map(p => h('tr', {}, td(fmtDate(p.date)), td(instName(p.instrumentId)), num(money(p.close, p.currency)), h('td', { class: 'pf-note' }, ''),
+    actionButtons(null, () => { void removeStorePrice(p.instrumentId, p.date, p.currency); }, `prețul din ${fmtDate(p.date)}`)));
+  const legacy = [...(data.prices ?? [])].sort((a, b) => b.date.localeCompare(a.date)).map(p => h('tr', {}, td(fmtDate(p.date)), td(instName(p.instrumentId)), num(money(p.price, instById(p.instrumentId)?.currency)), h('td', { class: 'pf-note' }, `${p.note ? `${p.note} · ` : ''}introdus înainte de prețurile automate`),
+    actionButtons(null, () => { void commit(d => { d.prices = (d.prices ?? []).filter(x => !(x.date === p.date && x.instrumentId === p.instrumentId)); }, 'Prețul a fost șters.'); }, `prețul din ${fmtDate(p.date)}`)));
+  table($('#priceTable'), ['Data', 'Instrument', ['Preț', 'num'], 'Notă', ''], [...store, ...legacy].slice(0, 300), 'Nicio corecție manuală.');
 }
 
 async function submitFx(ev: SubmitEvent) {
@@ -485,20 +516,35 @@ async function submitFx(ev: SubmitEvent) {
   if (ok) (form.elements.namedItem('ron') as HTMLInputElement).value = '';
 }
 
+/** Manual prices go to the same store as the automatic ones (the daily update never overwrites a manual entry). */
 async function submitPrice(ev: SubmitEvent) {
   ev.preventDefault();
   const form = ev.target as HTMLFormElement;
   if (!required(form, ['instrumentId', 'date', 'price'])) return;
   const nums = readNums(form, ['price']);
-  if (!nums || !(nums.price! >= 0)) { toast('Prețul trebuie să fie un număr.', 'err'); return; }
+  if (!nums || !(nums.price! > 0)) { toast('Prețul trebuie să fie un număr pozitiv.', 'err'); return; }
   const fd = new FormData(form);
-  const p = clean({ instrumentId: String(fd.get('instrumentId')), date: String(fd.get('date')), price: nums.price!, note: text(fd, 'note') });
-  const ok = await commit(d => {
-    const list = (d.prices ?? []).filter(x => !(x.date === p.date && x.instrumentId === p.instrumentId));
-    list.push(p);
-    d.prices = list;
-  }, 'Prețul a fost salvat.');
-  if (ok) (form.elements.namedItem('price') as HTMLInputElement).value = '';
+  const inst = instById(String(fd.get('instrumentId')));
+  if (!inst) { toast('Alege un instrument.', 'err'); return; }
+  try {
+    await setManualPrice({ instrumentId: inst.id, date: String(fd.get('date')), close: nums.price!, currency: inst.currency });
+    await refreshMarket(true);
+    toast('Prețul a fost salvat.');
+    (form.elements.namedItem('price') as HTMLInputElement).value = '';
+  } catch (e) {
+    toast((e as Error).message, 'err');
+  }
+}
+
+async function removeStorePrice(instrumentId: string, date: string, currency: Currency) {
+  if (!confirm('Ștergi prețul introdus manual? La următoarea actualizare se folosește prețul automat, dacă există.')) return;
+  try {
+    await setManualPrice({ instrumentId, date, close: null, currency });
+    await refreshMarket(true);
+    toast('Prețul a fost șters.');
+  } catch (e) {
+    toast((e as Error).message, 'err');
+  }
 }
 
 // ─── Pensions ───
@@ -879,6 +925,7 @@ async function init() {
     loaded = await loadDoc('data');
     data = loaded.doc;
     renderAll();
+    await refreshMarket(true);
   } catch (e) {
     $('#loadState').textContent = (e as Error).message;
     toast((e as Error).message, 'err');
