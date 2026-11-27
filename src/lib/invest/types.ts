@@ -31,6 +31,44 @@ export interface Settings {
   manualCapital?: number;
   /** Market assumptions and Monte Carlo options for the plan page (Phase 1) */
   projection?: ProjectionSettings;
+  /** Retirement / withdrawal page (Phase 5) */
+  retirement?: RetirementSettings;
+}
+
+/** One glidepath point: the allocation (decimals, by asset class) George wants at `age`. */
+export interface GlidePathPoint { age: number; weights: Partial<Record<AssetClass, number>> }
+
+/** Income in retirement besides the portfolio, entered by George: NET yearly amount in today's EUR. */
+export interface RetirementIncome {
+  id: string;
+  kind: 'pillar2' | 'pillar3' | 'state' | 'other';
+  label?: string;
+  amount: number;
+  startAge: number;
+  /** Last age it is paid (inclusive); missing = for life */
+  endAge?: number;
+}
+
+/** Inputs of /vault/invest/pensie/ (Phase 5). Age, spending, SWR, inflation and returns come from the plan. */
+export interface RetirementSettings {
+  strategy?: 'constant' | 'guardrails' | 'vpw' | 'floorCeiling';
+  /** First withdrawal: spending minus other income (default) or SWR × balance at retirement */
+  initial?: 'spending' | 'swr';
+  gkGuard?: number;
+  gkAdjust?: number;
+  gkMinYearsLeft?: number;
+  /** Floor / ceiling as a share of the first withdrawal */
+  floor?: number;
+  ceiling?: number;
+  /** VPW fixed real return; missing = expected return of the allocation at that age */
+  vpwReturn?: number;
+  glidepath?: GlidePathPoint[];
+  incomes?: RetirementIncome[];
+  /** Net-of-tax estimate */
+  gainShare?: number;
+  accountType?: 'foreign_broker' | 'ro_broker';
+  /** RON per EUR; missing = latest BNR rate */
+  eurRon?: number;
 }
 
 /** Expected REAL (after inflation) compound return and yearly volatility of one asset class, as decimals. */

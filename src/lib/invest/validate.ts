@@ -63,11 +63,23 @@ const projection = record({
   historySource: [str(500), false],
 });
 
+const retirement = record({
+  strategy: [oneOf(['constant', 'guardrails', 'vpw', 'floorCeiling']), false], initial: [oneOf(['spending', 'swr']), false],
+  gkGuard: [num, false], gkAdjust: [num, false], gkMinYearsLeft: [num, false], floor: [num, false], ceiling: [num, false],
+  vpwReturn: [num, false],
+  glidepath: [list(record({ age: [num, true], weights: [byClass(num), true] }), 50), false],
+  incomes: [list(record({
+    id: [id, true], kind: [oneOf(['pillar2', 'pillar3', 'state', 'other']), true], label: [str(120), false],
+    amount: [num, true], startAge: [num, true], endAge: [num, false],
+  }), 50), false],
+  gainShare: [num, false], accountType: [oneOf(['foreign_broker', 'ro_broker']), false], eurRon: [num, false],
+});
+
 const settings = record({
   birthYear: [num, false], baseCurrency: [oneOf(['EUR']), true], monthlyContribution: [num, false],
   contributionGrowth: [num, false], yearsToInvest: [num, false], retirementSpending: [num, false],
   swr: [num, false], inflation: [num, false], manualCapital: [num, false],
-  projection: [projection, false],
+  projection: [projection, false], retirement: [retirement, false],
 });
 const account = record({
   id: [id, true], name: [str(120), true], type: [oneOf(ACCOUNT_TYPES), true], institution: [str(120), false],
