@@ -119,9 +119,26 @@ const ipsSections: Check = (v, p, e) => {
   if (!isObj(v)) { e.push(`${p}: object expected`); return; }
   for (const [k, x] of Object.entries(v)) str(50_000)(x, `${p}.${k}`, e);
 };
+const range = (min: number, max: number, int = false): Check => (v, p, e) => {
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max || (int && !Number.isInteger(v))) {
+    e.push(`${p}: ${int ? 'whole ' : ''}number between ${min} and ${max} expected`);
+  }
+};
+const ipsRules = record({
+  driftAlerts: [bool, false],
+  emergencyFund: [record({ months: [range(0, 120), true], monthlyExpenses: [range(0, 1e9), true], accountIds: [list(id, 100), true] }), false],
+  contribution: [record({ amount: [range(0, 1e9), true], day: [range(1, 31, true), true], graceDays: [range(0, 31, true), false] }), false],
+  reviewMonth: [range(1, 12, true), false],
+  taxReturn: [record({ month: [range(1, 12, true), true], day: [range(1, 31, true), true], remindDaysBefore: [range(0, 366, true), false] }), false],
+  crash: [record({
+    referenceInstrumentId: [id, false],
+    rules: [list(record({ id: [id, true], dropPct: [range(0, 1), true], action: [str(1000), false], extraAmount: [range(0, 1e9), false] }), 50), true],
+  }), false],
+});
 const ips = record({
   version: [versionCheck, true],
-  versions: [list(record({ date: [date, true], changeNote: [str(1000), false], sections: [ipsSections, true] }), 500), true],
+  versions: [list(record({ date: [date, true], changeNote: [str(1000), false], sections: [ipsSections, true], rules: [ipsRules, false] }), 500), true],
+  draft: [record({ savedAt: [str(40), true], sections: [ipsSections, true], rules: [ipsRules, false] }), false],
 });
 
 const CHECKS: Record<DocName, Check> = { data, 'tax-rules': taxRules, ips };
