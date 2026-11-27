@@ -102,7 +102,7 @@ const data = record({
   pensionValues: [list(pensionValue, 5000), false],
 });
 
-const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false] });
+const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false], confirmed: [bool, false] });
 const taxParams: Check = (v, p, e) => {
   if (!isObj(v)) { e.push(`${p}: object expected`); return; }
   for (const [k, x] of Object.entries(v)) {

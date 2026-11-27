@@ -94,7 +94,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
 - [x] 2 Portofoliu — `/vault/invest/portofoliu/`: CRUD conturi/instrumente/tranzacții, `ledger.ts` (cost mediu ponderat, art. 97 alin. (8^2) Cod fiscal), `portfolio.ts` (evaluare, drift, rebalansare prin contribuții, scadențe), `fx.ts`/`prices.ts` (manual, interfață pentru Faza 3), Pilon 2/3 manual, export CSV
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”. Portofoliul folosește aceleași cursuri BNR și prețuri (un singur loc pentru corecțiile manuale): `src/lib/invest/market-sources.ts`
-- [ ] 4 Taxe RO
+- [x] 4 Taxe RO — `/vault/invest/taxe/`: `tax-ro.ts` (foreign broker yearly net gain + loss carry-forward with cap, RO-broker withholding by FIFO holding period, RO/foreign dividends and interest with capped foreign tax credit, Tezaur/Fidelis exemption, CASS tiers, effective rate, `estimateSales` / `estimateWithdrawal` for Phase 5), per-year parameter editor (source, verified on, confirmed per value), printable „Fișă Declarația Unică” with BNR rates used, CASS step chart. Researched 2025/2026 values in `tax-ro-defaults.ts` (all `confirmed: false` until George confirms). Details: § „Reguli fiscale (faza 4)”
 - [ ] 5 Pensie & retragere
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [ ] 7 Rapoarte anuale & Panou
@@ -145,6 +145,27 @@ How it works:
   (valuation with BNR rates + price store, drift with the Portofoliu default scope — no Pillar 2/3, with cash — and the same 5 pp fallback band).
 - Crash rules: drawdown = latest saved close vs the highest saved close of the reference instrument (price store, plus older manual prices in `data.json`).
 - Diff: line-based (`src/lib/invest/ips-diff.ts`); the rules are compared as readable lines. Print view: „Vizualizare pentru tipărire” → „Tipărește / PDF”.
+
+## Reguli fiscale (faza 4)
+Researched on 2026-11-27 from the Codul fiscal consolidated to 25.10.2026 (legislatie.just.ro 171282), Norme HG 1/2016 (307847),
+Legea 141/2025, Legea 239/2025 and the US–RO treaty. Every value, with article and link, is in `src/lib/invest/tax-ro-defaults.ts`;
+George loads them on the page („Încarcă valorile cercetate”), checks and confirms them. The stored copy is `invest/tax-rules.json`.
+
+| | 2025 | 2026 |
+|---|---|---|
+| Foreign broker, yearly net gain (DU) | 10% | 16% |
+| RO broker withholding ≥365 / <365 days (final) | 1% / 3% | 3% / 6% |
+| Dividends | 10% | 16% |
+| Interest (Tezaur/Fidelis exempt) | 10% | 10% |
+| Loss carry-forward (foreign) | 5 years, max 70% of the year's gain | same |
+| CASS 10%: 6/12/24 minimum wages; wage on 1 Jan of the income year | 4 050 lei | 4 050 lei |
+| FX: gains at the daily BNR rate, foreign income at the yearly average | | |
+| DU deadline | 25 May of the next year | |
+Not modelled / open doubts (shown in the parameter notes): losses offset "per country"; losses from before 2024 keep their 7-year window;
+whether RO-broker gains count gross or net for CASS; whether foreign income counts net of foreign tax for CASS; whether carried
+losses reduce the CASS base; the rate for the purchase leg of foreign-currency trades; exact DU rows.
+Engine API for Phase 5: `rulesFor(rules, year)` → `estimateWithdrawal(set, { year, withdrawalRon, gainShare, … })`
+returns income tax, CASS, net amount and effective rate; `estimateSales` gives the marginal cost of planned sales.
 
 ## Verificare (pentru fiecare fază)
 - `npm run check`, `npm run build`, `npx vitest run` verzi; CI verde (inclusiv garda anti-inline și Lighthouse).

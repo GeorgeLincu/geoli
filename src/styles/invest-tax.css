@@ -1,0 +1,49 @@
+/* Taxe page (/vault/invest/taxe/, phase 4). Reuses the pf-* table/form classes from invest-portfolio.css. */
+
+.tx-disclaimer {
+  border: 1px solid var(--border-h); border-left: 4px solid var(--warn-text);
+  border-radius: 12px; padding: 0.75rem 1rem; background: var(--surface);
+  font-size: 0.92rem; max-width: 80ch;
+}
+
+.tx-status { border-radius: 10px; padding: 0.5rem 0.75rem; font-size: 0.92rem; background: var(--surface); border-left: 4px solid var(--border-h); }
+.tx-status[hidden] { display: none; }
+.tx-status--ok { border-left-color: var(--ok-text); }
+.tx-status--warn { border-left-color: var(--warn-text); }
+.tx-status--err { border-left-color: var(--err-text); }
+
+.pf-table tr.tx-strong td { font-weight: 600; }
+
+/* Rules editor */
+.tx-group { border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem 1rem; margin: 0 0 1rem; display: grid; gap: 0.9rem; min-width: 0; }
+.tx-group legend { font-weight: 600; padding: 0 0.35rem; }
+.tx-param { display: grid; gap: 0.4rem; padding-bottom: 0.9rem; border-bottom: 1px solid var(--border); }
+.tx-param:last-child { border-bottom: 0; padding-bottom: 0; }
+.tx-param--unconfirmed { border-left: 3px solid var(--warn-text); padding-left: 0.6rem; }
+.tx-param__label { font-weight: 500; display: grid; gap: 0.15rem; }
+.tx-param__label small { font-weight: 400; color: var(--text-muted); }
+.tx-param__value { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.tx-param__value .pf-input { width: 10rem; }
+.tx-param__meta { display: grid; grid-template-columns: 2fr 10rem 1.5fr auto; gap: 0.5rem; align-items: center; }
+.tx-param__meta a { font-size: 0.85rem; color: var(--accent-text); white-space: nowrap; }
+@media (max-width: 760px) {
+  .tx-param__meta { grid-template-columns: 1fr; }
+}
+
+/* Declarația Unică sheet */
+.tx-sheet__head { display: grid; gap: 0.5rem; margin-bottom: 0.5rem; }
+.tx-sheet__sec { break-inside: avoid; }
+.tx-sheet__sec .pf-table td:first-child { width: 55%; }
+
+@media print {
+  body.inv { background: #fff; color: #000; }
+  .inv-top, .inv-nav, .inv-toast, .tx-noprint, .inv-h1, .inv-lead, main > .tx-disclaimer,
+  main > section:not(.tx-sheet) { display: none !important; }
+  .tx-sheet { display: grid !important; border: 0; padding: 0; background: #fff; }
+  .tx-sheet .pf-scroll { overflow: visible; }
+  .tx-sheet .pf-table { font-size: 10pt; }
+  .tx-sheet .pf-table th, .tx-sheet .pf-table td { color: #000; border-color: #bbb; }
+  .tx-sheet .inv-muted, .tx-sheet .pf-note { color: #333; }
+  .tx-disclaimer { background: #fff; border-color: #999; }
+  .inv-main { width: 100%; padding: 0; }
+}
