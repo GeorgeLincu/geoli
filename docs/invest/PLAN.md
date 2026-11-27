@@ -98,6 +98,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] Extra: import CSV — `/vault/invest/import/` (link „Importă CSV” în Portofoliu → Tranzacții). Detalii: secțiunea „Import CSV”.
 - [x] 5 Pensie & retragere — `/vault/invest/pensie/`: `withdrawal.ts` (sumă constantă reală, Guyton-Klinger, VPW, podea și plafon), toate pe același Monte Carlo ca Planul (Web Worker comun, aceeași sămânță, aceleași piețe pentru toate strategiile), glidepath / bond tent pe vârstă, venituri Pilon 2/3 + pensie de stat + altele (nete, introduse de George), venit net după taxe prin `tax-ro.ts` `estimateWithdrawal`, regulile de retragere din IPS afișate lângă rezultate. Detalii: secțiunea „Pensie & retragere (faza 5)”
 - [x] Extra: avere netă — `/vault/invest/avere/` (nav „Avere netă”) + card pe Panou: portofoliul din registru + alte active și datorii notate de George, total EUR/RON azi și în timp, lichid vs ilichid, fond de urgență în luni, datorii / active. Detalii: secțiunea „Avere netă”.
+- [x] Extra: calendar venituri — `/vault/invest/calendar/` (nav „Calendar”) + card „Încasări în următoarele 30 de zile” pe Panou. Detalii: secțiunea „Calendar venituri”.
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [ ] 7 Rapoarte anuale & Panou
 - [ ] 8 Întărire
@@ -118,6 +119,38 @@ Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
   - „Trimite e-mail de test”: owner only, at most one per 2 minutes and 5 per day.
 - [x] Logic and tests: `src/lib/invest/drawdown.ts` (series merge, highs, underwater, episodes, levels, crossing state), `src/lib/invest/alerts.ts` (settings validation, planner, digest text, raw e-mail, rate limit). Worker: `worker/alerts.ts` (API `/vault/api/invest/alerts*`, history fetch, cron run). Client: `src/scripts/invest/drawdown.ts`, CSS `src/styles/invest-drawdown.css`.
 - Not tested live: e-mail delivery on Cloudflare (locally `wrangler dev` only writes the .eml file) and Yahoo's weekly endpoint from Cloudflare's egress IPs. Tested locally on 2026-11-27 with real Yahoo data (VWCE.DE, AAPL, TLV.RO).
+
+## Calendar venituri
+Page `/vault/invest/calendar/` (`src/pages/vault/invest/calendar.astro`, `src/scripts/invest/calendar.ts`, shared loader
+`calendar-data.ts`, dashboard card `calendar-card.ts`, CSS `src/styles/invest-calendar.css`). Pure logic and tests:
+`src/lib/invest/calendar.ts` / `calendar.test.ts` (invented data only).
+- Window: 0/12/24 months back, 12/24 ahead; display currency RON or EUR (BNR rate of the day; future dates use the latest
+  rate); net or gross amounts. ECharts bars per month: expected vs received, plus „Scadențe (principal)” hidden by default.
+  Monthly and yearly totals table; list grouped by month with status.
+- What appears (nothing is invented):
+  - **Coupons** of every instrument with `maturity` + `coupon`, counted back from the maturity every 12/frequency months,
+    for each account that held units the day before (future dates: units held today). Amount = units × `faceValue` ×
+    coupon / frequency. Frequency per bond in `data.json` `calendar.bonds` (1/2/4/12); unset = 1 per year, shown as
+    „frecvență presupusă”. No `faceValue` → average purchase price (warned). A coupon on the purchase day is not counted.
+  - **Maturities**: units × face value; principal, not income (no tax, separate from the income totals).
+  - **Expected dividends** only from George's schedule `calendar.dividends`: `manual` (months, day, gross per unit,
+    currency) × units held, or `lastYear` = every dividend received is expected again one year later (payments of the last
+    12 months repeat for up to 3 years ahead), scaled to the units held now (per unit = amount ÷ units held on the payment date).
+  - **Other planned cash-ins** `calendar.planned` (one-off, monthly, quarterly, yearly, optional end date); tax only from
+    George's own % (`taxRate`), else „necunoscut”.
+  - **Received** dividend/interest transactions (actuals). A past expected coupon/dividend is „încasat” when a payment of the
+    same type, instrument and account exists within ±31 days (each payment matches once), else „neîncasat?”.
+- Tax (estimate, no CASS): `estimateIncomeTax()` uses `tax-ro.ts` — `rulesFor(year)`, `div.rate` / `int.rate`, Tezaur/Fidelis
+  exemption (`int.govExempt`, `isGovInterest`, now exported) and `incomeSource`. Received RO income: the tax withheld (else
+  the rate); foreign: max(withheld abroad, RO rate × gross). Marked „neconfirmat” when the parameter isn't confirmed for that
+  exact year; „necunoscut” without tax rules.
+- „De reinvestit”: button on each maturity → `calendar.reinvest` `{instrumentId, maturity, remind, daysBefore, note}`.
+  The existing alerts cron (`worker/alerts.ts` → `planAlerts`) e-mails it once per instrument and maturity when the maturity
+  is within `daysBefore` days (`reinvestReminders()` in `calendar.ts`, new alert kind `reinvest`, state
+  `alerts-state.json` `reinvest`). Opt-in per maturity; it still needs the master switch „Alerte pe e-mail” (page Scăderi).
+  Amounts only with „Include prețuri și sume”. A changed maturity date drops the marker.
+- Tested locally on 2026-11-27 with invented data (owner, non-owner 404, 375 px, dark mode, no CSP errors) and a local cron
+  run (`--test-scheduled`, the .eml was written). Not tested: delivery on Cloudflare; real Tezaur/Fidelis coupon calendars.
 
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).

@@ -2,6 +2,7 @@
 import Invest from '../../../layouts/Invest.astro';
 import '../../../styles/invest-market.css';
 import '../../../styles/invest-ips.css';
+import '../../../styles/invest-calendar.css';
 import '../../../styles/invest-networth.css';
 ---
 <Invest title="Panou" active="panou">
@@ -37,6 +38,13 @@ import '../../../styles/invest-networth.css';
     <p class="inv-muted" id="ipsAlertsState">Se verifică…</p>
     <ul class="ips-alerts" id="ipsAlerts"></ul>
     <a class="ips-link" href="/vault/invest/ips/">Deschide IPS →</a>
+  </section>
+
+  <section class="inv-card" aria-labelledby="calTitle" id="calCard">
+    <h2 id="calTitle" class="inv-h2">Încasări în următoarele 30 de zile</h2>
+    <p class="inv-muted" id="calState">Se încarcă…</p>
+    <ul class="cal-next" id="calNext"></ul>
+    <a class="cal-link" href="/vault/invest/calendar/">Deschide calendarul →</a>
   </section>
 
   <section class="inv-card" aria-labelledby="marketTitle" id="market">
@@ -85,5 +93,6 @@ import '../../../styles/invest-networth.css';
   import '../../../scripts/invest/dashboard';
   import '../../../scripts/invest/market';
   import '../../../scripts/invest/ips-alerts';
+  import '../../../scripts/invest/calendar-card';
   import '../../../scripts/invest/networth-card';
 </script>

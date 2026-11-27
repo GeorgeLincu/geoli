@@ -9,6 +9,7 @@
 // only when settings.email.includeAmounts is on. They go only to the owner address configured in the Worker.
 import type { Currency, Transaction } from './types';
 import { normalizeLevels, nextAlertLevel, latestIpsVersion, type DipLevel, type IpsLevels } from './drawdown';
+import type { ReinvestReminder } from './calendar';
 
 export const ALERTS_VERSION = 1;
 
@@ -55,6 +56,8 @@ export interface AlertState {
   du: string[];
   /** "<instrument id>|<maturity>" already sent */
   maturities: string[];
+  /** "<instrument id>|<maturity>" "de reinvestit" reminders already sent (income calendar) */
+  reinvest?: string[];
   lastRun?: string;
   /** Test e-mails: rate limit */
   lastTest?: string;
@@ -220,9 +223,13 @@ export interface AlertInput {
   ipsTaxDeadline?: string | null;
   /** Absolute link to the page, e.g. https://geoli.eu/vault/invest/oportunitati/ */
   pageUrl: string;
+  /** "De reinvestit" reminders George opted into on the income calendar (each with its own days before) */
+  reinvest?: ReinvestReminder[];
+  /** Absolute link to the income calendar */
+  calendarUrl?: string;
 }
 
-export interface AlertItem { kind: 'drawdown' | 'stale' | 'du' | 'maturity'; line: string }
+export interface AlertItem { kind: 'drawdown' | 'stale' | 'du' | 'maturity' | 'reinvest'; line: string }
 export interface AlertPlan { items: AlertItem[]; state: AlertState; subject: string; text: string }
 
 const daysBetween = (a: string, b: string) =>
@@ -335,6 +342,22 @@ export function planAlerts(input: AlertInput): AlertPlan {
     state.maturities = state.maturities.slice(-200);
   }
 
+  // "De reinvestit" (income calendar): opt-in per maturity, N days before; only the master switch applies
+  if (input.reinvest?.length) {
+    const sent = state.reinvest ?? [];
+    for (const r of input.reinvest) {
+      const left = daysBetween(today, r.maturity);
+      if (left < 0 || left > r.daysBefore || sent.includes(r.key)) continue;
+      sent.push(r.key);
+      let line = `${r.label}: ajunge la scadență pe ${roDate(r.maturity)} (${left === 0 ? 'azi' : `peste ${left} ${left === 1 ? 'zi' : 'zile'}`}) — marcat „de reinvestit”.`;
+      if (amounts && r.amount !== null) line += ` Valoare nominală: ${money(r.amount, r.currency)}.`;
+      if (r.note) line += ` Nota ta: „${r.note}”.`;
+      if (input.calendarUrl) line += ` Calendar: ${input.calendarUrl}`;
+      items.push({ kind: 'reinvest', line });
+    }
+    state.reinvest = sent.slice(-200);
+  }
+
   state.lastRun = now;
   const { subject, text } = composeEmail(items, input.pageUrl);
   return { items, state, subject, text };
@@ -342,6 +365,7 @@ export function planAlerts(input: AlertInput): AlertPlan {
 
 const SUBJECTS: Record<AlertItem['kind'], string> = {
   drawdown: 'scădere de la maxim', stale: 'prețuri neactualizate', du: 'Declarația unică', maturity: 'scadențe',
+  reinvest: 'de reinvestit',
 };
 
 /** Plain-text digest: one e-mail per run, grouped by kind. */
@@ -365,6 +389,7 @@ export function composeEmail(items: readonly AlertItem[], pageUrl: string, test 
   const sections: string[] = [];
   const titles: Record<AlertItem['kind'], string> = {
     drawdown: 'Scădere de la maxim', stale: 'Prețuri care nu se mai actualizează', du: 'Declarația unică', maturity: 'Scadențe apropiate',
+    reinvest: 'De reinvestit',
   };
   for (const k of kinds) sections.push(`${titles[k]}:\n${items.filter(i => i.kind === k).map(i => `- ${i.line}`).join('\n')}`);
   const text = [

@@ -1,0 +1,170 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-portfolio.css';
+import '../../../styles/invest-calendar.css';
+
+const MONTHS = ['ian', 'feb', 'mar', 'apr', 'mai', 'iun', 'iul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+const TABS = [
+  ['dividende', 'Dividende așteptate'],
+  ['planificate', 'Alte încasări'],
+  ['cupoane', 'Cupoane titluri de stat'],
+];
+---
+<Invest title="Calendar venituri" active="calendar">
+  <h1 class="inv-h1">Calendar venituri</h1>
+  <p class="inv-lead">Cupoane și scadențe (Tezaur, Fidelis), dividende așteptate după calendarul tău, alte încasări planificate și ce ai încasat deja, lună cu lună, cu impozitul estimat.</p>
+
+  <section class="inv-card" aria-labelledby="sumTitle">
+    <div class="pf-row">
+      <h2 id="sumTitle" class="inv-h2">Rezumat</h2>
+      <div class="cal-controls">
+        <label class="pf-inline">Trecut
+          <select id="past" class="pf-input">
+            <option value="0">nimic</option><option value="12" selected>12 luni</option><option value="24">24 luni</option>
+          </select>
+        </label>
+        <label class="pf-inline">Viitor
+          <select id="ahead" class="pf-input">
+            <option value="12">12 luni</option><option value="24" selected>24 luni</option>
+          </select>
+        </label>
+        <label class="pf-inline">Moneda
+          <select id="currency" class="pf-input"><option>RON</option><option>EUR</option></select>
+        </label>
+        <label class="pf-inline">Sume
+          <select id="amounts" class="pf-input"><option value="net">nete</option><option value="gross">brute</option></select>
+        </label>
+      </div>
+    </div>
+    <dl class="inv-stats">
+      <div><dt>Următoarele 30 de zile</dt><dd data-sum="next30">—</dd></div>
+      <div><dt>Următoarele 12 luni (așteptat)</dt><dd data-sum="next12">—</dd></div>
+      <div><dt>Ultimele 12 luni (încasat)</dt><dd data-sum="last12">—</dd></div>
+      <div><dt>Scadențe în următoarele 12 luni</dt><dd data-sum="principal">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="loadState">Se încarcă…</p>
+    <ul class="pf-warnings" id="warnings" hidden></ul>
+  </section>
+
+  <section class="inv-card" aria-labelledby="chartTitle">
+    <h2 id="chartTitle" class="inv-h2">Așteptat și încasat, pe luni</h2>
+    <div class="inv-chart" id="calChart" role="img" aria-label="Venituri așteptate și încasate pe luni"></div>
+    <p class="inv-muted">Scadențele (principalul care îți revine) sunt o serie separată, ascunsă implicit: apasă pe ea în legendă ca s-o vezi. Nu sunt venit și nu se impozitează.</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="monthsTitle">
+    <h2 id="monthsTitle" class="inv-h2">Totaluri pe luni și pe ani</h2>
+    <div class="pf-scroll"><table class="pf-table cal-months" id="monthTable"></table></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="listTitle">
+    <div class="pf-row">
+      <h2 id="listTitle" class="inv-h2">Listă</h2>
+      <label class="pf-inline">Arată
+        <select id="listFilter" class="pf-input">
+          <option value="all">tot (fără dublurile încasate)</option>
+          <option value="expected">doar așteptate</option>
+          <option value="received">doar încasate</option>
+          <option value="maturity">doar scadențe</option>
+        </select>
+      </label>
+    </div>
+    <div class="pf-scroll"><table class="pf-table cal-list" id="listTable"></table></div>
+    <p class="inv-muted">„Neîncasat?” = era așteptat, dar nu găsesc o plată pentru același instrument în ±31 de zile. Adaugă plata în Portofoliu → Tranzacții (dividend sau dobândă) ca să apară ca încasată.</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="reinvestTitle" id="reinvestBox" hidden>
+    <h2 id="reinvestTitle" class="inv-h2">De reinvestit: <span id="reinvestName"></span></h2>
+    <form id="reinvestForm" class="pf-form">
+      <input type="hidden" name="instrumentId" />
+      <input type="hidden" name="maturity" />
+      <label class="pf-check pf-wide"><input type="checkbox" name="remind" /> Trimite-mi un e-mail înainte de scadență</label>
+      <label>Cu câte zile înainte <input class="pf-input" type="number" name="daysBefore" min="0" max="365" step="1" value="14" inputmode="numeric" /></label>
+      <label class="pf-wide">Notă (ce vrei să faci cu banii) <input class="pf-input" type="text" name="note" maxlength="500" /></label>
+      <div class="pf-actions">
+        <button class="inv-btn inv-btn--primary" type="submit">Salvează</button>
+        <button class="inv-btn" type="button" id="reinvestRemove">Scoate marcajul</button>
+        <button class="inv-btn inv-btn--ghost" type="button" id="reinvestCancel">Închide</button>
+      </div>
+      <p class="inv-muted pf-wide" id="mailState">Se verifică alertele pe e-mail…</p>
+    </form>
+  </section>
+
+  <div class="pf-tabs" role="tablist" aria-label="Setări calendar">
+    {TABS.map(([key, label], i) => (
+      <button type="button" role="tab" id={`tab-${key}`} aria-controls={`panel-${key}`} aria-selected={i === 0 ? 'true' : 'false'} data-tab={key}>{label}</button>
+    ))}
+  </div>
+
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-dividende" aria-labelledby="tab-dividende">
+    <h2 class="inv-h2">Dividende așteptate</h2>
+    <p class="inv-muted">Fără un calendar aici nu apare niciun dividend așteptat. Alege fie lunile și suma brută pe unitate (de la emitent sau din anunțul tău), fie „ca anul trecut”: fiecare dividend încasat în ultimele 12 luni se repetă la aceeași dată, pe numărul de unități deținute acum.</p>
+    <div class="pf-scroll"><table class="pf-table" id="divTable"></table></div>
+    <form id="divForm" class="pf-form pf-gap">
+      <input type="hidden" name="id" />
+      <label>Instrument <select class="pf-input" name="instrumentId" required></select></label>
+      <label>Cum îl estimez
+        <select class="pf-input" name="mode">
+          <option value="manual">lunile și suma mea</option>
+          <option value="lastYear">ca anul trecut (din încasări)</option>
+        </select>
+      </label>
+      <fieldset class="cal-months-pick pf-wide" data-manual>
+        <legend>Lunile plății</legend>
+        {MONTHS.map((m, i) => <label class="pf-check"><input type="checkbox" name="months" value={String(i + 1)} /> {m}</label>)}
+      </fieldset>
+      <label data-manual>Ziua din lună <input class="pf-input" type="number" name="day" min="1" max="31" step="1" value="15" inputmode="numeric" /></label>
+      <label data-manual>Sumă brută pe unitate <input class="pf-input" type="text" name="perUnit" inputmode="decimal" /></label>
+      <label data-manual>Moneda
+        <select class="pf-input" name="currency"><option value="">a instrumentului</option><option>EUR</option><option>RON</option><option>USD</option><option>GBP</option><option>CHF</option></select>
+      </label>
+      <label class="pf-wide">Notă <input class="pf-input" type="text" name="note" maxlength="500" /></label>
+      <div class="pf-actions">
+        <button class="inv-btn inv-btn--primary" type="submit">Salvează calendarul</button>
+        <button class="inv-btn" type="reset">Golește</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-planificate" aria-labelledby="tab-planificate" hidden>
+    <h2 class="inv-h2">Alte încasări planificate</h2>
+    <p class="inv-muted">Orice altă sumă pe care o aștepți (chirie, bonus, un împrumut returnat…). Impozitul apare doar dacă scrii tu cota; altfel e „necunoscut”.</p>
+    <div class="pf-scroll"><table class="pf-table" id="plannedTable"></table></div>
+    <form id="plannedForm" class="pf-form pf-gap">
+      <input type="hidden" name="id" />
+      <label>Ce <input class="pf-input" type="text" name="label" maxlength="120" required /></label>
+      <label>Data (prima dată) <input class="pf-input" type="date" name="date" required /></label>
+      <label>Sumă brută <input class="pf-input" type="text" name="amount" inputmode="decimal" required /></label>
+      <label>Moneda
+        <select class="pf-input" name="currency"><option>RON</option><option>EUR</option><option>USD</option><option>GBP</option><option>CHF</option></select>
+      </label>
+      <label>Se repetă
+        <select class="pf-input" name="repeat">
+          <option value="none">o singură dată</option><option value="monthly">lunar</option><option value="quarterly">trimestrial</option><option value="yearly">anual</option>
+        </select>
+      </label>
+      <label>Până la (inclusiv) <input class="pf-input" type="date" name="until" /></label>
+      <label>Impozit estimat de tine (%) <input class="pf-input" type="text" name="taxRate" inputmode="decimal" /></label>
+      <label class="pf-wide">Notă <input class="pf-input" type="text" name="note" maxlength="500" /></label>
+      <div class="pf-actions">
+        <button class="inv-btn inv-btn--primary" type="submit">Salvează încasarea</button>
+        <button class="inv-btn" type="reset">Golește</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-cupoane" aria-labelledby="tab-cupoane" hidden>
+    <h2 class="inv-h2">Cupoane titluri de stat</h2>
+    <p class="inv-muted">Cupoanele se calculează din instrumentele cu dată de scadență și cupon (Portofoliu → Instrumente), numărând înapoi de la scadență. Dacă nu alegi frecvența, presupun o plată pe an: verifică în prospectul emisiunii și schimb-o aici.</p>
+    <div class="pf-scroll"><table class="pf-table" id="bondTable"></table></div>
+  </section>
+
+  <aside class="cal-note" role="note">
+    Impozitul e o estimare cu parametrii din pagina <a href="/vault/invest/taxe/">Taxe</a> (cotă pe dividende / dobânzi, scutirea pentru titluri de stat).
+    Unde scrie „neconfirmat”, parametrul anului nu e confirmat încă de tine. CASS nu e inclus aici (se calculează pe tot anul, în Taxe).
+  </aside>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/calendar';
+</script>

@@ -26,6 +26,7 @@ import {
   withDefaults, validateAlertSettings, emptyAlertState, ipsTaxDeadline, effectiveDuDate, heldQuantities, planAlerts, composeEmail,
   logSend, testWaitMs, recordTest, rawEmail, type AlertState, type AlertInstrument,
 } from '../src/lib/invest/alerts';
+import { reinvestReminders } from '../src/lib/invest/calendar';
 
 const P = 'invest/';
 const SETTINGS_KEY = `${P}alerts.json`;
@@ -38,6 +39,7 @@ const IPS_KEY = `${P}ips.json`;
 
 const SITE = 'https://geoli.eu';
 export const PAGE_PATH = '/vault/invest/oportunitati/';
+const CALENDAR_PATH = '/vault/invest/calendar/';
 const MANUAL_HISTORY_MAX = 5;
 const MANUAL_HISTORY_COOLDOWN_MS = 60_000;
 const FETCH_TIMEOUT_MS = 20_000;
@@ -185,7 +187,10 @@ async function alertInputs(env: Env, today: string) {
       maturity: i.maturity, faceValue: i.faceValue, held: held.get(i.id) ?? 0,
     };
   });
-  return { instruments, ips: ipsDipLevels(ips), ipsDeadline: ipsTaxDeadline(ips, today) };
+  return {
+    instruments, ips: ipsDipLevels(ips), ipsDeadline: ipsTaxDeadline(ips, today),
+    reinvest: data ? reinvestReminders(data, today) : [],
+  };
 }
 
 export async function runAlerts(env: Env) {
@@ -194,8 +199,11 @@ export async function runAlerts(env: Env) {
   const now = new Date().toISOString();
   const today = now.slice(0, 10);
   const state = (await getJson<AlertState>(env, STATE_KEY)) ?? emptyAlertState();
-  const { instruments, ips, ipsDeadline } = await alertInputs(env, today);
-  const plan = planAlerts({ today, now, settings, state, instruments, ips, ipsTaxDeadline: ipsDeadline, pageUrl: SITE + PAGE_PATH });
+  const { instruments, ips, ipsDeadline, reinvest } = await alertInputs(env, today);
+  const plan = planAlerts({
+    today, now, settings, state, instruments, ips, ipsTaxDeadline: ipsDeadline, pageUrl: SITE + PAGE_PATH,
+    reinvest, calendarUrl: SITE + CALENDAR_PATH,
+  });
   if (!plan.items.length) { await putJson(env, STATE_KEY, plan.state); return { sent: false, reason: 'nothing new' }; }
   const kinds = [...new Set(plan.items.map(i => i.kind))];
   try {

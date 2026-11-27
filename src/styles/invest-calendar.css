@@ -1,0 +1,49 @@
+/* /vault/invest/calendar/ — income calendar. Builds on invest.css + invest-portfolio.css. */
+
+.cal-controls { display: flex; flex-wrap: wrap; gap: 0.5rem 0.9rem; }
+
+.cal-months tr.cal-year td { font-weight: 600; background: var(--surface); }
+.cal-list tr.cal-month-row th {
+  text-align: left; text-transform: none; letter-spacing: 0; font-size: 0.85rem; color: var(--text);
+  background: var(--surface); padding-top: 0.6rem;
+}
+.cal-list tr.cal-got td { color: var(--text); }
+.cal-list tr.cal-exp td:first-child { color: var(--text-muted); }
+.cal-what { white-space: normal !important; min-width: 14ch; }
+.cal-what small { display: block; color: var(--text-muted); font-size: 0.75rem; }
+
+.cal-kind {
+  display: inline-block; padding: 0.1rem 0.45rem; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+  background: var(--surface-2); color: var(--text-muted);
+}
+.cal-kind--coupon, .cal-kind--interest { color: var(--inv-c1); }
+.cal-kind--dividend { color: var(--inv-c2); }
+.cal-kind--maturity { color: var(--warn-text); }
+.cal-kind--planned { color: var(--inv-c4); }
+
+.cal-reinvest { padding: 0.3rem 0.55rem; font-size: 0.78rem; }
+.cal-reinvest.is-on { border-color: var(--warn-text); color: var(--warn-text); }
+
+.cal-months-pick { display: flex; flex-wrap: wrap; gap: 0.35rem 0.8rem; border: 0; padding: 0; margin: 0; }
+.cal-months-pick legend { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-bottom: 0.3rem; }
+.cal-months-pick[hidden] { display: none; }
+
+.cal-note {
+  margin-top: 1rem; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--surface);
+  border-left: 4px solid var(--border-h); font-size: 0.85rem; color: var(--text-muted);
+}
+.cal-note a { color: var(--accent-text); }
+
+/* Dashboard card */
+.cal-next { list-style: none; display: grid; gap: 0.35rem; margin: 0.5rem 0; padding: 0; }
+.cal-next li { display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; align-items: baseline; font-size: 0.9rem; }
+.cal-next .cal-next__date { color: var(--text-muted); font-variant-numeric: tabular-nums; min-width: 5.5ch; }
+.cal-next .cal-next__amt { margin-left: auto; font-variant-numeric: tabular-nums; }
+.cal-link { color: var(--accent-text); font-size: 0.9rem; }
+
+@media (max-width: 640px) {
+  .cal-controls { width: 100%; }
+  .cal-controls .pf-inline { flex: 1 1 45%; }
+  .cal-controls .pf-input { width: 100%; }
+}
+#reinvestBox { scroll-margin-top: 4.5rem; }

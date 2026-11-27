@@ -393,7 +393,7 @@ export function incomeSource(account: Account | undefined, inst: Instrument | un
   return 'foreign';
 }
 
-const isGovInterest = (account: Account | undefined, inst: Instrument | undefined) =>
+export const isGovInterest = (account: Account | undefined, inst: Instrument | undefined) =>
   account?.type === 'gov_bonds' || inst?.assetClass === 'gov_bond';
 
 export interface SaleRow {
