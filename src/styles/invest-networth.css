@@ -1,0 +1,11 @@
+/* /vault/invest/avere/ (full net worth) and its dashboard card. Builds on invest.css + invest-portfolio.css. */
+
+.nw-stats dd { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.nw-stats .nw-stat--main dd { font-size: 1.5rem; }
+.nw-stats dd.is-warn { color: var(--warn-text); }
+.nw-ef { font-size: 1rem; }
+.nw-ef[data-kind="under"] { color: var(--warn-text); }
+.nw-ef[data-kind="ok"] { color: var(--ok-text); }
+.nw-card-link { color: var(--accent-text); font-size: 0.92rem; font-weight: 500; }
+.nw-card-link:hover { text-decoration: underline; }
+.nw-share { display: block; font-size: 0.78rem; font-weight: 500; color: var(--text-muted); }
