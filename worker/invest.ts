@@ -12,6 +12,7 @@ import { baseHeaders, error, json } from './http';
 import { isDocName, validateDoc, MAX_DOC_BYTES } from '../src/lib/invest/validate';
 import { emptyDoc } from '../src/lib/invest/types';
 import { handleMarketApi } from './market';
+import { handleAlertsApi } from './alerts';
 
 export const INVEST_PREFIX = 'invest/';
 const BACKUPS_KEPT = 50;
@@ -29,6 +30,9 @@ export async function handleInvest(request: Request, env: Env, url: URL, user: U
 
   if (path === '/vault/api/invest/market' || path.startsWith('/vault/api/invest/market/')) {
     return handleMarketApi(request, env, path.slice('/vault/api/invest/market'.length).replace(/^\//, ''));
+  }
+  if (path === '/vault/api/invest/alerts' || path.startsWith('/vault/api/invest/alerts/')) {
+    return handleAlertsApi(request, env, path.slice('/vault/api/invest/alerts'.length).replace(/^\//, ''), url.origin);
   }
   if (path.startsWith('/vault/api/invest/')) return handleApi(request, env, path.slice('/vault/api/invest/'.length));
 

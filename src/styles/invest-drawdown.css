@@ -1,0 +1,75 @@
+/* /vault/invest/oportunitati/ — "Scădere de la maxim" + e-mail alerts. Separate file to avoid conflicts in invest.css. */
+
+/* Level colours: shallow → deep. Text colours from base.css tokens (AA in both themes). */
+.dd-lvl-1 { --dd-c: var(--inv-c4); }
+.dd-lvl-2 { --dd-c: var(--inv-c6); }
+.dd-lvl-3 { --dd-c: var(--inv-c5); }
+.dd-lvl-4, .dd-lvl-5 { --dd-c: var(--err-text); }
+
+.dd-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-bottom: 0.75rem; }
+.dd-head .inv-h2 { margin-bottom: 0; }
+.dd-head__tools { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.dd-head .inv-btn[disabled] { opacity: 0.6; cursor: progress; }
+.dd-pick { display: inline-flex; gap: 0.5rem; align-items: center; font-size: 0.85rem; color: var(--text-muted); }
+.dd-pick select { max-width: 60vw; }
+
+.dd-levels { display: flex; flex-wrap: wrap; gap: 0.4rem; list-style: none; margin: 0.5rem 0 0.75rem; padding: 0; }
+.dd-levels[hidden] { display: none; }
+.dd-chip {
+  display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+  color: var(--dd-c, var(--text-muted)); border: 1px solid currentColor; white-space: nowrap;
+}
+
+.dd-table-wrap { overflow-x: auto; }
+.dd-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.dd-table th, .dd-table td { text-align: left; padding: 0.5rem 0.55rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.dd-table thead th { font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; white-space: nowrap; }
+.dd-table thead button {
+  font: inherit; letter-spacing: inherit; text-transform: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer;
+}
+.dd-table thead button:hover { color: var(--text); }
+.dd-table thead button:focus-visible, .dd-link:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.dd-table th[aria-sort="ascending"] button::after { content: " ↑"; }
+.dd-table th[aria-sort="descending"] button::after { content: " ↓"; }
+.dd-table th[aria-sort="ascending"], .dd-table th[aria-sort="descending"] { color: var(--text); }
+.dd-table .dd-num { text-align: right; white-space: nowrap; }
+.dd-table small { display: block; color: var(--text-muted); font-size: 0.78rem; font-weight: 400; }
+.dd-name { min-width: 10rem; }
+/* Phones: keep the instrument name visible while the table scrolls sideways */
+@media (max-width: 720px) {
+  #ddTable th:first-child, #ddTable td:first-child { position: sticky; left: 0; z-index: 1; background: linear-gradient(var(--bg-card), var(--bg-card)), var(--bg); }
+  .dd-name { min-width: 8rem; max-width: 9rem; }
+}
+.dd-name small { display: inline; }
+.dd-note { display: block; font-size: 0.78rem; color: var(--warn-text); }
+.dd-muted { color: var(--text-muted); }
+.dd-link { font: inherit; font-weight: 600; color: var(--text); background: none; border: 0; padding: 0; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--border-h); text-underline-offset: 3px; }
+.dd-link:hover { text-decoration-color: currentColor; }
+.dd-pct { font-weight: 500; }
+.dd-pct.is-basis { font-weight: 700; }
+.dd-row-hit > td:first-child { box-shadow: inset 3px 0 0 var(--dd-c); }
+.dd-row-hit .dd-pct.is-basis { color: var(--dd-c); }
+.dd-level { min-width: 9rem; }
+.dd-level .dd-chip { margin-bottom: 0.2rem; }
+
+/* Alerts form */
+.al-form { display: grid; gap: 1rem; }
+.al-set { border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem 1rem; display: grid; gap: 0.6rem; min-width: 0; }
+.al-set legend { font-weight: 600; padding: 0 0.35rem; }
+.al-check { display: flex; gap: 0.5rem; align-items: flex-start; }
+.al-check input { margin-top: 0.25rem; accent-color: var(--indigo); width: 1.05rem; height: 1.05rem; flex: none; }
+.al-field { display: grid; gap: 0.3rem; font-size: 0.88rem; color: var(--text-muted); max-width: 22rem; }
+.al-field--inline { display: flex; align-items: center; gap: 0.5rem; padding-left: 1.6rem; }
+.al-field--inline input { width: 6rem; }
+.inv .al-form input[type="date"] {
+  font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--border-h); border-radius: 8px; padding: 0.45rem 0.6rem;
+}
+.al-levels input[type="number"] { width: 7rem; }
+.al-levels input[type="text"] { width: 100%; min-width: 8rem; }
+.al-levels td { vertical-align: middle; }
+.al-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.al-actions .inv-btn[disabled] { opacity: 0.6; cursor: progress; }
+#alMsg:not(:empty) { color: var(--err-text); }
+
+.al-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; font-size: 0.88rem; }
+.al-log .is-err { color: var(--err-text); }

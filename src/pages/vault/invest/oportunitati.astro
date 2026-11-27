@@ -1,0 +1,122 @@
+---
+// "Scădere de la maxim" + e-mail alerts. Numbers and George's own rules only — no recommendations.
+// Logic: src/lib/invest/drawdown.ts, alerts.ts · client: src/scripts/invest/drawdown.ts · API: worker/alerts.ts
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-drawdown.css';
+---
+<Invest title="Scădere de la maxim" active="scaderi">
+  <h1 class="inv-h1">Scădere de la maxim</h1>
+  <p class="inv-lead">Cât e fiecare instrument sub maximul lui istoric și sub maximul pe 52 de săptămâni, cu pragurile tale evidențiate. Doar cifre și regulile tale, nu recomandări.</p>
+
+  <section class="inv-card" aria-labelledby="ddTitle" id="ddCard">
+    <div class="dd-head">
+      <h2 id="ddTitle" class="inv-h2">Instrumente</h2>
+      <div class="dd-head__tools">
+        <div class="plan-seg" role="group" aria-label="Pragurile se măsoară față de">
+          <button type="button" class="plan-seg__btn" data-basis="ath" aria-pressed="true">Maxim istoric</button>
+          <button type="button" class="plan-seg__btn" data-basis="high52" aria-pressed="false">Maxim 52 săpt.</button>
+        </div>
+        <button class="inv-btn" id="histBtn" type="button" hidden>Descarcă istoricul lipsă</button>
+      </div>
+    </div>
+    <p class="inv-muted" id="ddState">Se încarcă…</p>
+    <ul class="dd-levels" id="ddLevels" aria-label="Pragurile tale"></ul>
+    <div class="dd-table-wrap">
+      <table class="dd-table" id="ddTable" hidden>
+        <thead>
+          <tr>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="name">Instrument</button></th>
+            <th scope="col" class="dd-num" aria-sort="none"><button type="button" data-sort="last">Ultimul preț</button></th>
+            <th scope="col" class="dd-num" aria-sort="none"><button type="button" data-sort="ath">Maxim istoric</button></th>
+            <th scope="col" class="dd-num" aria-sort="descending"><button type="button" data-sort="belowAth">Sub maxim</button></th>
+            <th scope="col" class="dd-num" aria-sort="none"><button type="button" data-sort="high52">Maxim 52 săpt.</button></th>
+            <th scope="col" class="dd-num" aria-sort="none"><button type="button" data-sort="below52">Sub max. 52 săpt.</button></th>
+            <th scope="col" class="dd-num" aria-sort="none"><button type="button" data-sort="maxDd">Scădere maximă</button></th>
+            <th scope="col" aria-sort="none"><button type="button" data-sort="level">Pragul tău</button></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="inv-muted">Maximele sunt prețuri de închidere în moneda în care e cotat instrumentul. Ultimele ~13 luni sunt zilnice; istoricul mai vechi e săptămânal (închiderea de vineri), deci un maxim foarte vechi poate fi puțin sub maximul zilnic real. Istoricul lung se descarcă o singură dată per instrument (automat, câte 1–2 la fiecare rulare, sau cu butonul).</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="uwTitle" id="uwCard" hidden>
+    <div class="dd-head">
+      <h2 id="uwTitle" class="inv-h2">Sub apă: cât a fost sub maximul de până atunci</h2>
+      <label class="dd-pick">Instrument <select id="uwSelect"></select></label>
+    </div>
+    <div class="inv-chart inv-chart--tall" id="uwChart" role="img" aria-label="Grafic: procentul sub maximul anterior, în timp, pentru instrumentul ales"></div>
+    <h3 class="plan-h3">Cele mai mari scăderi</h3>
+    <div class="dd-table-wrap">
+      <table class="dd-table dd-table--plain" id="epTable">
+        <thead><tr><th scope="col">Vârf</th><th scope="col">Minim</th><th scope="col" class="dd-num">Scădere</th><th scope="col">Revenit la vârf</th><th scope="col" class="dd-num">Durată</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="alTitle" id="alerte">
+    <h2 id="alTitle" class="inv-h2">Alerte pe e-mail</h2>
+    <p class="inv-muted" id="alTo">Se încarcă…</p>
+    <form id="alForm" class="al-form" novalidate>
+      <fieldset class="al-set">
+        <legend>General</legend>
+        <label class="al-check"><input type="checkbox" name="emailEnabled" /> Trimite alerte pe e-mail</label>
+        <label class="al-check"><input type="checkbox" name="includeAmounts" /> Include prețuri și sume în e-mail <span class="plan-unit">(implicit doar nume și procente)</span></label>
+      </fieldset>
+
+      <fieldset class="al-set">
+        <legend>Scădere de la maxim</legend>
+        <label class="al-check"><input type="checkbox" name="ddEnabled" /> Anunță când un instrument trece unul dintre pragurile tale</label>
+        <label class="al-field">Măsurat față de
+          <select name="basis"><option value="ath">maximul istoric</option><option value="high52">maximul pe 52 de săptămâni</option></select>
+        </label>
+        <label class="al-check"><input type="checkbox" name="useIps" /> Folosește pragurile din IPS, dacă le-ai trecut acolo</label>
+        <p class="inv-muted" id="ipsLevels" hidden></p>
+        <div class="dd-table-wrap">
+          <table class="dd-table dd-table--plain al-levels" id="lvTable">
+            <thead><tr><th scope="col">Prag (% sub maxim)</th><th scope="col">Cumpărare suplimentară planificată</th><th scope="col">Moneda</th><th scope="col">Notă</th><th scope="col"><span class="visually-hidden">Acțiuni</span></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <button type="button" class="inv-btn" id="lvAdd">Adaugă prag</button>
+        <p class="plan-hint">Ex.: 10, 20, 30. Suma e opțională: ce ți-ai propus tu să cumperi în plus la acel prag. Fiecare prag se anunță o singură dată; se rearmează după ce prețul revine cu 2,5 puncte peste el.</p>
+      </fieldset>
+
+      <fieldset class="al-set">
+        <legend>Prețuri care nu se actualizează</legend>
+        <label class="al-check"><input type="checkbox" name="staleEnabled" /> Anunță când prețul automat e mai vechi de</label>
+        <label class="al-field al-field--inline"><input type="number" name="staleDays" min="2" max="60" step="1" inputmode="numeric" /> zile</label>
+      </fieldset>
+
+      <fieldset class="al-set">
+        <legend>Declarația unică</legend>
+        <label class="al-check"><input type="checkbox" name="duEnabled" /> Amintește-mi termenul</label>
+        <label class="al-field">Termen <input type="date" name="duDate" /></label>
+        <label class="al-field">Cu câte zile înainte <input type="text" name="duBefore" inputmode="numeric" placeholder="30, 7, 1" /></label>
+        <p class="plan-hint">Trece tu data termenului din anul respectiv (de pe anaf.ro); nu e completată automat.</p>
+      </fieldset>
+
+      <fieldset class="al-set">
+        <legend>Scadențe Tezaur / Fidelis</legend>
+        <label class="al-check"><input type="checkbox" name="matEnabled" /> Anunță scadențele titlurilor pe care le deții, cu</label>
+        <label class="al-field al-field--inline"><input type="number" name="matDays" min="1" max="365" step="1" inputmode="numeric" /> zile înainte</label>
+      </fieldset>
+
+      <div class="al-actions">
+        <button class="inv-btn inv-btn--primary" type="submit">Salvează setările</button>
+        <button class="inv-btn" type="button" id="testBtn">Trimite e-mail de test</button>
+      </div>
+      <p class="inv-muted" id="alMsg" role="status"></p>
+    </form>
+
+    <h3 class="plan-h3">Ultimele trimiteri</h3>
+    <p class="inv-muted" id="alLastRun"></p>
+    <ul class="al-log" id="alLog"></ul>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/drawdown';
+</script>
