@@ -179,6 +179,8 @@ export interface TaxParam {
   source?: string;
   verifiedOn?: string;
   note?: string;
+  /** Confirmed by George for this year (Phase 4). Missing = falls back to the year's `confirmed`. */
+  confirmed?: boolean;
 }
 
 /** Romanian tax parameters for one fiscal year (Phase 4). Keys are free-form so new rules can be added. */
