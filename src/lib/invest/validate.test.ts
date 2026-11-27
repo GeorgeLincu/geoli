@@ -73,3 +73,29 @@ describe('validateDoc: plan projection settings', () => {
     expect(errs).toContain('data.settings.projection.assumptions.equity.vol: required');
   });
 });
+
+describe('validateDoc — net worth', () => {
+  const nw = {
+    assets: [{ id: 'n1', name: 'Bank', category: 'savings', currency: 'RON', emergency: true, values: [{ date: '2026-01-31', value: 1000 }] }],
+    liabilities: [{ id: 'l1', name: 'Mortgage', kind: 'mortgage', currency: 'EUR', rate: 0.05, monthlyPayment: 500, balances: [{ date: '2026-01-31', value: 90000, note: 'bank statement' }] }],
+    monthlyExpenses: 2000,
+  };
+  it('accepts assets, liabilities and monthly expenses', () => {
+    expect(validateDoc('data', { ...emptyData(), netWorth: nw })).toEqual([]);
+    expect(validateDoc('data', { ...emptyData(), netWorth: { assets: [], liabilities: [] } })).toEqual([]);
+  });
+  it('rejects bad categories, negative values and rates above 100%', () => {
+    const bad = {
+      assets: [{ ...nw.assets[0], category: 'boat', values: [{ date: '2026-01-31', value: -5 }] }],
+      liabilities: [{ ...nw.liabilities[0], rate: 5, extra: 1 }],
+    };
+    const errs = validateDoc('data', { ...emptyData(), netWorth: bad });
+    expect(errs.some(e => e.includes('category'))).toBe(true);
+    expect(errs.some(e => e.includes('values[0].value'))).toBe(true);
+    expect(errs.some(e => e.includes('rate'))).toBe(true);
+    expect(errs).toContain('data.netWorth.liabilities[0].extra: unknown field');
+  });
+  it('requires the lists', () => {
+    expect(validateDoc('data', { ...emptyData(), netWorth: {} })).toEqual(expect.arrayContaining(['data.netWorth.assets: required', 'data.netWorth.liabilities: required']));
+  });
+});

@@ -187,6 +187,53 @@ export interface InvestData {
   pensionValues?: PensionValue[];
   /** Saved column mappings for the CSV import (/vault/invest/import/) */
   importPresets?: ImportPreset[];
+  /** Assets and debts outside the portfolio, for the full net worth (/vault/invest/avere/) */
+  netWorth?: NetWorthDoc;
+}
+
+// ─── Full net worth (/vault/invest/avere/) ───
+// The investment portfolio is never re-entered here: it comes from the ledger + prices.
+
+export type NetWorthAssetCategory = 'cash' | 'savings' | 'real_estate' | 'vehicle' | 'other';
+export const NET_WORTH_ASSET_CATEGORIES: readonly NetWorthAssetCategory[] = ['cash', 'savings', 'real_estate', 'vehicle', 'other'];
+export type LiabilityKind = 'mortgage' | 'loan' | 'credit_card' | 'other';
+export const LIABILITY_KINDS: readonly LiabilityKind[] = ['mortgage', 'loan', 'credit_card', 'other'];
+
+/** A value (asset) or balance (debt) recorded on a date, in the item's currency. Valid until the next entry. */
+export interface DatedValue { date: string; value: number; note?: string }
+
+export interface NetWorthAsset {
+  id: string;
+  name: string;
+  category: NetWorthAssetCategory;
+  currency: Currency;
+  /** Can be turned into cash quickly. Missing = cash/savings yes, the rest no. */
+  liquid?: boolean;
+  /** Counts toward the emergency fund. Missing = cash/savings yes, the rest no. */
+  emergency?: boolean;
+  notes?: string;
+  values: DatedValue[];
+}
+
+export interface Liability {
+  id: string;
+  name: string;
+  kind: LiabilityKind;
+  currency: Currency;
+  /** Yearly interest rate as a decimal (0.055 = 5.5%) */
+  rate?: number;
+  /** Monthly instalment, in `currency` */
+  monthlyPayment?: number;
+  notes?: string;
+  /** Outstanding balance over time (positive numbers) */
+  balances: DatedValue[];
+}
+
+export interface NetWorthDoc {
+  assets: NetWorthAsset[];
+  liabilities: Liability[];
+  /** Monthly expenses in EUR for the emergency-fund months. Missing = taken from the IPS rule, if any. */
+  monthlyExpenses?: number;
 }
 
 /** Fields a CSV column can be mapped to by the transaction import. */
