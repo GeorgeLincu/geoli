@@ -1,5 +1,6 @@
 ---
 import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-market.css';
 ---
 <Invest title="Panou" active="panou">
   <h1 class="inv-h1">Panou</h1>
@@ -17,6 +18,41 @@ import Invest from '../../../layouts/Invest.astro';
     <button class="inv-btn inv-btn--primary" id="initBtn" type="button" hidden>Creează fișierul de date (gol)</button>
   </section>
 
+  <section class="inv-card" aria-labelledby="marketTitle" id="market">
+    <div class="mk-head">
+      <h2 id="marketTitle" class="inv-h2">Prețuri și cursuri</h2>
+      <button class="inv-btn" id="refreshBtn" type="button">Actualizează acum</button>
+    </div>
+    <dl class="inv-stats">
+      <div><dt>Ultima actualizare</dt><dd data-mk="lastRun">—</dd></div>
+      <div><dt>EUR → RON (BNR)</dt><dd data-mk="eur">—</dd></div>
+      <div><dt>USD → RON (BNR)</dt><dd data-mk="usd">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="mkState">Se încarcă…</p>
+    <div class="mk-table-wrap">
+      <table class="mk-table" id="mkTable" hidden>
+        <thead><tr><th scope="col">Instrument</th><th scope="col">Sursă</th><th scope="col" class="mk-num">Preț</th><th scope="col">Data</th><th scope="col">Stare</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="inv-muted">Prețurile se iau automat în zilele lucrătoare, după închiderea burselor (cursul BNR, apoi prețul de închidere). Se trimit doar simbolurile bursiere, nimic personal.</p>
+
+    <details class="mk-override" id="overrideBox" hidden>
+      <summary>Preț introdus manual</summary>
+      <form id="overrideForm" class="mk-form">
+        <label>Instrument <select name="instrumentId" required></select></label>
+        <label>Data <input type="date" name="date" required /></label>
+        <label>Preț <input type="number" name="close" step="any" min="0" inputmode="decimal" /></label>
+        <label>Moneda <select name="currency"><option>EUR</option><option>RON</option><option>USD</option><option>GBP</option><option>CHF</option></select></label>
+        <div class="mk-form__actions">
+          <button class="inv-btn inv-btn--primary" type="submit">Salvează prețul</button>
+          <button class="inv-btn" type="button" id="overrideRemove">Șterge prețul manual</button>
+        </div>
+        <p class="inv-muted">Prețul manual are prioritate și nu e suprascris de actualizarea automată. Lasă câmpul gol și apasă „Șterge” ca să revii la prețul automat.</p>
+      </form>
+    </details>
+  </section>
+
   <section class="inv-card" aria-labelledby="demoTitle">
     <h2 id="demoTitle" class="inv-h2">Exemplu de grafic</h2>
     <p class="inv-muted">Doar un exemplu de calcul (nu datele tale): 100 € pe lună timp de 30 de ani, la un randament real ipotetic de 5% pe an.</p>
@@ -26,4 +62,5 @@ import Invest from '../../../layouts/Invest.astro';
 
 <script>
   import '../../../scripts/invest/dashboard';
+  import '../../../scripts/invest/market';
 </script>

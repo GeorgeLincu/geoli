@@ -52,5 +52,9 @@
   // Secrets (not in git): SHARE_SECRET (share links) and GITHUB_TOKEN (article publishing:
   // fine-grained token for GeorgeLincu/geoli only, "Contents: Read and write")
 
+  // Investments (/vault/invest/): BNR rates + closing prices, weekdays (times are UTC).
+  // 17:45 UTC = after Xetra/LSE/BVB close (18:45 or 19:45 in Romania); 21:30 UTC = after the US close.
+  "triggers": { "crons": ["45 17 * * 1-5", "30 21 * * 1-5"] },
+
   "observability": { "enabled": true }
 }

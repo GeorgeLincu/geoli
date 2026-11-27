@@ -20,6 +20,7 @@ import { listPosts, getPost, savePost, deletePost, validate, HttpError } from '.
 import { handleContact } from './contact';
 import { baseHeaders, APP_CSP, respond, json, error, html } from './http';
 import { isInvestPath, handleInvest, INVEST_PREFIX } from './invest';
+import { runMarketUpdate } from './market';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -366,5 +367,13 @@ export default {
       return error(500, 'Something went wrong');
     }
     return env.ASSETS.fetch(request);
+  },
+
+  // Cron Triggers (wrangler.jsonc "triggers"): daily BNR rates and closing prices for /vault/invest/
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(runMarketUpdate(env, 'cron').then(
+      r => console.log(`market update: fx ${r.status.fx.ok ? 'ok' : r.status.fx.message}, prices ${Object.values(r.status.instruments).filter(i => i.ok).length} ok`),
+      err => console.error('market update failed', err),
+    ));
   },
 } satisfies ExportedHandler<Env>;
