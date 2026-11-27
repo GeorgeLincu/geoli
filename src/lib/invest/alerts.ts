@@ -8,7 +8,7 @@
 // Privacy: e-mails carry instrument names and percentages; money (prices, planned extra amounts, bond values)
 // only when settings.email.includeAmounts is on. They go only to the owner address configured in the Worker.
 import type { Currency, Transaction } from './types';
-import { normalizeLevels, nextAlertLevel, type DipLevel } from './drawdown';
+import { normalizeLevels, nextAlertLevel, latestIpsVersion, type DipLevel, type IpsLevels } from './drawdown';
 
 export const ALERTS_VERSION = 1;
 
@@ -22,13 +22,13 @@ export interface AlertSettings {
     enabled: boolean;
     /** Which high the levels are measured from */
     basis: 'ath' | 'high52';
-    /** George's own levels; used when the IPS has none (or useIps is false) */
+    /** George's own levels, for every instrument (except the IPS reference instrument when useIps is on) */
     levels: DipLevel[];
-    /** Prefer the levels stored in the IPS (invest/ips.json) when present */
+    /** Use the IPS crash rules (invest/ips.json → rules.crash) for the IPS reference instrument */
     useIps: boolean;
   };
   stale: { enabled: boolean; days: number };
-  /** Declarația unică reminder. date '' = not set */
+  /** Declarația unică reminder. date '' = use the deadline from the IPS (rules.taxReturn), if any */
   du: { enabled: boolean; date: string; daysBefore: number[] };
   maturities: { enabled: boolean; daysAhead: number };
 }
@@ -110,7 +110,6 @@ export function validateAlertSettings(v: unknown): { settings?: AlertSettings; p
   if (du.date !== '' && !isDate(du.date)) p.push('du.date: YYYY-MM-DD or empty');
   if (!Array.isArray(du.daysBefore) || !du.daysBefore.length || du.daysBefore.length > 5 || !du.daysBefore.every(x => intIn(x, 0, 120)))
     p.push('du.daysBefore: 1–5 whole numbers 0–120');
-  if (du.enabled === true && du.date === '') p.push('du.date: set the deadline before turning the reminder on');
 
   const m = (o.maturities ?? {}) as Record<string, unknown>;
   if (typeof m.enabled !== 'boolean') p.push('maturities.enabled: true/false');
@@ -144,11 +143,31 @@ export function withDefaults(raw: unknown): AlertSettings {
   };
 }
 
-/** Levels actually used: the IPS ones when enabled and present, else the page's own. */
-export function effectiveLevels(settings: AlertSettings, ipsLevels: readonly DipLevel[]): { levels: DipLevel[]; source: 'ips' | 'settings' } {
-  if (settings.drawdown.useIps && ipsLevels.length) return { levels: [...ipsLevels], source: 'ips' };
+/**
+ * Levels for one instrument: the IPS crash rules for the IPS reference instrument (when useIps is on),
+ * George's own page levels for every other instrument. IPS rules without a reference instrument apply to none.
+ */
+export function levelsForInstrument(settings: AlertSettings, ips: IpsLevels | null, instrumentId: string): { levels: DipLevel[]; source: 'ips' | 'settings' } {
+  if (settings.drawdown.useIps && ips?.instrumentId === instrumentId && ips.levels.length) return { levels: ips.levels, source: 'ips' };
   return { levels: settings.drawdown.levels, source: 'settings' };
 }
+
+/** Next Declarația unică deadline (today or later) from the IPS `rules.taxReturn` {month, day}; null when not set. */
+export function ipsTaxDeadline(ips: unknown, today: string): string | null {
+  const t = (latestIpsVersion(ips)?.rules as { taxReturn?: { month?: unknown; day?: unknown } } | undefined)?.taxReturn;
+  const m = Number(t?.month), d = Number(t?.day);
+  if (!Number.isInteger(m) || m < 1 || m > 12 || !Number.isInteger(d) || d < 1 || d > 31) return null;
+  const on = (y: number) => {
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    return `${y}-${String(m).padStart(2, '0')}-${String(Math.min(d, last)).padStart(2, '0')}`;
+  };
+  const y = Number(today.slice(0, 4));
+  return on(y) >= today ? on(y) : on(y + 1);
+}
+
+/** The deadline the reminder uses: George's date on the page, else the IPS one. */
+export const effectiveDuDate = (settings: AlertSettings, ipsDeadline: string | null) =>
+  (isDate(settings.du.date) ? settings.du.date : ipsDeadline) ?? '';
 
 // ───────────── Holdings ─────────────
 
@@ -195,7 +214,10 @@ export interface AlertInput {
   settings: AlertSettings;
   state: AlertState;
   instruments: AlertInstrument[];
-  levels: DipLevel[];
+  /** IPS crash rules (reference instrument only); null = none */
+  ips: IpsLevels | null;
+  /** Deadline from the IPS, used when settings.du.date is empty */
+  ipsTaxDeadline?: string | null;
   /** Absolute link to the page, e.g. https://geoli.eu/vault/invest/oportunitati/ */
   pageUrl: string;
 }
@@ -220,17 +242,18 @@ const label = (i: AlertInstrument) => (i.ticker ? `${i.name} (${i.ticker})` : i.
  * Disabled alerts don't touch their state.
  */
 export function planAlerts(input: AlertInput): AlertPlan {
-  const { today, now, settings, instruments, levels } = input;
+  const { today, now, settings, instruments } = input;
   const state: AlertState = structuredClone(input.state);
   const items: AlertItem[] = [];
   const amounts = settings.includeAmounts;
 
   // Drawdown levels
-  if (settings.drawdown.enabled && levels.length) {
+  if (settings.drawdown.enabled) {
     const basisName = settings.drawdown.basis === 'ath' ? 'maximul istoric' : 'maximul pe 52 de săptămâni';
     for (const i of instruments) {
       const below = settings.drawdown.basis === 'ath' ? i.belowAth : i.below52;
-      if (below === undefined) continue;
+      const { levels } = levelsForInstrument(settings, input.ips, i.id);
+      if (below === undefined || !levels.length) continue;
       const prev = state.drawdown[i.id]?.level ?? 0;
       const r = nextAlertLevel(prev, below, levels);
       if (r.level !== prev) {
@@ -275,21 +298,22 @@ export function planAlerts(input: AlertInput): AlertPlan {
   }
 
   // Declarația unică
-  if (settings.du.enabled && isDate(settings.du.date)) {
-    const left = daysBetween(today, settings.du.date);
+  const duDate = effectiveDuDate(settings, input.ipsTaxDeadline ?? null);
+  if (settings.du.enabled && isDate(duDate)) {
+    const left = daysBetween(today, duDate);
     const offsets = [...settings.du.daysBefore].sort((a, b) => a - b);
     const due = offsets.find(o => left >= 0 && left <= o);
-    if (due !== undefined && !state.du.includes(`${settings.du.date}|${due}`)) {
+    if (due !== undefined && !state.du.includes(`${duDate}|${due}`)) {
       // Mark this and every earlier (larger) reminder as done, so a late first run sends only one e-mail
       for (const o of offsets) if (o >= due) {
-        const k = `${settings.du.date}|${o}`;
+        const k = `${duDate}|${o}`;
         if (!state.du.includes(k)) state.du.push(k);
       }
       items.push({
         kind: 'du',
         line: left === 0
-          ? `Declarația unică: termenul este azi (${roDate(settings.du.date)}).`
-          : `Declarația unică: termenul este ${roDate(settings.du.date)}, peste ${left} ${left === 1 ? 'zi' : 'zile'}.`,
+          ? `Declarația unică: termenul este azi (${roDate(duDate)}).`
+          : `Declarația unică: termenul este ${roDate(duDate)}, peste ${left} ${left === 1 ? 'zi' : 'zile'}.`,
       });
     }
     state.du = state.du.slice(-30);

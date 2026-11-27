@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   mergeSeries, seriesFor, highOf, belowHigh, underwater, drawdownEpisodes, drawdownStats,
-  normalizeLevels, levelsFromIps, deepestLevel, nextAlertLevel, type Point, type HistoryDoc,
+  normalizeLevels, ipsDipLevels, latestIpsVersion, deepestLevel, nextAlertLevel, type Point, type HistoryDoc,
 } from './drawdown';
 import type { PricesYear } from './market';
 
@@ -87,18 +87,26 @@ describe('levels', () => {
     expect(m).toEqual([{ pct: 0.1, extraAmount: 500, currency: 'EUR', note: 'x' }]);
   });
 
-  it('levelsFromIps reads the latest IPS version, tolerant to shape', () => {
+  it('ipsDipLevels reads rules.crash from the newest version by date (not the last in the list, never the draft)', () => {
     const ips = {
       version: 1,
+      draft: { savedAt: '', sections: {}, rules: { crash: { referenceInstrumentId: 'd', rules: [{ id: 'z', dropPct: 0.5 }] } } },
       versions: [
-        { date: '2026-01-01', sections: {}, rules: { dipBuys: [{ belowHighPct: 15 }] } },
-        { date: '2026-06-01', sections: {}, rules: { dipBuys: [{ belowHighPct: 10, extraAmount: 300 }, { belowHighPct: 30 }] } },
+        { date: '2026-06-01', sections: {}, rules: { crash: { referenceInstrumentId: 'vwce', rules: [{ id: 'a', dropPct: 0.3 }, { id: 'b', dropPct: 0.1, extraAmount: 300, action: 'Cumpăr extra' }] } } },
+        { date: '2026-01-01', sections: {}, rules: { crash: { rules: [{ id: 'c', dropPct: 0.15 }] } } }, // backdated, saved last
       ],
     };
-    expect(levelsFromIps(ips)).toEqual([{ pct: 0.1, extraAmount: 300 }, { pct: 0.3 }]);
-    expect(levelsFromIps({ version: 1, versions: [] })).toEqual([]);
-    expect(levelsFromIps(null)).toEqual([]);
-    expect(levelsFromIps({ dipLevels: [25] })).toEqual([{ pct: 0.25 }]);
+    expect(latestIpsVersion(ips)?.date).toBe('2026-06-01');
+    expect(ipsDipLevels(ips)).toEqual({
+      instrumentId: 'vwce', versionDate: '2026-06-01',
+      levels: [{ pct: 0.1, extraAmount: 300, currency: 'EUR', note: 'Cumpăr extra' }, { pct: 0.3 }],
+    });
+    // No reference instrument → instrumentId null; dropPct outside (0, 1) is ignored
+    const noRef = { version: 1, versions: [{ date: '2026-01-01', sections: {}, rules: { crash: { rules: [{ id: 'a', dropPct: 0.2 }, { id: 'b', dropPct: 20 }] } } }] };
+    expect(ipsDipLevels(noRef)).toEqual({ instrumentId: null, versionDate: '2026-01-01', levels: [{ pct: 0.2 }] });
+    expect(ipsDipLevels({ version: 1, versions: [] })).toBeNull();
+    expect(ipsDipLevels({ version: 1, versions: [{ date: '2026-01-01', sections: {} }] })).toBeNull();
+    expect(ipsDipLevels(null)).toBeNull();
   });
 
   const L = normalizeLevels([10, 20, 30]);

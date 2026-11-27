@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  defaultAlertSettings, emptyAlertState, validateAlertSettings, withDefaults, effectiveLevels, heldQuantities,
+  defaultAlertSettings, emptyAlertState, validateAlertSettings, withDefaults, levelsForInstrument, ipsTaxDeadline, effectiveDuDate, heldQuantities,
   planAlerts, composeEmail, testWaitMs, recordTest, logSend, rawEmail, TESTS_PER_DAY, LOG_KEPT,
   type AlertSettings, type AlertInstrument, type AlertState,
 } from './alerts';
@@ -40,7 +40,6 @@ describe('settings', () => {
     expect(r.settings).toBeUndefined();
     expect(r.problems.join(' ')).toMatch(/extra: unknown/);
     expect(r.problems.join(' ')).toMatch(/stale.days/);
-    expect(r.problems.join(' ')).toMatch(/du.date: set the deadline/);
     expect(validateAlertSettings({ ...defaultAlertSettings(), drawdown: { ...defaultAlertSettings().drawdown, levels: [10, 10] } }).problems.join()).toMatch(/unique/);
     expect(validateAlertSettings(null).problems).toEqual(['object expected']);
   });
@@ -52,11 +51,27 @@ describe('settings', () => {
     expect(s.maturities.daysAhead).toBe(30);
   });
 
-  it('effectiveLevels prefers the IPS when allowed and present', () => {
+  it('IPS crash rules apply only to the IPS reference instrument', () => {
     const s = settings({ drawdown: { enabled: true, basis: 'ath', useIps: true, levels: L } });
-    expect(effectiveLevels(s, [{ pct: 0.15 }])).toEqual({ levels: [{ pct: 0.15 }], source: 'ips' });
-    expect(effectiveLevels(s, [])).toEqual({ levels: L, source: 'settings' });
-    expect(effectiveLevels({ ...s, drawdown: { ...s.drawdown, useIps: false } }, [{ pct: 0.15 }]).source).toBe('settings');
+    const ips = { levels: [{ pct: 0.15 }], instrumentId: 'vwce', versionDate: '2026-01-01' };
+    expect(levelsForInstrument(s, ips, 'vwce')).toEqual({ levels: [{ pct: 0.15 }], source: 'ips' });
+    expect(levelsForInstrument(s, ips, 'other')).toEqual({ levels: L, source: 'settings' });
+    expect(levelsForInstrument(s, { ...ips, instrumentId: null }, 'vwce').source).toBe('settings');
+    expect(levelsForInstrument({ ...s, drawdown: { ...s.drawdown, useIps: false } }, ips, 'vwce').source).toBe('settings');
+    expect(levelsForInstrument(s, null, 'vwce').source).toBe('settings');
+  });
+
+  it('Declarația unică deadline: own date first, else the IPS month/day (next occurrence)', () => {
+    const ips = { version: 1, versions: [{ date: '2026-01-01', sections: {}, rules: { taxReturn: { month: 5, day: 25 } } }] };
+    expect(ipsTaxDeadline(ips, '2026-11-27')).toBe('2027-05-25');
+    expect(ipsTaxDeadline(ips, '2026-05-25')).toBe('2026-05-25');
+    expect(ipsTaxDeadline({ version: 1, versions: [{ date: 'x', sections: {}, rules: { taxReturn: { month: 2, day: 31 } } }] }, '2027-01-01')).toBe('2027-02-28');
+    expect(ipsTaxDeadline({ version: 1, versions: [] }, '2026-11-27')).toBeNull();
+    expect(ipsTaxDeadline(null, '2026-11-27')).toBeNull();
+    const s = settings();
+    expect(effectiveDuDate(s, '2027-05-25')).toBe('2027-05-25');
+    expect(effectiveDuDate({ ...s, du: { ...s.du, date: '2027-05-20' } }, '2027-05-25')).toBe('2027-05-20');
+    expect(effectiveDuDate(s, null)).toBe('');
   });
 });
 
@@ -76,13 +91,13 @@ describe('planAlerts', () => {
   const dd = settings({ drawdown: { enabled: true, basis: 'ath', useIps: false, levels: L } });
 
   it('nothing enabled → no items, state untouched except lastRun', () => {
-    const p = planAlerts({ ...base, settings: settings(), state: emptyAlertState(), instruments: [inst()], levels: L });
+    const p = planAlerts({ ...base, settings: settings(), state: emptyAlertState(), instruments: [inst()], ips: null });
     expect(p.items).toEqual([]);
     expect(p.state.lastRun).toBe(base.now);
   });
 
   it('drawdown: once per crossing, no amounts by default', () => {
-    const p1 = planAlerts({ ...base, settings: dd, state: emptyAlertState(), instruments: [inst()], levels: L });
+    const p1 = planAlerts({ ...base, settings: dd, state: emptyAlertState(), instruments: [inst()], ips: null });
     expect(p1.items).toHaveLength(1);
     expect(p1.items[0].line).toContain('12 % sub maximul istoric (01.02.2026)');
     expect(p1.items[0].line).toContain('pragul tău de −10 %');
@@ -90,43 +105,52 @@ describe('planAlerts', () => {
     expect(p1.items[0].line).not.toMatch(/500|100|113/);
     expect(p1.state.drawdown.vwce.level).toBe(0.1);
     // Next day, same depth: silent
-    const p2 = planAlerts({ ...base, settings: dd, state: p1.state, instruments: [inst({ belowAth: 0.13 })], levels: L });
+    const p2 = planAlerts({ ...base, settings: dd, state: p1.state, instruments: [inst({ belowAth: 0.13 })], ips: null });
     expect(p2.items).toEqual([]);
     // Deeper: new level
-    const p3 = planAlerts({ ...base, settings: dd, state: p2.state, instruments: [inst({ belowAth: 0.22 })], levels: L });
+    const p3 = planAlerts({ ...base, settings: dd, state: p2.state, instruments: [inst({ belowAth: 0.22 })], ips: null });
     expect(p3.items[0].line).toContain('pragul tău de −20 %.');
     expect(p3.items[0].line).not.toContain('suma');
     // A gap through several levels names all of them
-    const gap = planAlerts({ ...base, settings: dd, state: emptyAlertState(), instruments: [inst({ belowAth: 0.31 })], levels: L });
+    const gap = planAlerts({ ...base, settings: dd, state: emptyAlertState(), instruments: [inst({ belowAth: 0.31 })], ips: null });
     expect(gap.items[0].line).toContain('pragurile tale de −10 %, −20 % și −30 %');
   });
 
+  it('drawdown: IPS rules for the reference instrument, own levels for the others', () => {
+    const s = settings({ drawdown: { enabled: true, basis: 'ath', useIps: true, levels: [] } });
+    const ips = { levels: normalizeLevels([{ pct: 0.1, note: 'cumpăr extra' }]), instrumentId: 'vwce', versionDate: '2026-01-01' };
+    const p = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [inst(), inst({ id: 'x', name: 'Alt', ticker: 'ALT' })], ips });
+    expect(p.items).toHaveLength(1);
+    expect(p.items[0].line).toContain('VWCE');
+    expect(p.items[0].line).toContain('Notă −10 %: cumpăr extra');
+  });
+
   it('drawdown with amounts enabled shows price, high and the planned extra amount', () => {
-    const p = planAlerts({ ...base, settings: { ...dd, includeAmounts: true }, state: emptyAlertState(), instruments: [inst()], levels: L });
+    const p = planAlerts({ ...base, settings: { ...dd, includeAmounts: true }, state: emptyAlertState(), instruments: [inst()], ips: null });
     expect(p.items[0].line).toContain('Preț 100 EUR');
     expect(p.items[0].line).toContain('cumpărare suplimentară de 500 EUR la −10 %');
   });
 
   it('drawdown can use the 52-week high', () => {
     const s = settings({ drawdown: { enabled: true, basis: 'high52', useIps: false, levels: L } });
-    expect(planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [inst()], levels: L }).items).toEqual([]);
+    expect(planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [inst()], ips: null }).items).toEqual([]);
   });
 
   it('stale prices: once per stale date, cleared when prices resume', () => {
     const s = settings({ stale: { enabled: true, days: 5 } });
     const old = inst({ latest: { date: '2026-11-10', close: 1, currency: 'EUR' } });
-    const p1 = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [old, inst({ id: 'm', auto: false, latest: null })], levels: [] });
+    const p1 = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [old, inst({ id: 'm', auto: false, latest: null })], ips: null });
     expect(p1.items.map(i => i.line)).toEqual(['Vanguard FTSE All-World (VWCE): prețul nu s-a mai actualizat din 10.11.2026 (17 zile).']);
-    expect(planAlerts({ ...base, settings: s, state: p1.state, instruments: [old], levels: [] }).items).toEqual([]);
-    const p3 = planAlerts({ ...base, settings: s, state: p1.state, instruments: [inst()], levels: [] });
+    expect(planAlerts({ ...base, settings: s, state: p1.state, instruments: [old], ips: null }).items).toEqual([]);
+    const p3 = planAlerts({ ...base, settings: s, state: p1.state, instruments: [inst()], ips: null });
     expect(p3.state.stale).toEqual({});
-    const none = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [inst({ latest: null })], levels: [] });
+    const none = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [inst({ latest: null })], ips: null });
     expect(none.items[0].line).toContain('niciun preț automat');
   });
 
   it('Declarația unică: one reminder per window, late start sends only the nearest', () => {
     const s = settings({ du: { enabled: true, date: '2027-05-25', daysBefore: [30, 7, 1] } });
-    const at = (today: string, state: AlertState) => planAlerts({ ...base, today, settings: s, state, instruments: [], levels: [] });
+    const at = (today: string, state: AlertState) => planAlerts({ ...base, today, settings: s, state, instruments: [], ips: null });
     expect(at('2027-04-01', emptyAlertState()).items).toEqual([]);
     const p1 = at('2027-04-25', emptyAlertState());
     expect(p1.items[0].line).toBe('Declarația unică: termenul este 25.05.2027, peste 30 de zile.'.replace('30 de zile', '30 zile'));
@@ -139,17 +163,20 @@ describe('planAlerts', () => {
     expect(late.state.du).toEqual(['2027-05-25|7', '2027-05-25|30']);
     expect(at('2027-05-24', late.state).items[0].line).toContain('peste 1 zi');
     expect(at('2027-05-26', emptyAlertState()).items).toEqual([]);
+    // Empty own date: the IPS deadline is used
+    const viaIps = planAlerts({ ...base, today: '2027-05-20', settings: settings({ du: { enabled: true, date: '', daysBefore: [7] } }), state: emptyAlertState(), instruments: [], ips: null, ipsTaxDeadline: '2027-05-25' });
+    expect(viaIps.items[0].line).toContain('25.05.2027');
     // Disabled or no date: nothing
-    expect(planAlerts({ ...base, today: '2027-05-24', settings: settings(), state: emptyAlertState(), instruments: [], levels: [] }).items).toEqual([]);
+    expect(planAlerts({ ...base, today: '2027-05-24', settings: settings(), state: emptyAlertState(), instruments: [], ips: null }).items).toEqual([]);
   });
 
   it('maturities: held bonds within the window, once each; amount only when enabled', () => {
     const s = settings({ maturities: { enabled: true, daysAhead: 30 } });
     const bond = inst({ id: 'tz', name: 'Tezaur 2026', ticker: undefined, auto: false, maturity: '2026-12-15', held: 20, faceValue: 100, currency: 'RON' });
-    const p1 = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [bond, { ...bond, id: 'sold', held: 0 }, { ...bond, id: 'far', maturity: '2027-06-01' }], levels: [] });
+    const p1 = planAlerts({ ...base, settings: s, state: emptyAlertState(), instruments: [bond, { ...bond, id: 'sold', held: 0 }, { ...bond, id: 'far', maturity: '2027-06-01' }], ips: null });
     expect(p1.items.map(i => i.line)).toEqual(['Tezaur 2026: ajunge la scadență pe 15.12.2026 (peste 18 zile).']);
-    expect(planAlerts({ ...base, settings: s, state: p1.state, instruments: [bond], levels: [] }).items).toEqual([]);
-    const withAmt = planAlerts({ ...base, settings: { ...s, includeAmounts: true }, state: emptyAlertState(), instruments: [bond], levels: [] });
+    expect(planAlerts({ ...base, settings: s, state: p1.state, instruments: [bond], ips: null }).items).toEqual([]);
+    const withAmt = planAlerts({ ...base, settings: { ...s, includeAmounts: true }, state: emptyAlertState(), instruments: [bond], ips: null });
     expect(withAmt.items[0].line).toContain('2.000 RON');
   });
 

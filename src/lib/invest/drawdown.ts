@@ -194,20 +194,36 @@ export function normalizeLevels(levels: readonly unknown[] | undefined): DipLeve
   return [...out.values()].sort((a, b) => a.pct - b.pct);
 }
 
+/** Newest IPS version by date (ties: the one saved last), as in ips-checks.ts. Drafts are never read. */
+export function latestIpsVersion(ips: unknown): Record<string, unknown> | null {
+  const versions = (ips as { versions?: unknown } | null)?.versions;
+  if (!Array.isArray(versions) || !versions.length) return null;
+  let best = versions[0] as Record<string, unknown>;
+  for (const v of versions as Record<string, unknown>[]) if (String(v?.date ?? '') >= String(best?.date ?? '')) best = v;
+  return best && typeof best === 'object' ? best : null;
+}
+
+/** Dip-buy rules from the IPS in force: they apply to ONE reference instrument (none when it isn't set). */
+export interface IpsLevels { levels: DipLevel[]; instrumentId: string | null; versionDate: string }
+
 /**
- * Reads dip-buy levels from invest/ips.json if the IPS page (Phase 6) stored any, in the latest version.
- * Tolerant: looks for `rules.dipBuys`, `rules.dipLevels`, `dipBuys` or `dipLevels`. Empty when absent.
+ * Reads `rules.crash` from the newest invest/ips.json version (Phase 6):
+ * `{ referenceInstrumentId?, rules: [{ id, dropPct (decimal), action?, extraAmount? (EUR) }] }`.
+ * null when there is no version or no crash rules.
  */
-export function levelsFromIps(ips: unknown): DipLevel[] {
-  const versions = (ips as { versions?: unknown[] } | null)?.versions;
-  const latest = Array.isArray(versions) && versions.length
-    ? [...versions].sort((a, b) => String((a as { date?: string }).date ?? '').localeCompare(String((b as { date?: string }).date ?? ''))).at(-1)
-    : ips;
-  const v = latest as Record<string, unknown> | null;
-  if (!v || typeof v !== 'object') return [];
-  const rules = (v.rules ?? {}) as Record<string, unknown>;
-  const list = rules.dipBuys ?? rules.dipLevels ?? v.dipBuys ?? v.dipLevels;
-  return Array.isArray(list) ? normalizeLevels(list) : [];
+export function ipsDipLevels(ips: unknown): IpsLevels | null {
+  const v = latestIpsVersion(ips);
+  const crash = (v?.rules as { crash?: { referenceInstrumentId?: unknown; rules?: unknown } } | undefined)?.crash;
+  if (!crash || !Array.isArray(crash.rules)) return null;
+  const levels = normalizeLevels(crash.rules.map(r => {
+    const o = (r ?? {}) as { dropPct?: unknown; action?: unknown; extraAmount?: unknown };
+    const pct = Number(o.dropPct);
+    // dropPct is a decimal; anything outside (0, 1) is invalid (normalizeLevels would read ≥ 1 as percent)
+    return { pct: pct > 0 && pct < 1 ? pct : NaN, extraAmount: o.extraAmount, currency: o.extraAmount ? 'EUR' : undefined, note: o.action };
+  }));
+  if (!levels.length) return null;
+  const ref = crash.referenceInstrumentId;
+  return { levels, instrumentId: typeof ref === 'string' && ref ? ref : null, versionDate: String(v?.date ?? '') };
 }
 
 /** Deepest level reached by a fall of `below` (fraction), or 0 when none. */

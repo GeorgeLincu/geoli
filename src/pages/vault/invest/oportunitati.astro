@@ -72,7 +72,7 @@ import '../../../styles/invest-drawdown.css';
         <label class="al-field">Măsurat față de
           <select name="basis"><option value="ath">maximul istoric</option><option value="high52">maximul pe 52 de săptămâni</option></select>
         </label>
-        <label class="al-check"><input type="checkbox" name="useIps" /> Folosește pragurile din IPS, dacă le-ai trecut acolo</label>
+        <label class="al-check"><input type="checkbox" name="useIps" /> Pentru instrumentul de referință din IPS, folosește regulile de scădere din IPS</label>
         <p class="inv-muted" id="ipsLevels" hidden></p>
         <div class="dd-table-wrap">
           <table class="dd-table dd-table--plain al-levels" id="lvTable">
@@ -81,7 +81,7 @@ import '../../../styles/invest-drawdown.css';
           </table>
         </div>
         <button type="button" class="inv-btn" id="lvAdd">Adaugă prag</button>
-        <p class="plan-hint">Ex.: 10, 20, 30. Suma e opțională: ce ți-ai propus tu să cumperi în plus la acel prag. Fiecare prag se anunță o singură dată; se rearmează după ce prețul revine cu 2,5 puncte peste el.</p>
+        <p class="plan-hint">Pragurile de aici se aplică tuturor instrumentelor (în afară de cel de referință din IPS, dacă bifezi mai sus). Ex.: 10, 20, 30. Suma e opțională: ce ți-ai propus tu să cumperi în plus la acel prag. Fiecare prag se anunță o singură dată; se rearmează după ce prețul revine cu 2,5 puncte peste el.</p>
       </fieldset>
 
       <fieldset class="al-set">
@@ -96,6 +96,7 @@ import '../../../styles/invest-drawdown.css';
         <label class="al-field">Termen <input type="date" name="duDate" /></label>
         <label class="al-field">Cu câte zile înainte <input type="text" name="duBefore" inputmode="numeric" placeholder="30, 7, 1" /></label>
         <p class="plan-hint">Trece tu data termenului din anul respectiv (de pe anaf.ro); nu e completată automat.</p>
+        <p class="plan-hint" id="duIps" hidden></p>
       </fieldset>
 
       <fieldset class="al-set">

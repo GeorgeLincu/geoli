@@ -73,3 +73,4 @@
 
 .al-log { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.3rem; font-size: 0.88rem; }
 .al-log .is-err { color: var(--err-text); }
+.dd-levels__label { align-self: center; font-size: 0.8rem; color: var(--text-muted); }

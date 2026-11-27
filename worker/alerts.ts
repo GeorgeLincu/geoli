@@ -20,10 +20,10 @@ import {
 } from '../src/lib/invest/market';
 import {
   HISTORY_VERSION, HISTORY_DAILY_DAYS, emptyHistoryIndex, yahooWeeklyUrl, pointsToTuples, highOf, mergeSeries,
-  drawdownStats, levelsFromIps, type HistoryDoc, type HistoryIndex, type Point,
+  drawdownStats, ipsDipLevels, type HistoryDoc, type HistoryIndex, type Point,
 } from '../src/lib/invest/drawdown';
 import {
-  withDefaults, validateAlertSettings, emptyAlertState, effectiveLevels, heldQuantities, planAlerts, composeEmail,
+  withDefaults, validateAlertSettings, emptyAlertState, ipsTaxDeadline, effectiveDuDate, heldQuantities, planAlerts, composeEmail,
   logSend, testWaitMs, recordTest, rawEmail, type AlertState, type AlertInstrument,
 } from '../src/lib/invest/alerts';
 
@@ -185,7 +185,7 @@ async function alertInputs(env: Env, today: string) {
       maturity: i.maturity, faceValue: i.faceValue, held: held.get(i.id) ?? 0,
     };
   });
-  return { instruments, ipsLevels: levelsFromIps(ips) };
+  return { instruments, ips: ipsDipLevels(ips), ipsDeadline: ipsTaxDeadline(ips, today) };
 }
 
 export async function runAlerts(env: Env) {
@@ -194,9 +194,8 @@ export async function runAlerts(env: Env) {
   const now = new Date().toISOString();
   const today = now.slice(0, 10);
   const state = (await getJson<AlertState>(env, STATE_KEY)) ?? emptyAlertState();
-  const { instruments, ipsLevels } = await alertInputs(env, today);
-  const { levels } = effectiveLevels(settings, ipsLevels);
-  const plan = planAlerts({ today, now, settings, state, instruments, levels, pageUrl: SITE + PAGE_PATH });
+  const { instruments, ips, ipsDeadline } = await alertInputs(env, today);
+  const plan = planAlerts({ today, now, settings, state, instruments, ips, ipsTaxDeadline: ipsDeadline, pageUrl: SITE + PAGE_PATH });
   if (!plan.items.length) { await putJson(env, STATE_KEY, plan.state); return { sent: false, reason: 'nothing new' }; }
   const kinds = [...new Set(plan.items.map(i => i.kind))];
   try {
@@ -220,11 +219,13 @@ export async function handleAlertsApi(request: Request, env: Env, sub: string, o
       getJson(env, SETTINGS_KEY), getJson<AlertState>(env, STATE_KEY), getJson<HistoryIndex>(env, INDEX_KEY), getJson(env, IPS_KEY),
     ]);
     const settings = withDefaults(raw);
-    const ipsLevels = levelsFromIps(ips);
-    const eff = effectiveLevels(settings, ipsLevels);
     const st = state ?? emptyAlertState();
+    const today = new Date().toISOString().slice(0, 10);
+    const ipsDeadline = ipsTaxDeadline(ips, today);
     return json({
-      settings, saved: !!raw, ipsLevels, levels: eff.levels, levelsSource: eff.source,
+      settings, saved: !!raw,
+      // IPS crash rules (reference instrument only) and the DU deadline actually used
+      ips: ipsDipLevels(ips), ipsTaxDeadline: ipsDeadline, duDate: effectiveDuDate(settings, ipsDeadline),
       state: { lastRun: st.lastRun ?? null, log: st.log, drawdown: st.drawdown },
       history: index ?? emptyHistoryIndex(),
       email: { configured: !!env.CONTACT_EMAIL, to: ownerAddress(env), from: env.CONTACT_FROM || 'formular@geoli.eu' },
