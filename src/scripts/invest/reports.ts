@@ -3,15 +3,17 @@ import type { EChartsCoreOption } from 'echarts/core';
 import { toast } from './common';
 import { axisStyle, type ChartTheme } from './charts';
 import { chartIn } from './chart-slot';
-import { loadReportContext, ensureSnapshots, snapshotOf } from './report-data';
-import { yearFigures, realOf, type YearFigures } from '../../lib/invest/report';
+import { loadReportContext, ensureSnapshots, snapshotOf, saveData, type ReportContext } from './report-data';
+import { yearFigures, realOf, benchmarkReturn, yearEnd, type YearFigures } from '../../lib/invest/report';
 import { isEdited } from '../../lib/invest/snapshots';
 import { eur, signedEur, pct, fmtDate, axisMoney, el, byId, trendClass, row } from './report-ui';
 
 async function main() {
   const state = byId('rpState')!;
+  void initMonthly();
   try {
     const ctx = await loadReportContext();
+    initBenchmark(ctx);
     if (!ctx.history) {
       state.textContent = 'Încă nu există tranzacții. Adaugă-le în Portofoliu; rapoartele apar automat pentru fiecare an.';
       return;
@@ -31,9 +33,11 @@ async function main() {
       const real = f.complete ? realOf(f.twr, snap?.inflation) : null;
       const cell = (text: string, x: number | null) => el('span', text, trendClass(x));
       const snapText = !f.complete ? `până la ${fmtDate(f.end)}` : !snap ? 'lipsă' : isEdited(snap) ? 'salvat, corectat' : 'salvat';
+      const bm = benchmarkReturn(ctx.data.instruments.find(i => i.id === ctx.data.settings.benchmarkInstrumentId), { fx: ctx.fx, prices: ctx.prices }, yearEnd(f.year - 1), f.end);
       const tr = row(link, [
         eur(f.endEur), signedEur(f.netContributions), cell(signedEur(f.market), f.market),
         cell(pct(f.twr, true), f.twr), cell(pct(f.xirr, true), f.xirr), cell(pct(real, true), real),
+        cell(bm ? pct(bm.ret, true) : '—', bm?.ret ?? null),
       ]);
       const td = el('td', snapText);
       tr.append(td);
@@ -64,3 +68,78 @@ async function main() {
 }
 
 void main();
+
+// ─── Benchmark picker ───
+
+function initBenchmark(ctx: ReportContext) {
+  const card = byId('bmCard');
+  const form = byId<HTMLFormElement>('bmForm');
+  if (!card || !form) return;
+  const select = form.elements.namedItem('instrumentId') as HTMLSelectElement;
+  const none = el('option', '— niciunul —'); none.value = '';
+  const opts = [...ctx.data.instruments]
+    .sort((a, b) => (a.ticker || a.name).localeCompare(b.ticker || b.name))
+    .map(i => { const o = el('option', `${i.ticker ? `${i.ticker} · ` : ''}${i.name}${i.priceSource ? '' : ' (fără sursă automată)'}`); o.value = i.id; return o; });
+  select.replaceChildren(none, ...opts);
+  select.value = ctx.data.settings.benchmarkInstrumentId ?? '';
+  card.hidden = !ctx.dataExists;
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    const settings = { ...ctx.data.settings };
+    if (select.value) settings.benchmarkInstrumentId = select.value; else delete settings.benchmarkInstrumentId;
+    try {
+      await saveData(ctx, { ...ctx.data, settings });
+      toast('Indicele de referință a fost salvat.');
+      setTimeout(() => location.reload(), 500);
+    } catch (err) { toast((err as Error).message, 'err'); }
+  });
+}
+
+// ─── Monthly e-mail ───
+
+interface MonthlyInfo {
+  settings: { version: 1; enabled: boolean; includeAmounts: boolean };
+  state: { lastSent?: string; log: { at: string; month: string; ok: boolean; message?: string }[] };
+  email: { configured: boolean; to: string };
+}
+
+async function monthlyApi<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`/vault/api/invest/monthly${path}`, {
+    cache: 'no-store', ...init, headers: { Accept: 'application/json', ...(init?.body ? { 'Content-Type': 'application/json' } : {}) },
+  });
+  const body = await res.json().catch(() => ({})) as T & { error?: string; problems?: string[] };
+  if (!res.ok) throw new Error([body.error || `Eroare ${res.status}`, ...(body.problems ?? [])].join(': '));
+  return body;
+}
+
+async function initMonthly() {
+  const form = byId<HTMLFormElement>('moForm');
+  const state = byId('moState');
+  if (!form || !state) return;
+  const box = (n: string) => form.elements.namedItem(n) as HTMLInputElement;
+  const show = (info: MonthlyInfo) => {
+    box('enabled').checked = info.settings.enabled;
+    box('includeAmounts').checked = info.settings.includeAmounts;
+    const last = info.state.log[0];
+    state.textContent = [
+      info.email.configured ? `Se trimite la ${info.email.to}.` : 'Trimiterea de e-mail nu e configurată pe server.',
+      info.state.lastSent ? `Ultimul rezumat: luna ${info.state.lastSent}.` : '',
+      last && !last.ok ? `Ultima încercare a eșuat: ${last.message ?? ''}` : '',
+    ].filter(Boolean).join(' ');
+  };
+  try { show(await monthlyApi<MonthlyInfo>('')); } catch (e) { state.textContent = (e as Error).message; }
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    try {
+      await monthlyApi('/settings', { method: 'PUT', body: JSON.stringify({ version: 1, enabled: box('enabled').checked, includeAmounts: box('includeAmounts').checked }) });
+      toast('Setările rezumatului lunar au fost salvate.');
+      show(await monthlyApi<MonthlyInfo>(''));
+    } catch (err) { toast((err as Error).message, 'err'); }
+  });
+  byId('moTest')?.addEventListener('click', async () => {
+    try {
+      const r = await monthlyApi<{ to: string; month: string }>('/test', { method: 'POST' });
+      toast(`Test trimis la ${r.to} (luna ${r.month}).`);
+    } catch (err) { toast((err as Error).message, 'err'); }
+  });
+}

@@ -1,0 +1,58 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-reports.css';
+---
+<Invest title="Ce-ar fi dacă" active="simulare">
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Ce-ar fi dacă retrag bani?</h1>
+      <p class="inv-lead">Simulează o retragere azi: ce s-ar vinde, cât impozit ai datora, cum se schimbă alocarea și cât te întârzie față de FI. Nu se salvează și nu se vinde nimic.</p>
+    </div>
+  </div>
+
+  <section class="inv-card" aria-labelledby="wiFormTitle">
+    <h2 id="wiFormTitle" class="inv-h2">Retragerea</h2>
+    <form class="rp-edit" id="wiForm">
+      <label>Suma <input type="text" name="amount" inputmode="decimal" autocomplete="off" required /></label>
+      <label>Moneda <select name="currency"><option value="RON">lei</option><option value="EUR">EUR</option></select></label>
+      <label>Din contul <select name="accountId"></select></label>
+      <label>Doar din instrumentul <select name="instrumentId"></select></label>
+      <div class="rp-edit__actions"><button class="inv-btn inv-btn--primary" type="submit">Calculează</button></div>
+    </form>
+    <p class="rp-note">Se vinde proporțional din toate pozițiile alese (Pilon 2/3 nu intră). Câștigul se calculează la costul mediu ponderat, ca în Portofoliu.</p>
+    <p class="inv-muted" id="wiState">Se încarcă…</p>
+  </section>
+
+  <div class="rp-body" id="wiOut" hidden>
+    <section class="inv-card" aria-labelledby="wiSumTitle">
+      <h2 id="wiSumTitle" class="inv-h2">Rezultat</h2>
+      <dl class="kpis" id="wiKpis"></dl>
+      <p class="rp-warn" id="wiWarn" hidden></p>
+    </section>
+
+    <section class="inv-card" aria-labelledby="wiSalesTitle">
+      <h2 id="wiSalesTitle" class="inv-h2">Ce s-ar vinde</h2>
+      <div class="rp-table-wrap">
+        <table class="rp-table" id="wiSales">
+          <thead><tr><th scope="col">Instrument</th><th scope="col">Cont</th><th scope="col" class="num">Unități</th><th scope="col" class="num">Valoare</th><th scope="col" class="num">Câștig (lei)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="inv-card" aria-labelledby="wiAllocTitle">
+      <h2 id="wiAllocTitle" class="inv-h2">Alocarea înainte și după</h2>
+      <div class="rp-table-wrap">
+        <table class="rp-table" id="wiAlloc">
+          <thead><tr><th scope="col">Rând țintă</th><th scope="col" class="num">Țintă</th><th scope="col" class="num">Acum</th><th scope="col" class="num">După</th><th scope="col">Stare după</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="inv-muted" id="wiAllocState"></p>
+    </section>
+  </div>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/whatif';
+</script>

@@ -1,0 +1,47 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-reports.css';
+---
+<Invest title="Jurnal" active="jurnal">
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Jurnalul deciziilor</h1>
+      <p class="inv-lead">Notează de ce cumperi, vinzi sau schimbi ceva, cât timp e proaspăt. La revizuirea anuală a IPS recitești și scrii cum a ieșit. Notele apar și în raportul anului.</p>
+    </div>
+  </div>
+
+  <section class="inv-card" aria-labelledby="jrFormTitle">
+    <h2 id="jrFormTitle" class="inv-h2">Notă nouă</h2>
+    <form class="rp-edit" id="jrForm">
+      <input type="hidden" name="id" />
+      <label>Data <input type="date" name="date" required /></label>
+      <label>Titlu <input type="text" name="title" maxlength="200" required autocomplete="off" /></label>
+      <label class="rp-edit__wide">Ce am decis și de ce
+        <textarea name="text" rows="5" maxlength="10000" required></textarea>
+      </label>
+      <label>Tranzacție legată <small>opțional</small>
+        <select name="txId"></select>
+      </label>
+      <label>Instrument <small>opțional</small>
+        <select name="instrumentId"></select>
+      </label>
+      <label class="rp-edit__wide">Cum a ieșit <small>completezi mai târziu</small>
+        <textarea name="review" rows="3" maxlength="10000"></textarea>
+      </label>
+      <div class="rp-edit__actions">
+        <button class="inv-btn inv-btn--primary" type="submit" id="jrSave">Adaugă nota</button>
+        <button class="inv-btn" type="button" id="jrCancel" hidden>Renunță la modificare</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="inv-card" aria-labelledby="jrListTitle">
+    <h2 id="jrListTitle" class="inv-h2">Note</h2>
+    <p class="inv-muted" id="jrState">Se încarcă…</p>
+    <div class="jr-list" id="jrList"></div>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/journal';
+</script>

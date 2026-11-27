@@ -38,6 +38,17 @@ import '../../../styles/invest-reports.css';
     <ul class="db-alerts" id="dbAlerts"></ul>
   </section>
 
+  <section class="inv-card" aria-labelledby="bpTitle">
+    <h2 id="bpTitle" class="inv-h2">Ce cumpăr luna asta</h2>
+    <form class="rp-edit" id="bpForm">
+      <label>Suma de investit (EUR) <input type="text" name="amount" inputmode="decimal" autocomplete="off" /></label>
+      <label class="rp-check"><input type="checkbox" name="fractional" /> Brokerul meu permite fracțiuni de unitate</label>
+      <div class="rp-edit__actions"><button class="inv-btn" type="submit">Recalculează</button></div>
+    </form>
+    <p class="inv-muted" id="bpState">Se calculează…</p>
+    <ul class="db-alerts" id="bpList"></ul>
+  </section>
+
   <section class="inv-card" aria-labelledby="dbNwTitle">
     <h2 id="dbNwTitle" class="inv-h2">Avere netă în timp, pe clase de active</h2>
     <div class="inv-chart inv-chart--tall" id="dbNwChart" role="img" aria-label="Averea netă la sfârșitul fiecărei luni, stivuită pe clase de active, cu datoriile sub zero și linia averii nete"></div>
@@ -108,4 +119,5 @@ import '../../../styles/invest-reports.css';
   import '../../../scripts/invest/dashboard';
   import '../../../scripts/invest/market';
   import '../../../scripts/invest/calendar-card';
+  import '../../../scripts/invest/buyplan-card';
 </script>

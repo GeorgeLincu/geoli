@@ -1,6 +1,6 @@
 // Loads everything the yearly reports need and keeps the year-end snapshots up to date.
 // Shared by /vault/invest/rapoarte/ (list) and /vault/invest/rapoarte/<an>/ (one year).
-import { loadDocOnce, loadMarketOnce, loadSnapshots, saveSnapshot, type SnapshotList } from './api';
+import { loadDocOnce, loadMarketOnce, loadSnapshots, saveSnapshot, saveDoc, type SnapshotList, type Loaded } from './api';
 import { manualFx, chainFx, type FxSource } from '../../lib/invest/fx';
 import { manualPrices, chainPrices, type PriceSource } from '../../lib/invest/prices';
 import { bnrFx, storePrices } from '../../lib/invest/market-sources';
@@ -20,6 +20,8 @@ export interface ReportContext {
   today: string;
   data: InvestData;
   dataExists: boolean;
+  /** As loaded (ETag), for saving data.json from the report pages */
+  loaded: Loaded<'data'>;
   ips: IpsDoc | null;
   rules: TaxRules | null;
   fxDocs: FxYear[];
@@ -50,12 +52,18 @@ export async function loadReportContext(): Promise<ReportContext> {
   const prices = chainPrices(storePrices(market.prices, data.instruments, fx), manualPrices(data.prices ?? []));
   const ips = ipsDoc?.exists ? ipsDoc.doc : null;
   const ctx: ReportContext = {
-    today, data, dataExists: d.exists, ips, rules: rulesDoc?.exists ? rulesDoc.doc : null,
+    today, data, dataExists: d.exists, loaded: d, ips, rules: rulesDoc?.exists ? rulesDoc.doc : null,
     fxDocs: market.fx, fx, prices, snaps, history: null, years: [],
     emergencyAccountIds: activeIpsRules(ips)?.rules.emergencyFund?.accountIds ?? [],
   };
   rebuildHistory(ctx);
   return ctx;
+}
+
+/** Saves a changed copy of data.json (ETag); the context keeps the new state. */
+export async function saveData(ctx: ReportContext, next: InvestData) {
+  ctx.loaded = await saveDoc('data', ctx.loaded, next);
+  ctx.data = next;
 }
 
 /** Recomputes the month-end history with the corrected snapshot values. */

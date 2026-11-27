@@ -5,7 +5,7 @@ import { axisStyle, emptyChart, installPrintTheme, type ChartTheme } from './cha
 import { chartIn } from './chart-slot';
 import { loadReportContext, ensureSnapshots, snapshotOf, saveComputedSnapshot, storeSnapshot, rebuildHistory, type ReportContext } from './report-data';
 import {
-  yearFigures, pointAt, waterfall, waterfallBars, driftOf, accountValues, ipsCompliance, fiProgress, realOf, taxResults,
+  yearFigures, pointAt, waterfall, benchmarkReturn, yearEnd, waterfallBars, driftOf, accountValues, ipsCompliance, fiProgress, realOf, taxResults,
   type YearFigures,
 } from '../../lib/invest/report';
 import { drawdownSeries, wealthIndex } from '../../lib/invest/returns';
@@ -54,6 +54,15 @@ function renderKpis(f: YearFigures, snap: YearSnapshot | null, nwEur: number | n
     kpi('Comisioane', eur(f.fees)),
     kpi('Avere netă', eur(nwEur), { href: '/vault/invest/avere/', linkText: 'Avere netă →' }),
   ];
+  const bmInst = ctx.data.instruments.find(i => i.id === ctx.data.settings.benchmarkInstrumentId);
+  if (bmInst) {
+    const bm = benchmarkReturn(bmInst, { fx: ctx.fx, prices: ctx.prices }, yearEnd(YEAR - 1), f.end);
+    const diff = bm && f.twr !== null ? f.twr - bm.ret : null;
+    items.splice(6, 0, kpi(`Referință: ${bmInst.ticker || bmInst.name}`, bm ? pct(bm.ret, true) : '—', {
+      cls: trendClass(bm?.ret ?? null),
+      note: !bm ? 'fără prețuri pentru perioadă' : diff === null ? 'preț în EUR' : `tu: ${diff >= 0 ? '+' : '−'}${NF1.format(Math.abs(diff) * 100)} pp față de referință`,
+    }));
+  }
   byId('rpKpis')!.replaceChildren(...items);
   const warn = byId('rpWarn')!;
   const notes: string[] = [];
@@ -281,6 +290,20 @@ function renderTax() {
   ].filter(Boolean).join(' ');
 }
 
+function renderJournal() {
+  const entries = (ctx.data.journal ?? []).filter(j => j.date.startsWith(`${YEAR}-`)).sort((a, b) => a.date.localeCompare(b.date));
+  const state = byId('rpJournalState')!;
+  state.replaceChildren(entries.length ? `${entries.length} ${entries.length === 1 ? 'notă' : 'note'}. ` : 'Nicio notă în acest an. ');
+  const link = el('a', 'Deschide jurnalul →'); link.href = '/vault/invest/jurnal/';
+  state.append(link);
+  byId('rpJournal')!.replaceChildren(...entries.map(j => {
+    const box = el('article', null, 'jr-entry');
+    box.append(el('p', fmtDate(j.date), 'jr-meta'), el('h3', j.title), el('p', j.text));
+    if (j.review) box.append(el('p', `Cum a ieșit${j.reviewedOn ? ` (${fmtDate(j.reviewedOn)})` : ''}: ${j.review}`, 'jr-review'));
+    return box;
+  }));
+}
+
 // ─── Snapshot editor ───
 
 function renderSnapshot(f: YearFigures) {
@@ -369,6 +392,7 @@ function render() {
   renderIps(f);
   renderFiAndNetWorth(f, nwEur, nwRon);
   renderTax();
+  renderJournal();
   renderSnapshot(f);
 }
 

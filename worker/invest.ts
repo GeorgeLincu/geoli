@@ -14,6 +14,7 @@ import { emptyDoc } from '../src/lib/invest/types';
 import { handleMarketApi } from './market';
 import { handleAlertsApi } from './alerts';
 import { handleSnapshotsApi } from './snapshots';
+import { handleMonthlyApi } from './monthly';
 
 export const INVEST_PREFIX = 'invest/';
 const BACKUPS_KEPT = 50;
@@ -37,6 +38,9 @@ export async function handleInvest(request: Request, env: Env, url: URL, user: U
   }
   if (path === '/vault/api/invest/snapshots' || path.startsWith('/vault/api/invest/snapshots/')) {
     return handleSnapshotsApi(request, env, path.slice('/vault/api/invest/snapshots'.length).replace(/^\//, ''));
+  }
+  if (path === '/vault/api/invest/monthly' || path.startsWith('/vault/api/invest/monthly/')) {
+    return handleMonthlyApi(request, env, path.slice('/vault/api/invest/monthly'.length).replace(/^\//, ''));
   }
   if (path.startsWith('/vault/api/invest/')) return handleApi(request, env, path.slice('/vault/api/invest/'.length));
 

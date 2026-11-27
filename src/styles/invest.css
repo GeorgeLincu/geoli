@@ -101,7 +101,7 @@
 .inv-menu__title { font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); padding: 0.25rem 0; }
 .inv-menu__panel a { padding: 0.55rem 0; margin: 0; border: 0; color: var(--text); }
 .inv-menu__panel a[aria-current="page"] { color: var(--accent-text); font-weight: 600; }
-@media (max-width: 760px) {
+@media (max-width: 1180px) {
   .inv-nav { display: none; }
   .inv-menu { display: block; }
 }

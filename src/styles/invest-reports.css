@@ -96,3 +96,17 @@
   details > summary { list-style: none; }
   a { color: inherit; text-decoration: none; }
 }
+
+/* ─── Extras: checkboxes in forms, journal, what-if, costs, buy plan ─── */
+.rp-check { display: flex !important; align-items: center; gap: 0.5rem; grid-column: 1 / -1; font-weight: 500; }
+.rp-check input { width: 1.1rem; height: 1.1rem; accent-color: var(--indigo); }
+.jr-list { display: grid; gap: 0.75rem; }
+.jr-entry { border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; display: grid; gap: 0.35rem; }
+.jr-entry h3 { font-size: 1rem; font-weight: 600; }
+.jr-entry p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.jr-meta { font-size: 0.82rem; color: var(--text-muted); }
+.jr-review { border-left: 3px solid var(--border-h); padding-left: 0.75rem; color: var(--text-muted); }
+.jr-actions { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.jr-year { font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-top: 0.5rem; }
+.rp-links { display: grid; gap: 0.35rem; }
+.rp-links a { color: var(--accent-text); }
