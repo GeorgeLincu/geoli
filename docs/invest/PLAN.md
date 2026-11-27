@@ -102,6 +102,21 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
 
+## Extra: scădere de la maxim + alerte pe e-mail
+- [x] Page `/vault/invest/oportunitati/` (nav „Scăderi”): per instrument with an automatic price source — last price, all-time high and 52-week high (with dates), % below each, deepest historical drawdown (peak → trough). Sortable table; rows that crossed George's levels are highlighted with the level and the extra amount he planned (if any) and the distance to the next level. Toggle: measure from the all-time or 52-week high. Underwater chart per instrument (ECharts) with his levels as dashed lines, plus the five deepest drawdowns (peak, trough, recovery date, duration). Numbers and his own rules only, no recommendations.
+- [x] Long history: one-off per instrument, Yahoo `interval=1wk` since listing → `invest/history/<id>.json` (weekly closes, compact `[date, close]`), plus the last 400 days of **daily** closes merged into the normal price store `invest/prices/<year>.json` (manual prices are never overwritten). Summary (`ath`, range, symbol) in `invest/history/index.json` so the cron never parses the big files. Weekly was chosen over daily because a full daily history (e.g. AAPL since 1980: 1.3 MB) risks the free plan's 10 ms CPU limit; consequence: highs older than ~13 months are weekly closes and can be slightly below the true daily-close high. Fetched by the cron (1–2 per run, inside the 50-subrequest budget, see `cronHistoryBudget`) or with „Descarcă istoricul lipsă” (owner, max 5 per click, once a minute). An instrument is re-fetched when its symbol changes.
+- [x] Levels: George's own list on the page (`invest/alerts.json` → `drawdown.levels`: % below the high, optional planned extra amount + currency, note) applies to every instrument. The IPS (Phase 6, PR #31) crash rules are read from the **newest `invest/ips.json` version by date** (never the draft): `rules.crash = { referenceInstrumentId?, rules: [{ id, dropPct (decimal), action?, extraAmount? (EUR) }] }`. With „Pentru instrumentul de referință din IPS…” on (default), they replace the page levels **for the reference instrument only**; with no reference instrument they apply to none. Reader: `ipsDipLevels()` in `drawdown.ts`, choice per instrument: `levelsForInstrument()` in `alerts.ts`. Default: no levels.
+- [x] E-mail alerts, run after the price job in the existing cron (weekdays 17:45 and 21:30 UTC), sent through the existing `send_email` binding `CONTACT_EMAIL` from `CONTACT_FROM` to the first `INVEST_EMAILS` address only. Everything is **off by default**. One plain-text digest per run:
+  - drawdown level crossed (once per crossing; re-armed when the price recovers 2.5 points above the level; a gap through several levels names all of them);
+  - automatic price older than N days (default 5; once per stale date);
+  - Declarația unică deadline (date entered on the page; if empty, the next occurrence of the IPS `rules.taxReturn` month/day; reminders N days before, default 30/7/1, each once);
+  - Tezaur/Fidelis (any held instrument with a maturity) maturing within N days (default 30; once per instrument and maturity).
+  - Privacy: names and percentages only; prices, planned amounts and face values only with „Include prețuri și sume”. Link to the page.
+  - State in `invest/alerts-state.json` (what was already announced + last 30 sends). A failed send keeps the old state so the same events are retried next run.
+  - „Trimite e-mail de test”: owner only, at most one per 2 minutes and 5 per day.
+- [x] Logic and tests: `src/lib/invest/drawdown.ts` (series merge, highs, underwater, episodes, levels, crossing state), `src/lib/invest/alerts.ts` (settings validation, planner, digest text, raw e-mail, rate limit). Worker: `worker/alerts.ts` (API `/vault/api/invest/alerts*`, history fetch, cron run). Client: `src/scripts/invest/drawdown.ts`, CSS `src/styles/invest-drawdown.css`.
+- Not tested live: e-mail delivery on Cloudflare (locally `wrangler dev` only writes the .eml file) and Yahoo's weekly endpoint from Cloudflare's egress IPs. Tested locally on 2026-11-27 with real Yahoo data (VWCE.DE, AAPL, TLV.RO).
+
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).
 

@@ -21,6 +21,7 @@ import { handleContact } from './contact';
 import { baseHeaders, APP_CSP, respond, json, error, html } from './http';
 import { isInvestPath, handleInvest, INVEST_PREFIX } from './invest';
 import { runMarketUpdate } from './market';
+import { runHistoryBackfill, runAlerts, cronHistoryBudget } from './alerts';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -372,8 +373,15 @@ export default {
   // Cron Triggers (wrangler.jsonc "triggers"): daily BNR rates and closing prices for /vault/invest/
   async scheduled(_controller, env, ctx) {
     ctx.waitUntil(runMarketUpdate(env, 'cron').then(
-      r => console.log(`market update: fx ${r.status.fx.ok ? 'ok' : r.status.fx.message}, prices ${Object.values(r.status.instruments).filter(i => i.ok).length} ok`),
-      err => console.error('market update failed', err),
-    ));
+      r => {
+        console.log(`market update: fx ${r.status.fx.ok ? 'ok' : r.status.fx.message}, prices ${Object.values(r.status.instruments).filter(i => i.ok).length} ok`);
+        return Object.values(r.status.instruments).filter(i => i.symbol).length;
+      },
+      err => { console.error('market update failed', err); return 20; },
+    ).then(async fetchable => {
+      // Then (worker/alerts.ts): long price history for new instruments within the subrequest budget, then e-mail alerts
+      try { await runHistoryBackfill(env, cronHistoryBudget(fetchable)); } catch (err) { console.error('history backfill failed', err); }
+      try { console.log('alerts', JSON.stringify(await runAlerts(env))); } catch (err) { console.error('alerts failed', err); }
+    }));
   },
 } satisfies ExportedHandler<Env>;
