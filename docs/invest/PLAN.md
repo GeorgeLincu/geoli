@@ -91,8 +91,8 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 
 ## Progres faze
 - [x] 0 Fundație — owner gate, `/vault/api/invest/<doc>` (ETag + backups), layout, ECharts helper, `g i` shortcut, vitest
-- [ ] 1 Plan & proiecție
-- [ ] 2 Portofoliu
+- [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
+- [x] 2 Portofoliu — `/vault/invest/portofoliu/`: CRUD conturi/instrumente/tranzacții, `ledger.ts` (cost mediu ponderat, art. 97 alin. (8^2) Cod fiscal), `portfolio.ts` (evaluare, drift, rebalansare prin contribuții, scadențe), `fx.ts`/`prices.ts` (manual, interfață pentru Faza 3), Pilon 2/3 manual, export CSV
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”
 - [ ] 4 Taxe RO
 - [ ] 5 Pensie & retragere

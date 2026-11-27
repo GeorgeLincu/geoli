@@ -1,6 +1,6 @@
 # Project status: geoli.eu
 
-_Last updated: 2026-10-01. Update this file whenever something important changes._
+_Last updated: 2026-11-27. Update this file whenever something important changes._
 
 ## 1. What's live
 
@@ -14,7 +14,7 @@ _Last updated: 2026-10-01. Update this file whenever something important changes
 | **Contact form** | `src/scripts/form.ts` → `POST /api/contact` → `worker/contact.ts` | Email via Cloudflare Email Routing `send_email` binding `CONTACT_EMAIL`, from `formular@geoli.eu` to George's Gmail, Reply-To = visitor. Honeypot + min fill time + same-origin + rate limit |
 | **Vault** `/vault/` | `worker/index.ts`, `auth.ts`, `share.ts`, `ui.ts` | Cloudflare Access login (email one-time PIN), Worker re-verifies the JWT. Files in R2. Share links `/s/<token>` (HMAC, `SHARE_SECRET`) |
 | **Article editor** (vault → Articles) | `worker/posts.ts`, `worker/ui.ts` | Commits `src/content/blog/<slug>.md` via the GitHub API (`GITHUB_TOKEN` secret). Images to R2 `media/blog/…`, served at `/media/*`. Shows "Live now ✓" by polling `/version.json` |
-| **Investiții** `/vault/invest/` | `worker/invest.ts`, `src/pages/vault/invest/`, `src/layouts/Invest.astro`, `src/scripts/invest/`, `src/lib/invest/` | Owner-only (`INVEST_EMAILS`; others get 404). Pages are built by Astro and served by the Worker after the check. Data in R2 `invest/*.json` (hidden from Files/share), ETag concurrency, backup per save in `invest/backups/` (newest 50). Charts: self-hosted ECharts. Hidden shortcut `g` then `i` on any page. **Prices & FX (phase 3)**: `worker/market.ts` + `src/lib/invest/market.ts`; Cron Triggers in `wrangler.jsonc` (weekdays 17:45 and 21:30 UTC) fetch BNR rates (`curs.bnr.ro`) and Yahoo daily closes into `invest/fx/<year>.json` / `invest/prices/<year>.json`; manual price override and rate-limited „Actualizează acum” on the dashboard. Sources and limits: `docs/invest/PLAN.md` § „Surse de date”. Plan: `docs/invest/PLAN.md` |
+| **Investiții** `/vault/invest/` | `worker/invest.ts`, `src/pages/vault/invest/`, `src/layouts/Invest.astro`, `src/scripts/invest/`, `src/lib/invest/` | Owner-only (`INVEST_EMAILS`; others get 404). Pages are built by Astro and served by the Worker after the check. Data in R2 `invest/*.json` (hidden from Files/share), ETag concurrency, backup per save in `invest/backups/` (newest 50). Charts: self-hosted ECharts. Hidden shortcut `g` then `i` on any page. **Plan** page `/vault/invest/plan/` (logic `src/lib/invest/projection.ts`, `montecarlo.ts`; Monte Carlo in `src/scripts/invest/mc.worker.ts`). **Prices & FX (phase 3)**: `worker/market.ts` + `src/lib/invest/market.ts`; Cron Triggers in `wrangler.jsonc` (weekdays 17:45 and 21:30 UTC) fetch BNR rates (`curs.bnr.ro`) and Yahoo daily closes into `invest/fx/<year>.json` / `invest/prices/<year>.json`; manual price override and rate-limited „Actualizează acum” on the dashboard. Sources and limits: `docs/invest/PLAN.md` § „Surse de date”. Plan: `docs/invest/PLAN.md` |
 | Roles | `wrangler.jsonc` vars | `ADMIN_EMAILS` = george.lincu@gmail.com · `EDITOR_EMAILS` = volonci.madalina@gmail.com (articles only; can't delete articles or touch files). Both must also be in the Access policy |
 | Monitoring | `.github/workflows/monitor.yml` | Hourly: pages, headers, secret files 404, vault closed, TLS expiry. Opens/closes a GitHub issue |
 | CI | `.github/workflows/ci.yml`, `lighthouserc.json` | astro check + worker tsc, vitest (`npm test`), build, inline-code guard, Lighthouse (error < 0.9) |
@@ -71,7 +71,8 @@ _Last updated: 2026-10-01. Update this file whenever something important changes
 - [ ] Case studies section, once George provides real projects.
 - [ ] Cloudflare Turnstile on the contact form if spam appears (needs a Turnstile token permission; add to the CSP).
 - [ ] R2 backup job.
-- [ ] **Investiții**: phase 0 (foundation) and phase 3 (prices & FX) done; phases 1–2 in progress. Prompts in `docs/invest/PROMPTS.md`, progress in `docs/invest/PLAN.md`.
+- [ ] **Investiții**: phases 0–3 done (foundation, plan & projection, portfolio, prices & FX). Prompts in `docs/invest/PROMPTS.md`, progress in `docs/invest/PLAN.md`.
+  - Phase 2 (Portofoliu): `src/pages/vault/invest/portofoliu.astro`, `src/scripts/invest/portfolio.ts`, logic in `src/lib/invest/{ledger,portfolio,fx,prices,csv,labels}.ts` (tested). data.json gained optional `prices`, `fxRates` (RON per unit, manual), `pensionValues`, `Instrument.faceValue`. Local preview on Windows: run `wrangler dev` with `--persist-to <short path>` (deep worktree paths make local R2 fail with a 500).
 - [ ] **dermi.ro**: separate repo and session. The full brief is in `PROMPT-dermi.md` (not committed; kept locally next to this repo).
 
 ## 6. History (short)
