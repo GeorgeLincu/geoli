@@ -1,0 +1,267 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-portfolio.css';
+import { ACCOUNT_TYPE_LABEL, ASSET_CLASS_LABEL, REGION_LABEL, TX_TYPE_LABEL } from '../../../lib/invest/labels';
+import { CURRENCIES } from '../../../lib/invest/types';
+
+const opts = (m: Record<string, string>) => Object.entries(m);
+const TABS = [
+  ['pozitii', 'Poziții'],
+  ['tranzactii', 'Tranzacții'],
+  ['alocare', 'Alocare'],
+  ['titluri', 'Titluri de stat'],
+  ['pensii', 'Pilon 2/3'],
+  ['conturi', 'Conturi & instrumente'],
+  ['cursuri', 'Cursuri & prețuri'],
+  ['castiguri', 'Câștiguri & venituri'],
+];
+---
+<Invest title="Portofoliu" active="portofoliu">
+  <h1 class="inv-h1">Portofoliu</h1>
+  <p class="inv-lead">Registrul tău: conturi, instrumente și tranzacții. Pozițiile, costul mediu ponderat, câștigurile și alocarea se calculează din tranzacții.</p>
+
+  <section class="inv-card" aria-labelledby="sumTitle">
+    <div class="pf-row">
+      <h2 id="sumTitle" class="inv-h2">Rezumat</h2>
+      <label class="pf-inline">Evaluare la
+        <input type="date" id="asOf" class="pf-input" />
+      </label>
+    </div>
+    <dl class="inv-stats">
+      <div><dt>Valoare (EUR)</dt><dd data-sum="eur">—</dd></div>
+      <div><dt>Valoare (RON)</dt><dd data-sum="ron">—</dd></div>
+      <div><dt>Câștig nerealizat (EUR)</dt><dd data-sum="unreal">—</dd></div>
+      <div><dt>Câștig realizat anul acesta (RON)</dt><dd data-sum="real">—</dd></div>
+      <div><dt>Dividende + dobânzi nete anul acesta (RON)</dt><dd data-sum="income">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="loadState">Se încarcă…</p>
+    <ul class="pf-warnings" id="warnings" hidden></ul>
+  </section>
+
+  <div class="pf-tabs" role="tablist" aria-label="Secțiuni portofoliu">
+    {TABS.map(([key, label], i) => (
+      <button type="button" role="tab" id={`tab-${key}`} aria-controls={`panel-${key}`} aria-selected={i === 0 ? 'true' : 'false'} data-tab={key}>{label}</button>
+    ))}
+  </div>
+
+  <!-- ─── Positions ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-pozitii" aria-labelledby="tab-pozitii">
+    <h2 class="inv-h2">Poziții</h2>
+    <p class="inv-muted">Preț: <b>piață</b> = ultimul preț introdus (tab „Cursuri & prețuri”), <b>nominal</b> = valoarea nominală a titlului de stat, <b>cost</b> = fără preț, se folosește costul mediu.</p>
+    <div class="pf-scroll"><table class="pf-table" id="positionsTable"></table></div>
+    <h3 class="pf-h3">Cash pe conturi</h3>
+    <p class="inv-muted">Apar doar conturile în care ai înregistrat depuneri sau retrageri; doar cash-ul lor intră în valoarea totală.</p>
+    <div class="pf-scroll"><table class="pf-table" id="cashTable"></table></div>
+  </section>
+
+  <!-- ─── Transactions ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-tranzactii" aria-labelledby="tab-tranzactii" hidden>
+    <h2 class="inv-h2">Tranzacții</h2>
+    <form class="pf-form" id="txForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Data<input type="date" name="date" required class="pf-input" /></label>
+      <label>Tip
+        <select name="type" class="pf-input">
+          {opts(TX_TYPE_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}
+        </select>
+      </label>
+      <label>Cont<select name="accountId" class="pf-input" data-accounts required></select></label>
+      <label data-show="buy sell dividend interest transfer">Instrument
+        <select name="instrumentId" class="pf-input" data-instruments data-optional></select>
+      </label>
+      <label data-show="buy sell transfer">Cantitate<input name="quantity" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-show="buy sell">Preț / unitate<input name="price" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-show="dividend interest fee deposit withdrawal transfer">Sumă (brută)<input name="amount" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label>Moneda
+        <select name="currency" class="pf-input">{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select>
+      </label>
+      <label>Comision<input name="fees" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-show="dividend interest sell">Impozit reținut<input name="withheldTax" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-show="transfer">Către contul<select name="toAccountId" class="pf-input" data-accounts data-optional></select></label>
+      <label class="pf-wide">Notă<input name="note" maxlength="500" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează tranzacția</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <p class="inv-muted pf-hint" id="txHint"></p>
+
+    <div class="pf-row">
+      <label class="pf-inline">Cont
+        <select id="txFilter" class="pf-input" data-accounts data-optional data-all="Toate"></select>
+      </label>
+      <button type="button" class="inv-btn" id="csvBtn">Exportă CSV</button>
+    </div>
+    <div class="pf-scroll"><table class="pf-table" id="txTable"></table></div>
+  </section>
+
+  <!-- ─── Allocation ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-alocare" aria-labelledby="tab-alocare" hidden>
+    <h2 class="inv-h2">Alocare</h2>
+    <div class="pf-row">
+      <label class="pf-check"><input type="checkbox" id="incPension" /> Include Pilon 2/3</label>
+      <label class="pf-check"><input type="checkbox" id="incCash" checked /> Include cash</label>
+    </div>
+    <div class="pf-grid2">
+      <div>
+        <h3 class="pf-h3">Alocare actuală (clasă → regiune → instrument)</h3>
+        <div class="inv-chart" id="sunburstChart" role="img" aria-label="Alocarea actuală pe clase de active, regiuni și instrumente"></div>
+      </div>
+      <div>
+        <h3 class="pf-h3">Actual vs țintă (cu benzi de toleranță)</h3>
+        <div class="inv-chart" id="driftChart" role="img" aria-label="Ponderea actuală față de ținta ta, cu banda de toleranță"></div>
+      </div>
+    </div>
+    <div class="pf-scroll"><table class="pf-table" id="driftTable"></table></div>
+
+    <h3 class="pf-h3">Rebalansare prin contribuții</h3>
+    <p class="inv-muted">Cât să cumperi din fiecare rând al țintei tale cu suma de luna asta, fără să vinzi nimic. Se completează întâi rândurile cele mai sub țintă.</p>
+    <form class="pf-form" id="rebForm" novalidate>
+      <label>Contribuție (EUR)<input name="amount" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Calculează</button></div>
+    </form>
+    <div class="pf-scroll"><table class="pf-table" id="rebTable"></table></div>
+
+    <h3 class="pf-h3">Ținta ta de alocare</h3>
+    <p class="inv-muted">Un rând poate fi o clasă de active, o clasă + regiune sau un instrument anume. Fiecare poziție se potrivește cu rândul cel mai specific. Ponderile trebuie să însumeze 100%. Ce nu se potrivește cu niciun rând (ex. cash, dacă nu ai rând pentru cash) apare separat și nu intră în ponderi. Banda e toleranța în puncte procentuale (implicit ±5).</p>
+    <form class="pf-form" id="targetForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Denumire<input name="label" required maxlength="120" class="pf-input" autocomplete="off" /></label>
+      <label>Clasă
+        <select name="assetClass" class="pf-input">{opts(ASSET_CLASS_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}</select>
+      </label>
+      <label>Regiune (opțional)
+        <select name="region" class="pf-input"><option value="">—</option>{opts(REGION_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}</select>
+      </label>
+      <label>Instrument (opțional)<select name="instrumentId" class="pf-input" data-instruments data-optional></select></label>
+      <label>Pondere (%)<input name="weight" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
+      <label>Bandă (± pp)<input name="band" inputmode="decimal" class="pf-input" placeholder="5" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează rândul</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <p class="inv-muted" id="targetSum"></p>
+    <div class="pf-scroll"><table class="pf-table" id="targetTable"></table></div>
+  </section>
+
+  <!-- ─── Government bonds ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-titluri" aria-labelledby="tab-titluri" hidden>
+    <h2 class="inv-h2">Titluri de stat — scadențe</h2>
+    <p class="inv-muted">Apar instrumentele care au o dată de scadență. Introdu Tezaur/Fidelis ca instrument (clasa „Titluri de stat”, cu cupon, scadență și valoare nominală), apoi o cumpărare. La scadență, înregistrează răscumpărarea ca vânzare la valoarea nominală.</p>
+    <div class="inv-chart" id="ladderChart" role="img" aria-label="Sume care ajung la scadență pe ani"></div>
+    <div class="pf-scroll"><table class="pf-table" id="ladderTable"></table></div>
+  </section>
+
+  <!-- ─── Pensions ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-pensii" aria-labelledby="tab-pensii" hidden>
+    <h2 class="inv-h2">Pilon 2 / Pilon 3</h2>
+    <p class="inv-muted">Introdu valoarea contului din extrasul fondului de pensii. Pentru asta ai nevoie de un cont de tip Pilon 2 sau Pilon 3 (tab „Conturi & instrumente”).</p>
+    <form class="pf-form" id="pensionForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Cont<select name="accountId" class="pf-input" data-pension-accounts required></select></label>
+      <label>Data<input type="date" name="date" required class="pf-input" /></label>
+      <label>Valoare<input name="value" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
+      <label class="pf-wide">Notă<input name="note" maxlength="200" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează valoarea</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <div class="inv-chart" id="pensionChart" role="img" aria-label="Valoarea conturilor de pensie în timp"></div>
+    <div class="pf-scroll"><table class="pf-table" id="pensionTable"></table></div>
+  </section>
+
+  <!-- ─── Accounts & instruments ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-conturi" aria-labelledby="tab-conturi" hidden>
+    <h2 class="inv-h2">Conturi</h2>
+    <form class="pf-form" id="accountForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Nume<input name="name" required maxlength="120" class="pf-input" autocomplete="off" /></label>
+      <label>Tip
+        <select name="type" class="pf-input">{opts(ACCOUNT_TYPE_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}</select>
+      </label>
+      <label>Instituție<input name="institution" maxlength="120" class="pf-input" autocomplete="off" /></label>
+      <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select></label>
+      <label class="pf-wide">Note<input name="notes" maxlength="2000" class="pf-input" autocomplete="off" /></label>
+      <label class="pf-check"><input type="checkbox" name="closed" /> Cont închis</label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează contul</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <div class="pf-scroll"><table class="pf-table" id="accountTable"></table></div>
+
+    <h2 class="inv-h2 pf-gap">Instrumente</h2>
+    <form class="pf-form" id="instrumentForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Nume<input name="name" required maxlength="160" class="pf-input" autocomplete="off" /></label>
+      <label>Ticker<input name="ticker" maxlength="32" class="pf-input" autocomplete="off" /></label>
+      <label>ISIN<input name="isin" maxlength="12" class="pf-input" autocomplete="off" /></label>
+      <label>Clasă
+        <select name="assetClass" class="pf-input">{opts(ASSET_CLASS_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}</select>
+      </label>
+      <label>Regiune
+        <select name="region" class="pf-input">{opts(REGION_LABEL).map(([v, l]) => <option value={v}>{l}</option>)}</select>
+      </label>
+      <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select></label>
+      <label>Distribuție
+        <select name="distribution" class="pf-input">
+          <option value="">—</option><option value="accumulating">Acumulare</option><option value="distributing">Distribuție</option>
+        </select>
+      </label>
+      <label>Sursă preț (Faza 3)<input name="priceSource" maxlength="80" class="pf-input" placeholder="ex. xetra:TICKER" autocomplete="off" /></label>
+      <label>Cupon (% pe an)<input name="coupon" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label>Scadență<input type="date" name="maturity" class="pf-input" /></label>
+      <label>Valoare nominală / unitate<input name="faceValue" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează instrumentul</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <div class="pf-scroll"><table class="pf-table" id="instrumentTable"></table></div>
+  </section>
+
+  <!-- ─── FX and prices ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-cursuri" aria-labelledby="tab-cursuri" hidden>
+    <h2 class="inv-h2">Cursuri valutare (manual)</h2>
+    <p class="inv-muted">Lei pentru 1 unitate de valută, ca la BNR. Se folosește cel mai recent curs din data tranzacției sau dinainte. Până vine actualizarea automată (Faza 3), introdu cursurile de care ai nevoie.</p>
+    <form class="pf-form" id="fxForm" novalidate>
+      <label>Data<input type="date" name="date" required class="pf-input" /></label>
+      <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.filter(c => c !== 'RON').map(c => <option value={c}>{c}</option>)}</select></label>
+      <label>Lei pentru 1 unitate<input name="ron" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
+      <label class="pf-wide">Notă<input name="note" maxlength="200" class="pf-input" placeholder="ex. curs BNR" autocomplete="off" /></label>
+      <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Salvează cursul</button></div>
+    </form>
+    <div class="pf-scroll"><table class="pf-table" id="fxTable"></table></div>
+
+    <h2 class="inv-h2 pf-gap">Prețuri (manual)</h2>
+    <p class="inv-muted">Prețul unei unități în moneda instrumentului, la o dată. Se folosește cel mai recent preț până la data evaluării.</p>
+    <form class="pf-form" id="priceForm" novalidate>
+      <label>Instrument<select name="instrumentId" class="pf-input" data-instruments required></select></label>
+      <label>Data<input type="date" name="date" required class="pf-input" /></label>
+      <label>Preț<input name="price" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
+      <label class="pf-wide">Notă<input name="note" maxlength="200" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Salvează prețul</button></div>
+    </form>
+    <div class="pf-scroll"><table class="pf-table" id="priceTable"></table></div>
+  </section>
+
+  <!-- ─── Gains and income ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-castiguri" aria-labelledby="tab-castiguri" hidden>
+    <div class="pf-row">
+      <h2 class="inv-h2">Câștiguri realizate și venituri</h2>
+      <label class="pf-inline">Anul<select id="yearSel" class="pf-input"></select></label>
+    </div>
+    <p class="inv-muted">Cost mediu ponderat pe cont și instrument, cu comisioane incluse. În lei: costul la cursul din ziua fiecărei cumpărări, încasarea la cursul din ziua vânzării. Sumele sunt informative; calculul fiscal vine în faza „Taxe”.</p>
+    <dl class="inv-stats" id="yearStats"></dl>
+    <h3 class="pf-h3">Vânzări</h3>
+    <div class="pf-scroll"><table class="pf-table" id="realizedTable"></table></div>
+    <h3 class="pf-h3">Dividende și dobânzi</h3>
+    <div class="pf-scroll"><table class="pf-table" id="incomeTable"></table></div>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/portfolio';
+</script>

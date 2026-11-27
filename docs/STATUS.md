@@ -71,7 +71,8 @@ _Last updated: 2026-11-27. Update this file whenever something important changes
 - [ ] Case studies section, once George provides real projects.
 - [ ] Cloudflare Turnstile on the contact form if spam appears (needs a Turnstile token permission; add to the CSP).
 - [ ] R2 backup job.
-- [ ] **Investiții**: phases 0 (foundation) and 1 (plan & projection) done; phases 2–3 in progress in parallel. Prompts in `docs/invest/PROMPTS.md`, progress in `docs/invest/PLAN.md`.
+- [ ] **Investiții**: phases 0 (foundation), 1 (plan & projection) and 2 (portfolio) done; phase 3 (prices) next. Prompts in `docs/invest/PROMPTS.md`, progress in `docs/invest/PLAN.md`.
+  - Phase 2 (Portofoliu): `src/pages/vault/invest/portofoliu.astro`, `src/scripts/invest/portfolio.ts`, logic in `src/lib/invest/{ledger,portfolio,fx,prices,csv,labels}.ts` (tested). data.json gained optional `prices`, `fxRates` (RON per unit, manual), `pensionValues`, `Instrument.faceValue`. Phase 3 should feed `FxSource`/`PriceSource` (`fx.ts`, `prices.ts`) and reuse `prices` for manual overrides. Local preview on Windows: run `wrangler dev` with `--persist-to <short path>` (deep worktree paths make local R2 fail with a 500).
 - [ ] **dermi.ro**: separate repo and session. The full brief is in `PROMPT-dermi.md` (not committed; kept locally next to this repo).
 
 ## 6. History (short)

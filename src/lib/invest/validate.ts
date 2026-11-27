@@ -72,7 +72,7 @@ const instrument = record({
   assetClass: [oneOf(['equity', 'bond', 'gov_bond', 'gold', 'cash', 'real_estate', 'pension', 'other']), true],
   region: [oneOf(['global', 'us', 'europe', 'romania', 'emerging', 'developed_ex_us', 'other']), true],
   currency: [oneOf(CURRENCIES), true], distribution: [oneOf(['accumulating', 'distributing']), false],
-  priceSource: [str(80), false], coupon: [num, false], maturity: [date, false],
+  priceSource: [str(80), false], coupon: [num, false], maturity: [date, false], faceValue: [num, false],
 });
 const transaction = record({
   id: [id, true], date: [date, true], type: [oneOf(TX_TYPES), true], accountId: [id, true],
@@ -88,12 +88,18 @@ const target = record({
 });
 const scenario = record({ id: [id, true], name: [str(120), true], settings: [settings, true], createdAt: [str(40), true] });
 
+const pricePoint = record({ instrumentId: [id, true], date: [date, true], price: [num, true], note: [str(200), false] });
+const fxRate = record({ date: [date, true], currency: [oneOf(CURRENCIES), true], ron: [num, true], note: [str(200), false] });
+const pensionValue = record({ id: [id, true], accountId: [id, true], date: [date, true], value: [num, true], note: [str(200), false] });
+
 const versionCheck: Check = (v, p, e) => { if (v !== SCHEMA_VERSION) e.push(`${p}: must be ${SCHEMA_VERSION}`); };
 
 const data = record({
   version: [versionCheck, true], settings: [settings, true], accounts: [list(account, 500), true],
   instruments: [list(instrument, 2000), true], transactions: [list(transaction), true],
   targets: [list(target, 200), true], scenarios: [list(scenario, 200), true],
+  prices: [list(pricePoint, 50_000), false], fxRates: [list(fxRate, 50_000), false],
+  pensionValues: [list(pensionValue, 5000), false],
 });
 
 const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false] });
