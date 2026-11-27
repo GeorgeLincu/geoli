@@ -1,0 +1,129 @@
+---
+// /vault/invest/avere/ — full net worth: portfolio (from the ledger) + other assets − debts.
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-portfolio.css';
+import '../../../styles/invest-networth.css';
+import { CURRENCIES } from '../../../lib/invest/types';
+import { NW_CATEGORY_LABEL, LIABILITY_KIND_LABEL } from '../../../lib/invest/labels';
+
+const assetCats = ['cash', 'savings', 'real_estate', 'vehicle', 'other'] as const;
+const kinds = ['mortgage', 'loan', 'credit_card', 'other'] as const;
+---
+<Invest title="Avere netă" active="avere">
+  <h1 class="inv-h1">Avere netă</h1>
+  <p class="inv-lead">Tot ce ai minus tot ce datorezi. Portofoliul de investiții vine automat din Portofoliu (tranzacții + prețuri); aici notezi restul: bani în bancă, economii, imobile, mașini și datorii, cu valoarea lor în timp.</p>
+
+  <section class="inv-card" aria-labelledby="nwSumTitle">
+    <div class="pf-row">
+      <h2 id="nwSumTitle" class="inv-h2">Azi</h2>
+      <span class="inv-muted" id="nwDate"></span>
+    </div>
+    <dl class="inv-stats nw-stats">
+      <div class="nw-stat--main"><dt>Avere netă (EUR)</dt><dd data-nw="netEur">—</dd></div>
+      <div class="nw-stat--main"><dt>Avere netă (RON)</dt><dd data-nw="netRon">—</dd></div>
+      <div><dt>Active</dt><dd data-nw="assets">—</dd></div>
+      <div><dt>Datorii</dt><dd data-nw="debts">—</dd></div>
+      <div><dt>Lichid</dt><dd data-nw="liquid">—</dd></div>
+      <div><dt>Ilichid</dt><dd data-nw="illiquid">—</dd></div>
+      <div><dt>Fond de urgență</dt><dd data-nw="ef">—</dd></div>
+      <div><dt>Datorii / active</dt><dd data-nw="ratio">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="nwState">Se încarcă…</p>
+    <ul class="pf-warnings" id="nwWarnings" hidden></ul>
+  </section>
+
+  <section class="inv-card" aria-labelledby="nwTimeTitle">
+    <div class="plan-card-head">
+      <h2 id="nwTimeTitle" class="inv-h2">Evoluție în timp</h2>
+      <div class="plan-seg" role="group" aria-label="Moneda graficului">
+        <button type="button" class="plan-seg__btn" data-cur="EUR" aria-pressed="true">EUR</button>
+        <button type="button" class="plan-seg__btn" data-cur="RON" aria-pressed="false">RON</button>
+      </div>
+    </div>
+    <div class="inv-chart inv-chart--tall" id="nwChart" role="img" aria-label="Averea netă pe luni, stivuită pe categorii, cu datoriile sub zero"></div>
+    <p class="inv-muted">Câte un punct la sfârșitul fiecărei luni. O valoare notată rămâne valabilă până la următoarea. Pozițiile fără preț la acea dată sunt socotite la cost.</p>
+  </section>
+
+  <div class="pf-grid2">
+    <section class="inv-card" aria-labelledby="nwLiqTitle">
+      <h2 id="nwLiqTitle" class="inv-h2">Lichid vs ilichid</h2>
+      <div class="inv-chart inv-chart--short" id="nwLiqChart" role="img" aria-label="Activele lichide față de cele ilichide"></div>
+      <p class="inv-muted">Lichid = se poate transforma repede în bani: investițiile (fără Pilon 2/3), cash-ul și economiile, plus ce marchezi tu. Ilichid: pensiile private, imobilele, mașinile și restul.</p>
+    </section>
+    <section class="inv-card" aria-labelledby="nwEfTitle">
+      <h2 id="nwEfTitle" class="inv-h2">Fond de urgență</h2>
+      <p id="nwEfText" class="nw-ef">—</p>
+      <form class="pf-form" id="expForm" novalidate>
+        <label>Cheltuieli lunare (EUR)<input name="monthlyExpenses" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+        <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Salvează</button></div>
+      </form>
+      <p class="inv-muted" id="expHint"></p>
+    </section>
+  </div>
+
+  <section class="inv-card" aria-labelledby="nwItemsTitle">
+    <h2 id="nwItemsTitle" class="inv-h2">Componența de azi</h2>
+    <div class="pf-scroll"><table class="pf-table" id="itemsTable"></table></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="assetsTitle" id="assets">
+    <h2 id="assetsTitle" class="inv-h2">Alte active</h2>
+    <form class="pf-form" id="assetForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Denumire<input name="name" maxlength="120" required class="pf-input" autocomplete="off" /></label>
+      <label>Categorie
+        <select name="category" class="pf-input">{assetCats.map(c => <option value={c}>{NW_CATEGORY_LABEL[c]}</option>)}</select>
+      </label>
+      <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select></label>
+      <label data-new>Valoare<input name="value" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-new>La data<input type="date" name="date" class="pf-input" /></label>
+      <label class="pf-check"><input type="checkbox" name="liquid" /> Lichid</label>
+      <label class="pf-check"><input type="checkbox" name="emergency" /> Fond de urgență</label>
+      <label class="pf-wide">Notă<input name="notes" maxlength="2000" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează activul</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <p class="inv-muted">Valoarea e estimarea ta (ex. prețul de piață al apartamentului). „Lichid” și „Fond de urgență” sunt bifate implicit pentru cash și economii; le poți schimba.</p>
+    <div class="pf-scroll"><table class="pf-table" id="assetsTable"></table></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="debtsTitle" id="debts">
+    <h2 id="debtsTitle" class="inv-h2">Datorii</h2>
+    <form class="pf-form" id="debtForm" novalidate>
+      <input type="hidden" name="id" />
+      <label>Denumire<input name="name" maxlength="120" required class="pf-input" autocomplete="off" /></label>
+      <label>Tip<select name="kind" class="pf-input">{kinds.map(k => <option value={k}>{LIABILITY_KIND_LABEL[k]}</option>)}</select></label>
+      <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select></label>
+      <label>Dobândă anuală (%)<input name="rate" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label>Rată lunară<input name="monthlyPayment" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-new>Sold rămas<input name="value" inputmode="decimal" class="pf-input" autocomplete="off" /></label>
+      <label data-new>La data<input type="date" name="date" class="pf-input" /></label>
+      <label class="pf-wide">Notă<input name="notes" maxlength="2000" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary">Salvează datoria</button>
+        <button type="reset" class="inv-btn">Anulează</button>
+      </div>
+    </form>
+    <p class="inv-muted">Soldul îl iei din extrasul băncii. „Achitat în” e o estimare cu rata și dobânda de acum (dobândă fixă, fără rambursări anticipate).</p>
+    <div class="pf-scroll"><table class="pf-table" id="debtsTable"></table></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="valuesTitle" id="values">
+    <h2 id="valuesTitle" class="inv-h2">Valori în timp</h2>
+    <form class="pf-form" id="valueForm" novalidate>
+      <label class="pf-wide">Pentru<select name="target" class="pf-input" id="valueTarget"></select></label>
+      <label>Data<input type="date" name="date" required class="pf-input" /></label>
+      <label><span id="valueLabel">Valoare</span><input name="value" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
+      <label class="pf-wide">Notă<input name="note" maxlength="200" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Adaugă valoarea</button></div>
+    </form>
+    <p class="inv-muted">O valoare pe aceeași dată o înlocuiește pe cea veche. Pune 0 când ai vândut un activ sau ai achitat o datorie.</p>
+    <div class="pf-scroll"><table class="pf-table" id="valuesTable"></table></div>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/networth';
+</script>

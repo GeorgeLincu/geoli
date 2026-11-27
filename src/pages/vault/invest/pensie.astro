@@ -1,0 +1,192 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-retire.css';
+
+// The ids must match src/scripts/invest/retire.ts.
+const CLASSES = [
+  ['equity', 'Acțiuni'], ['bond', 'Obligațiuni'], ['gov_bond', 'Titluri de stat'], ['gold', 'Aur'],
+  ['cash', 'Numerar'], ['real_estate', 'Imobiliare'], ['pension', 'Pensii'], ['other', 'Altele'],
+];
+const STRATS = [
+  ['constant', 'Sumă constantă', 'Aceeași sumă reală în fiecare an (ajustată cu inflația).'],
+  ['guardrails', 'Guyton-Klinger', 'Pornește ca suma constantă; tai sau crești cu un procent când rata curentă iese din „parapeți”.'],
+  ['vpw', 'VPW', 'Retragi o fracție din sold care depinde de anii rămași: nu se termină banii, dar venitul variază.'],
+  ['floorCeiling', 'Podea și plafon', 'Rata inițială × soldul curent, dar niciodată sub podea sau peste plafon.'],
+];
+---
+<Invest title="Pensie & retragere" active="pensie">
+  <div class="plan-head">
+    <div>
+      <h1 class="inv-h1">Pensie &amp; retragere</h1>
+      <p class="inv-lead">Calculator personal, nu consultanță. Sume în <strong>bani de azi</strong> (EUR, reale). Vârsta, cheltuiala, SWR, inflația și randamentele vin din pagina <a href="/vault/invest/plan/">Plan</a>.</p>
+    </div>
+    <div class="plan-save">
+      <span class="inv-muted" id="saveState" aria-live="polite">Se încarcă…</span>
+      <button class="inv-btn inv-btn--primary" id="saveBtn" type="button" disabled>Salvează</button>
+    </div>
+  </div>
+
+  <section class="inv-card" aria-labelledby="fromTitle">
+    <h2 id="fromTitle" class="inv-h2">Din plan</h2>
+    <p class="plan-empty" id="emptyState" hidden>Completează în <a href="/vault/invest/plan/">Plan</a>: <span id="missingList"></span>.</p>
+    <dl class="inv-stats ret-from" id="fromStats">
+      <div><dt>Pensionare</dt><dd id="pRetAge">—</dd><p class="plan-hint" id="pAge"></p></div>
+      <div><dt>Banii trebuie să ajungă până la</dt><dd id="pPlanTo">—</dd></div>
+      <div><dt>Cheltuială dorită</dt><dd id="pSpend">—</dd><p class="plan-hint">pe an, bani de azi</p></div>
+      <div><dt>SWR · inflație</dt><dd id="pSwr">—</dd></div>
+      <div><dt>Simulare</dt><dd id="pMc">—</dd><p class="plan-hint" id="pMcHint"></p></div>
+    </dl>
+  </section>
+
+  <div class="plan-grid">
+    <section class="inv-card" aria-labelledby="stTitle">
+      <h2 id="stTitle" class="inv-h2">Strategia de retragere</h2>
+      <fieldset class="ret-strats">
+        <legend class="plan-sr">Strategia afișată în grafice</legend>
+        {STRATS.map(([k, label, hint]) => (
+          <label class="ret-strat">
+            <input type="radio" name="strategy" value={k} />
+            <span><strong>{label}</strong><small>{hint}</small></span>
+          </label>
+        ))}
+      </fieldset>
+      <label class="plan-inline plan-inline--wide">Prima retragere
+        <select id="initial">
+          <option value="spending">Cheltuiala dorită minus alte venituri</option>
+          <option value="swr">SWR × soldul la pensionare</option>
+        </select>
+      </label>
+      <p class="plan-hint" id="initialHint"></p>
+
+      <div class="ret-params" data-for="guardrails">
+        <h3 class="plan-h3">Guyton-Klinger</h3>
+        <div class="ret-row">
+          <label class="plan-inline">Parapet ± % din rata inițială <input type="number" id="gkGuard" inputmode="decimal" step="1" min="1" max="90" /></label>
+          <label class="plan-inline">Ajustare % <input type="number" id="gkAdjust" inputmode="decimal" step="1" min="1" max="50" /></label>
+          <label class="plan-inline">Fără tăieri în ultimii … ani <input type="number" id="gkMinYearsLeft" inputmode="numeric" step="1" min="0" max="60" /></label>
+        </div>
+      </div>
+      <div class="ret-params" data-for="floorCeiling">
+        <h3 class="plan-h3">Podea și plafon</h3>
+        <div class="ret-row">
+          <label class="plan-inline">Podea % din prima retragere <input type="number" id="floor" inputmode="decimal" step="1" min="0" max="100" /></label>
+          <label class="plan-inline">Plafon % din prima retragere <input type="number" id="ceiling" inputmode="decimal" step="1" min="100" max="300" /></label>
+        </div>
+      </div>
+      <div class="ret-params" data-for="vpw">
+        <h3 class="plan-h3">VPW</h3>
+        <label class="plan-inline">Randament real folosit în formulă % <input type="number" id="vpwReturn" inputmode="decimal" step="0.1" placeholder="din alocare" /></label>
+        <p class="plan-hint">Gol = randamentul așteptat al alocării la vârsta respectivă.</p>
+      </div>
+      <p class="plan-hint" id="paramNote"></p>
+    </section>
+
+    <section class="inv-card" aria-labelledby="incTitle">
+      <h2 id="incTitle" class="inv-h2">Alte venituri la pensie</h2>
+      <p class="inv-muted">Opțional. Sume <strong>nete</strong> pe an, în bani de azi (EUR). Le introduci tu: plata din Pilonul 2 sau 3, pensia de stat estimată, chirii etc. Nu sunt taxate din nou aici.</p>
+      <div class="plan-table-wrap">
+        <table class="plan-table ret-inc">
+          <thead><tr><th scope="col">Tip</th><th scope="col">Descriere</th><th scope="col">€/an net</th><th scope="col">De la vârsta</th><th scope="col">Până la (inclusiv)</th><th scope="col"><span class="plan-sr">Acțiuni</span></th></tr></thead>
+          <tbody id="incBody"></tbody>
+        </table>
+      </div>
+      <p class="inv-muted" id="incEmpty">Niciun venit adăugat.</p>
+      <div class="plan-actions">
+        <button class="inv-btn" type="button" id="incAdd">Adaugă venit</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="inv-card" aria-labelledby="gpTitle">
+    <h2 id="gpTitle" class="inv-h2">Alocare pe vârstă (glidepath / bond tent)</h2>
+    <p class="inv-muted" id="gpNote">Fără puncte, alocarea rămâne cea de azi pe tot parcursul. Cu puncte, între două vârste alocarea se schimbă liniar; înainte de primul și după ultimul punct rămâne constantă. Ponderile unui punct sunt scalate la 100%.</p>
+    <div class="plan-table-wrap">
+      <table class="plan-table ret-gp">
+        <thead><tr>
+          <th scope="col">Vârstă</th>
+          {CLASSES.map(([, label]) => <th scope="col">{label} %</th>)}
+          <th scope="col">Total</th><th scope="col"><span class="plan-sr">Acțiuni</span></th>
+        </tr></thead>
+        <tbody id="gpBody"></tbody>
+      </table>
+    </div>
+    <div class="plan-actions">
+      <button class="inv-btn" type="button" id="gpAdd">Adaugă punct</button>
+      <label class="plan-inline">la vârsta <input type="number" id="gpAge" inputmode="numeric" step="1" min="18" max="110" /></label>
+    </div>
+    <div class="inv-chart" id="gpChart" role="img" aria-label="Alocarea pe vârstă: ponderile claselor de active, stivuite"></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="taxTitle">
+    <h2 id="taxTitle" class="inv-h2">Taxe pe retrageri</h2>
+    <p class="inv-muted">Retragerea din portofoliu = vânzare de investiții: impozit pe partea de câștig și CASS pe praguri, cu regulile din pagina <a href="/vault/invest/taxe/">Taxe</a> (anul curent, praguri de azi, în bani de azi).</p>
+    <p class="ret-warn" id="taxWarn" hidden></p>
+    <div class="ret-row">
+      <label class="plan-inline">Partea de câștig din suma vândută % <input type="number" id="gainShare" inputmode="decimal" step="1" min="0" max="100" /></label>
+      <label class="plan-inline">Unde vinzi
+        <select id="accountType">
+          <option value="foreign_broker">Broker străin (Declarația unică)</option>
+          <option value="ro_broker">Broker românesc (reținere la sursă)</option>
+        </select>
+      </label>
+      <label class="plan-inline">Curs EUR (lei) <input type="number" id="eurRon" inputmode="decimal" step="0.0001" min="0" /></label>
+    </div>
+    <p class="plan-hint" id="taxHint"></p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="resTitle">
+    <div class="plan-card-head">
+      <h2 id="resTitle" class="inv-h2">Rezultat: <span id="resStrat">—</span></h2>
+      <span class="inv-muted" id="resState" aria-live="polite"></span>
+    </div>
+    <dl class="inv-stats">
+      <div><dt>Șanse să nu rămâi fără bani</dt><dd id="rSucc">—</dd><p class="plan-hint" id="rDepl"></p></div>
+      <div><dt>Probabilitatea de a rămâne fără bani</dt><dd id="rFail">—</dd><p class="plan-hint" id="rShort"></p></div>
+      <div><dt>Moștenire mediană</dt><dd id="rBeq">—</dd><p class="plan-hint" id="rBeq10"></p></div>
+      <div><dt>Venit în primul an (median)</dt><dd id="rInc">—</dd><p class="plan-hint" id="rIncNet"></p></div>
+      <div><dt>Cel mai slab an (median)</dt><dd id="rMin">—</dd><p class="plan-hint">pe an, venit total real</p></div>
+      <div><dt>Rata inițială</dt><dd id="rRate">—</dd><p class="plan-hint" id="rRet"></p></div>
+    </dl>
+
+    <h3 class="plan-h3">Sold în pensie</h3>
+    <div class="inv-chart inv-chart--tall" id="balChart" role="img" aria-label="Soldul portofoliului în pensie: percentilele 10, 50 și 90, cu parapeții Guyton-Klinger"></div>
+    <h3 class="plan-h3">Venit pe an (bani de azi)</h3>
+    <div class="inv-chart" id="incChart" role="img" aria-label="Venitul real pe an: percentilele 10, 50 și 90, venitul net median după taxe și cheltuiala dorită"></div>
+
+    <h3 class="plan-h3">Toate strategiile, pe aceleași piețe simulate</h3>
+    <div class="plan-table-wrap">
+      <table class="plan-table plan-table--sc">
+        <thead><tr>
+          <th scope="col">Strategie</th><th scope="col">Șanse să ajungă</th><th scope="col">Ani cu venit sub cheltuială</th>
+          <th scope="col">Venit an 1 (median)</th><th scope="col">Cel mai slab an</th><th scope="col">Moștenire mediană</th><th scope="col">Moștenire p10</th>
+        </tr></thead>
+        <tbody id="cmpBody"></tbody>
+      </table>
+    </div>
+    <p class="plan-hint">„Ani cu venit sub cheltuială” = procentul simulărilor în care cel puțin un an venitul total a fost sub cheltuiala dorită.</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="ipsTitle" id="ipsBox" hidden>
+    <h2 id="ipsTitle" class="inv-h2">Regulile tale de retragere (IPS)</h2>
+    <p class="inv-muted" id="ipsMeta"></p>
+    <div class="ret-ips" id="ipsText"></div>
+  </section>
+
+  <section class="inv-card plan-method">
+    <h2 class="inv-h2">Cum se calculează</h2>
+    <ul class="inv-muted">
+      <li>Aceeași simulare Monte Carlo ca pe pagina Plan (aceeași sămânță, același mod normal sau istoric): acumulare cu contribuțiile tale, apoi în fiecare an de pensie retragi la începutul anului, iar restul primește randamentul anului.</li>
+      <li>Randamentul fiecărui an se trage pentru alocarea de la vârsta respectivă (glidepath). Toate cele patru strategii văd aceleași piețe, ca să poată fi comparate corect.</li>
+      <li><strong>Sumă constantă</strong>: cu „cheltuiala dorită”, portofoliul plătește cheltuiala minus celelalte venituri din acel an; cu „SWR”, plătește SWR × soldul de la pensionare, în fiecare an.</li>
+      <li><strong>Guyton-Klinger</strong> (2006): după un an cu randament negativ, dacă rata curentă e peste cea inițială, nu crești suma cu inflația. Dacă rata curentă trece de rata inițială + parapet, tai suma (dar nu în ultimii ani aleși); sub rata inițială − parapet, o crești.</li>
+      <li><strong>VPW</strong>: retragi soldul × r ÷ ((1 + r)(1 − (1 + r)<sup>−n</sup>)), cu n = anii rămași până la vârsta finală. Banii nu se termină, dar moștenirea tinde spre zero.</li>
+      <li><strong>Podea și plafon</strong>: rata inițială × soldul curent, limitată între podea și plafon (procente din prima retragere).</li>
+      <li>„Rămâi fără bani” = într-un an, soldul nu mai acoperă retragerea cerută de strategie. Moștenirea = soldul la vârsta finală, în bani de azi.</li>
+      <li>Venitul net: retragerea trece prin motorul fiscal (impozit pe partea de câștig + CASS pe praguri în salarii minime), cu regulile anului curent; celelalte venituri sunt deja nete. Taxele viitoare pot fi altele.</li>
+    </ul>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/retire';
+</script>

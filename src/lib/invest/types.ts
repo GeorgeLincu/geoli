@@ -31,6 +31,44 @@ export interface Settings {
   manualCapital?: number;
   /** Market assumptions and Monte Carlo options for the plan page (Phase 1) */
   projection?: ProjectionSettings;
+  /** Retirement / withdrawal page (Phase 5) */
+  retirement?: RetirementSettings;
+}
+
+/** One glidepath point: the allocation (decimals, by asset class) George wants at `age`. */
+export interface GlidePathPoint { age: number; weights: Partial<Record<AssetClass, number>> }
+
+/** Income in retirement besides the portfolio, entered by George: NET yearly amount in today's EUR. */
+export interface RetirementIncome {
+  id: string;
+  kind: 'pillar2' | 'pillar3' | 'state' | 'other';
+  label?: string;
+  amount: number;
+  startAge: number;
+  /** Last age it is paid (inclusive); missing = for life */
+  endAge?: number;
+}
+
+/** Inputs of /vault/invest/pensie/ (Phase 5). Age, spending, SWR, inflation and returns come from the plan. */
+export interface RetirementSettings {
+  strategy?: 'constant' | 'guardrails' | 'vpw' | 'floorCeiling';
+  /** First withdrawal: spending minus other income (default) or SWR × balance at retirement */
+  initial?: 'spending' | 'swr';
+  gkGuard?: number;
+  gkAdjust?: number;
+  gkMinYearsLeft?: number;
+  /** Floor / ceiling as a share of the first withdrawal */
+  floor?: number;
+  ceiling?: number;
+  /** VPW fixed real return; missing = expected return of the allocation at that age */
+  vpwReturn?: number;
+  glidepath?: GlidePathPoint[];
+  incomes?: RetirementIncome[];
+  /** Net-of-tax estimate */
+  gainShare?: number;
+  accountType?: 'foreign_broker' | 'ro_broker';
+  /** RON per EUR; missing = latest BNR rate */
+  eurRon?: number;
 }
 
 /** Expected REAL (after inflation) compound return and yearly volatility of one asset class, as decimals. */
@@ -151,6 +189,8 @@ export interface InvestData {
   importPresets?: ImportPreset[];
   /** Income calendar (/vault/invest/calendar/): dividend schedules, planned cash-ins, coupon frequency, reinvest markers */
   calendar?: IncomeCalendar;
+  /** Assets and debts outside the portfolio, for the full net worth (/vault/invest/avere/) */
+  netWorth?: NetWorthDoc;
 }
 
 /** Expected dividends of one instrument, entered by George ('manual') or copied from last year's payments ('lastYear'). */
@@ -203,6 +243,52 @@ export interface IncomeCalendar {
   planned?: PlannedIncome[];
   bonds?: BondSchedule[];
   reinvest?: ReinvestMarker[];
+}
+
+
+// ─── Full net worth (/vault/invest/avere/) ───
+// The investment portfolio is never re-entered here: it comes from the ledger + prices.
+
+export type NetWorthAssetCategory = 'cash' | 'savings' | 'real_estate' | 'vehicle' | 'other';
+export const NET_WORTH_ASSET_CATEGORIES: readonly NetWorthAssetCategory[] = ['cash', 'savings', 'real_estate', 'vehicle', 'other'];
+export type LiabilityKind = 'mortgage' | 'loan' | 'credit_card' | 'other';
+export const LIABILITY_KINDS: readonly LiabilityKind[] = ['mortgage', 'loan', 'credit_card', 'other'];
+
+/** A value (asset) or balance (debt) recorded on a date, in the item's currency. Valid until the next entry. */
+export interface DatedValue { date: string; value: number; note?: string }
+
+export interface NetWorthAsset {
+  id: string;
+  name: string;
+  category: NetWorthAssetCategory;
+  currency: Currency;
+  /** Can be turned into cash quickly. Missing = cash/savings yes, the rest no. */
+  liquid?: boolean;
+  /** Counts toward the emergency fund. Missing = cash/savings yes, the rest no. */
+  emergency?: boolean;
+  notes?: string;
+  values: DatedValue[];
+}
+
+export interface Liability {
+  id: string;
+  name: string;
+  kind: LiabilityKind;
+  currency: Currency;
+  /** Yearly interest rate as a decimal (0.055 = 5.5%) */
+  rate?: number;
+  /** Monthly instalment, in `currency` */
+  monthlyPayment?: number;
+  notes?: string;
+  /** Outstanding balance over time (positive numbers) */
+  balances: DatedValue[];
+}
+
+export interface NetWorthDoc {
+  assets: NetWorthAsset[];
+  liabilities: Liability[];
+  /** Monthly expenses in EUR for the emergency-fund months. Missing = taken from the IPS rule, if any. */
+  monthlyExpenses?: number;
 }
 
 /** Fields a CSV column can be mapped to by the transaction import. */

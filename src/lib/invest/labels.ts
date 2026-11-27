@@ -1,5 +1,6 @@
 // Romanian UI labels for the enum values in types.ts (shared by the invest pages).
-import type { AccountType, AssetClass, Region, TxType } from './types';
+import type { AccountType, AssetClass, LiabilityKind, Region, TxType } from './types';
+import type { NetWorthCategory } from './networth';
 
 export const ACCOUNT_TYPE_LABEL: Record<AccountType, string> = {
   foreign_broker: 'Broker străin',
@@ -40,4 +41,21 @@ export const TX_TYPE_LABEL: Record<TxType, string> = {
   deposit: 'Depunere',
   withdrawal: 'Retragere',
   transfer: 'Transfer',
+};
+
+export const NW_CATEGORY_LABEL: Record<NetWorthCategory, string> = {
+  investments: 'Investiții',
+  pension: 'Pilon 2/3',
+  cash: 'Cash / cont curent',
+  savings: 'Economii / depozite',
+  real_estate: 'Imobiliare',
+  vehicle: 'Mașini',
+  other: 'Altele',
+};
+
+export const LIABILITY_KIND_LABEL: Record<LiabilityKind, string> = {
+  mortgage: 'Credit ipotecar',
+  loan: 'Credit de nevoi personale / auto',
+  credit_card: 'Card de credit',
+  other: 'Altă datorie',
 };

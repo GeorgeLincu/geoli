@@ -2,6 +2,7 @@
 // (and testable with vitest). It checks shape and types, not business rules.
 import {
   SCHEMA_VERSION, ACCOUNT_TYPES, CURRENCIES, TX_TYPES, DOC_NAMES, IMPORT_FIELDS,
+  NET_WORTH_ASSET_CATEGORIES, LIABILITY_KINDS,
   type DocName,
 } from './types';
 
@@ -17,6 +18,11 @@ const num: Check = (v, p, e) => { if (typeof v !== 'number' || !Number.isFinite(
 const bool: Check = (v, p, e) => { if (typeof v !== 'boolean') e.push(`${p}: true/false expected`); };
 const date: Check = (v, p, e) => { if (typeof v !== 'string' || !DATE.test(v)) e.push(`${p}: date YYYY-MM-DD expected`); };
 const oneOf = (allowed: readonly string[]): Check => (v, p, e) => { if (typeof v !== 'string' || !allowed.includes(v)) e.push(`${p}: one of ${allowed.join(', ')}`); };
+const range = (min: number, max: number, int = false): Check => (v, p, e) => {
+  if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max || (int && !Number.isInteger(v))) {
+    e.push(`${p}: ${int ? 'whole ' : ''}number between ${min} and ${max} expected`);
+  }
+};
 const anyObj: Check = (v, p, e) => { if (!isObj(v)) e.push(`${p}: object expected`); };
 
 /** required keys = true, optional = false */
@@ -57,11 +63,23 @@ const projection = record({
   historySource: [str(500), false],
 });
 
+const retirement = record({
+  strategy: [oneOf(['constant', 'guardrails', 'vpw', 'floorCeiling']), false], initial: [oneOf(['spending', 'swr']), false],
+  gkGuard: [num, false], gkAdjust: [num, false], gkMinYearsLeft: [num, false], floor: [num, false], ceiling: [num, false],
+  vpwReturn: [num, false],
+  glidepath: [list(record({ age: [num, true], weights: [byClass(num), true] }), 50), false],
+  incomes: [list(record({
+    id: [id, true], kind: [oneOf(['pillar2', 'pillar3', 'state', 'other']), true], label: [str(120), false],
+    amount: [num, true], startAge: [num, true], endAge: [num, false],
+  }), 50), false],
+  gainShare: [num, false], accountType: [oneOf(['foreign_broker', 'ro_broker']), false], eurRon: [num, false],
+});
+
 const settings = record({
   birthYear: [num, false], baseCurrency: [oneOf(['EUR']), true], monthlyContribution: [num, false],
   contributionGrowth: [num, false], yearsToInvest: [num, false], retirementSpending: [num, false],
   swr: [num, false], inflation: [num, false], manualCapital: [num, false],
-  projection: [projection, false],
+  projection: [projection, false], retirement: [retirement, false],
 });
 const account = record({
   id: [id, true], name: [str(120), true], type: [oneOf(ACCOUNT_TYPES), true], institution: [str(120), false],
@@ -138,6 +156,22 @@ const calendar = record({
   }), 2000), false],
 });
 
+const datedValue = record({ date: [date, true], value: [range(0, 1e12), true], note: [str(200), false] });
+const netWorthAsset = record({
+  id: [id, true], name: [str(120), true], category: [oneOf(NET_WORTH_ASSET_CATEGORIES), true],
+  currency: [oneOf(CURRENCIES), true], liquid: [bool, false], emergency: [bool, false], notes: [str(2000), false],
+  values: [list(datedValue, 5000), true],
+});
+const liability = record({
+  id: [id, true], name: [str(120), true], kind: [oneOf(LIABILITY_KINDS), true], currency: [oneOf(CURRENCIES), true],
+  rate: [range(0, 1), false], monthlyPayment: [range(0, 1e9), false], notes: [str(2000), false],
+  balances: [list(datedValue, 5000), true],
+});
+const netWorth = record({
+  assets: [list(netWorthAsset, 500), true], liabilities: [list(liability, 500), true],
+  monthlyExpenses: [range(0, 1e9), false],
+});
+
 const versionCheck: Check = (v, p, e) => { if (v !== SCHEMA_VERSION) e.push(`${p}: must be ${SCHEMA_VERSION}`); };
 
 const data = record({
@@ -146,6 +180,7 @@ const data = record({
   targets: [list(target, 200), true], scenarios: [list(scenario, 200), true],
   prices: [list(pricePoint, 50_000), false], fxRates: [list(fxRate, 50_000), false],
   pensionValues: [list(pensionValue, 5000), false],
+  netWorth: [netWorth, false],
   importPresets: [list(importPreset, 50), false],
   calendar: [calendar, false],
 });
@@ -166,11 +201,6 @@ const taxRules = record({
 const ipsSections: Check = (v, p, e) => {
   if (!isObj(v)) { e.push(`${p}: object expected`); return; }
   for (const [k, x] of Object.entries(v)) str(50_000)(x, `${p}.${k}`, e);
-};
-const range = (min: number, max: number, int = false): Check => (v, p, e) => {
-  if (typeof v !== 'number' || !Number.isFinite(v) || v < min || v > max || (int && !Number.isInteger(v))) {
-    e.push(`${p}: ${int ? 'whole ' : ''}number between ${min} and ${max} expected`);
-  }
 };
 const ipsRules = record({
   driftAlerts: [bool, false],

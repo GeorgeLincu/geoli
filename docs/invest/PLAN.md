@@ -96,8 +96,9 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”. Portofoliul folosește aceleași cursuri BNR și prețuri (un singur loc pentru corecțiile manuale): `src/lib/invest/market-sources.ts`
 - [x] 4 Taxe RO — `/vault/invest/taxe/`: `tax-ro.ts` (foreign broker yearly net gain + loss carry-forward with cap, RO-broker withholding by FIFO holding period, RO/foreign dividends and interest with capped foreign tax credit, Tezaur/Fidelis exemption, CASS tiers, effective rate, `estimateSales` / `estimateWithdrawal` for Phase 5), per-year parameter editor (source, verified on, confirmed per value), printable „Fișă Declarația Unică” with BNR rates used, CASS step chart. Researched 2025/2026 values in `tax-ro-defaults.ts` (all `confirmed: false` until George confirms). Details: § „Reguli fiscale (faza 4)”
 - [x] Extra: import CSV — `/vault/invest/import/` (link „Importă CSV” în Portofoliu → Tranzacții). Detalii: secțiunea „Import CSV”.
+- [x] 5 Pensie & retragere — `/vault/invest/pensie/`: `withdrawal.ts` (sumă constantă reală, Guyton-Klinger, VPW, podea și plafon), toate pe același Monte Carlo ca Planul (Web Worker comun, aceeași sămânță, aceleași piețe pentru toate strategiile), glidepath / bond tent pe vârstă, venituri Pilon 2/3 + pensie de stat + altele (nete, introduse de George), venit net după taxe prin `tax-ro.ts` `estimateWithdrawal`, regulile de retragere din IPS afișate lângă rezultate. Detalii: secțiunea „Pensie & retragere (faza 5)”
+- [x] Extra: avere netă — `/vault/invest/avere/` (nav „Avere netă”) + card pe Panou: portofoliul din registru + alte active și datorii notate de George, total EUR/RON azi și în timp, lichid vs ilichid, fond de urgență în luni, datorii / active. Detalii: secțiunea „Avere netă”.
 - [x] Extra: calendar venituri — `/vault/invest/calendar/` (nav „Calendar”) + card „Încasări în următoarele 30 de zile” pe Panou. Detalii: secțiunea „Calendar venituri”.
-- [ ] 5 Pensie & retragere
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [ ] 7 Rapoarte anuale & Panou
 - [ ] 8 Întărire
@@ -223,6 +224,46 @@ Page `/vault/invest/import/` (`src/pages/vault/invest/import.astro`, `src/script
     value; the commission currency (`IBCommissionCurrency`) is assumed equal to the trade currency. Dividends/withholding
     tax are in other Flex sections (Cash Transactions) and are not covered by this preset.
 - Currencies outside EUR/RON/USD/GBP/CHF are reported as errors (types.ts `CURRENCIES`). Transfers need a destination account column.
+
+## Avere netă
+- Page `/vault/invest/avere/` (nav „Avere netă”) and a compact card on the dashboard (`src/scripts/invest/networth-card.ts`).
+- **Portfolio is never re-entered**: one item per portfolio account from `computeLedger` + `valuePortfolio` on that date (positions at market price, else face value, else cost; tracked cash; Pillar 2/3 manual values). Categories: `investments`, `pension` (Pillar 2/3), `cash` (accounts of type `cash`).
+- **Other assets and debts** in `data.json` → optional `netWorth` (`NetWorthDoc`): `assets[]` (category `cash | savings | real_estate | vehicle | other`, currency, optional `liquid` / `emergency` flags, `values[]` dated) and `liabilities[]` (kind `mortgage | loan | credit_card | other`, currency, yearly `rate` decimal, `monthlyPayment`, `balances[]` dated), plus `monthlyExpenses` (EUR). A dated value stays valid until the next one; 0 = sold / paid off.
+- **Liquid**: portfolio except Pillar 2/3, plus cash and savings by default (the flag overrides). **Emergency fund**: assets flagged „Fond de urgență” (default: cash and savings) plus the portfolio accounts chosen in the IPS rule (`activeIpsRules().rules.emergencyFund.accountIds`). Months = that money / monthly expenses; expenses = the page value, else the IPS rule's `monthlyExpenses`; target months from the IPS rule (the IPS dashboard alert is unchanged and still uses only its own accounts).
+- **Debt / assets** = liabilities ÷ gross assets. Debts table also shows interest per month (yearly rate / 12) and an estimated payoff (annuity, fixed rate, no prepayments).
+- **Over time**: month-ends from the first recorded date (transaction, Pillar 2/3 value, asset value or debt balance) to today, thinned above 180 points; stacked area per category with debts below zero and the net line; EUR/RON toggle. Market years loaded: every year from the first date to now. Positions without a price on a past date are valued at cost (counted in a warning).
+- **For the yearly reports (Phase 7)**: `netWorthAt(data, { fx, prices, emergencyAccountIds }, 'YYYY-12-31')` in `src/lib/invest/networth.ts` returns totals in EUR and RON, per category, liquid/illiquid, emergency money, debt ratio and missing FX.
+- Files: logic `src/lib/invest/networth.ts` (+ tests), types/validator additive (`NetWorthDoc` in `types.ts`, `netWorth` in `validate.ts`), labels in `labels.ts`, UI `src/pages/vault/invest/avere.astro`, `src/scripts/invest/networth.ts`, `src/styles/invest-networth.css`. No values are pre-filled.
+
+## Pensie & retragere (faza 5)
+Page `/vault/invest/pensie/` (`src/pages/vault/invest/pensie.astro`, `src/scripts/invest/retire.ts`, `src/styles/invest-retire.css`),
+logic `src/lib/invest/withdrawal.ts` (tests: `withdrawal.test.ts`).
+- Inputs from the plan (no re-entry): age, years to invest, contributions, capital, spending, SWR, inflation, plan-to age, class
+  assumptions, correlation, Monte Carlo mode/runs/seed and historical data — all from `settings` / `settings.projection`.
+  The page only edits `settings.retirement` (`RetirementSettings` in `types.ts`, validated in `validate.ts`) and saves with „Salvează” (ETag, backup).
+- Simulation: `runRetirement()` reuses `montecarlo.ts` (`mulberry32`, `gaussian`, `percentile`, `lognormalParams`, `historyYearReturn`)
+  and `projection.ts` (`grow`, `contributionInYear`, `portfolioStats`); it runs in the shared `mc.worker.ts` (message kind `retire`).
+  With no glidepath it reproduces the plan's Monte Carlo exactly (unit test). All four strategies run on the same simulated
+  markets (common random numbers). Real terms, withdrawal at the start of each year.
+- Strategies: constant (spending − other income, or SWR × balance at retirement, chosen with „Prima retragere”);
+  Guyton-Klinger (2006 defaults: ±20% guardrails, 10% cut/raise, no cuts in the last 15 years; skip the inflation raise after a
+  losing year when the rate is above the initial one); VPW (annuity-due rate on the years left, return = expected return of the
+  allocation at that age or a fixed one); floor and ceiling (initial rate × balance, kept between floor and ceiling × first withdrawal;
+  85% / 125% are placeholders labelled „implicit”).
+- Glidepath: points `{ age, weights }`, linear between points, flat outside; none = today's target allocation. Each simulated year
+  draws its return for that age's allocation (normal: lognormal per year; bootstrap: one historical year, weighted by that age's allocation).
+- Other income (`incomes`): Pillar 2, Pillar 3, state pension, other — NET real EUR per year, start age, optional end age (inclusive).
+  Not taxed again. In „spending” mode they reduce what the portfolio pays.
+- Outputs: balance p10/p50/p90 (Guyton-Klinger also shows the balance levels where the median withdrawal hits the cut/raise
+  guardrails), income per year p10/p50/p90 + median net after tax + spending line, probability of running out (and median age),
+  share of runs with at least one year below the spending need, median and p10 bequest, comparison table of all strategies.
+- Tax: the median withdrawal of each year goes through `estimateWithdrawal` with the current year's rule set (`rulesFor`), today's
+  thresholds, `gainShare` (default 100% = prudent, labelled) and the latest BNR EUR rate (or a manual one). A warning lists
+  unconfirmed or missing parameters and when another year's rules are used.
+- IPS: the `withdrawal` section text of the IPS in force (`activeIpsRules(doc)?.version`, else `latestIpsVersion`) is shown under the
+  results. `IpsRules` has no machine-checkable withdrawal rule, so it is text only.
+- Not modelled: tax on Pillar 2/3 and state pension (entered net), CASS on pensions, future changes of thresholds,
+  the order of withdrawals across accounts.
 
 ## Verificare (pentru fiecare fază)
 - `npm run check`, `npm run build`, `npx vitest run` verzi; CI verde (inclusiv garda anti-inline și Lighthouse).

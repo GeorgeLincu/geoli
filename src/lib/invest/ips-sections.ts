@@ -41,7 +41,7 @@ export const IPS_SECTIONS: readonly IpsSectionDef[] = [
     'Când și cum vei începe retragerile?',
     'Ce rată de retragere iei în calcul și cum o ajustezi în anii slabi?',
     'Din ce conturi și în ce ordine retragi?',
-  ], link: { href: '/vault/invest/plan/', label: 'Planul și proiecția (pagina Pensie vine în faza 5)' } },
+  ], link: { href: '/vault/invest/pensie/', label: 'Pensie & retragere: strategii simulate' } },
   { key: 'instruments', title: 'Instrumente permise și nepermise', questions: [
     'Ce tipuri de instrumente folosești și de ce?',
     'Ce nu cumperi niciodată?',
