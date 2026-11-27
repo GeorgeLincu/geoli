@@ -73,6 +73,7 @@ _Last updated: 2026-11-27. Update this file whenever something important changes
 - [ ] R2 backup job.
 - [ ] **Investiții**: phases 0–3 done (foundation, plan & projection, portfolio, prices & FX). Prompts in `docs/invest/PROMPTS.md`, progress in `docs/invest/PLAN.md`.
   - Phase 2 (Portofoliu): `src/pages/vault/invest/portofoliu.astro`, `src/scripts/invest/portfolio.ts`, logic in `src/lib/invest/{ledger,portfolio,fx,prices,csv,labels}.ts` (tested). data.json gained optional `prices`, `fxRates` (RON per unit, manual), `pensionValues`, `Instrument.faceValue`. Local preview on Windows: run `wrangler dev` with `--persist-to <short path>` (deep worktree paths make local R2 fail with a 500).
+  - CSV import: `/vault/invest/import/` (linked from Portofoliu → Tranzacții). Parsed in the browser, one ETag save; column-mapping presets in `data.json` `importPresets`; built-in presets for the app's own CSV and the IBKR Flex „Trades” CSV are marked unverified until George tries a real file. Logic `src/lib/invest/import.ts` (tested). Details: `docs/invest/PLAN.md` § „Import CSV”.
 - [ ] **dermi.ro**: separate repo and session. The full brief is in `PROMPT-dermi.md` (not committed; kept locally next to this repo).
 
 ## 6. History (short)

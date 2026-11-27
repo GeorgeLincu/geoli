@@ -94,6 +94,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
 - [x] 2 Portofoliu — `/vault/invest/portofoliu/`: CRUD conturi/instrumente/tranzacții, `ledger.ts` (cost mediu ponderat, art. 97 alin. (8^2) Cod fiscal), `portfolio.ts` (evaluare, drift, rebalansare prin contribuții, scadențe), `fx.ts`/`prices.ts` (manual, interfață pentru Faza 3), Pilon 2/3 manual, export CSV
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”. Portofoliul folosește aceleași cursuri BNR și prețuri (un singur loc pentru corecțiile manuale): `src/lib/invest/market-sources.ts`
+- [x] Extra: import CSV — `/vault/invest/import/` (link „Importă CSV” în Portofoliu → Tranzacții). Detalii: secțiunea „Import CSV”.
 - [ ] 4 Taxe RO
 - [ ] 5 Pensie & retragere
 - [ ] 6 IPS
@@ -121,6 +122,29 @@ How it works:
 - „Actualizează acum”: `POST /vault/api/invest/market/refresh`, owner only, at most once every 5 minutes (HTTP 429 + `Retry-After`).
 - Pure logic and tests: `src/lib/invest/market.ts` (`parseBnrXml`, `parseYahooChart`, `rateOn`, `convert`, `latestPrice`, `isStale`…), fixtures in `src/lib/invest/__fixtures__/`.
 - Not tested live: the Cron Trigger on Cloudflare's network (only locally) and how Yahoo treats Cloudflare's egress IPs. If prices fail after deploy, the dashboard shows the error per instrument.
+
+## Import CSV
+Page `/vault/invest/import/` (`src/pages/vault/invest/import.astro`, `src/scripts/invest/import.ts`), pure logic in
+`src/lib/invest/import.ts` (tests: `import.test.ts`, invented rows only; never commit George's real files).
+- The file is read and parsed in the browser (`FileReader`, UTF-8 with a Windows-1250 fallback). Only the result is saved:
+  new transactions + confirmed new instruments, in **one** `data.json` PUT (ETag, so the Worker makes a backup).
+- Formats: comma / semicolon / tab (auto-detected), quoted cells, decimal comma or dot (auto or fixed), dates
+  `2024-03-05`, `20240305`, `2024-03-05, 10:30:00`, and d.m.y / m/d/y / y-m-d with a chosen order (2-digit years = 20xx).
+- Steps: (1) file + preset + format; (2) column mapping (date, type, ticker, ISIN, name, quantity, price, currency, fees,
+  withheld tax, amount, account, destination account, note), type values → transaction type or „ignoră”, account values
+  → app account, default account/currency, optional "type from quantity sign"; (3) unknown instruments proposed for
+  creation (name, ticker, ISIN, class, region, currency, price source; class/region are only a suggestion);
+  (4) preview: new / duplicate / error (with the reason) / skipped (subtotal or „ignoră” rows).
+- Duplicate = same account, instrument, date, type, quantity, price and amount as an existing transaction, matched
+  one-to-one (two identical fills stay two rows). Duplicates are unticked by default; errors can't be imported.
+- Presets are saved in `data.json` `importPresets` (validated in `validate.ts`). Built-in presets, both shown as
+  **„neverificat pe un fișier real”** until George confirms on a real file (then set `verified: true` in `BUILTIN_PRESETS`):
+  - this app's own CSV export (round-trip covered by a unit test);
+  - Interactive Brokers Flex Query, section **Trades**, CSV: columns `ClientAccountID, TradeDate, Symbol, Description,
+    ISIN, CurrencyPrimary, Buy/Sell, Quantity, TradePrice, IBCommission`; date `yyyyMMdd` or ISO; commission negative → absolute
+    value; the commission currency (`IBCommissionCurrency`) is assumed equal to the trade currency. Dividends/withholding
+    tax are in other Flex sections (Cash Transactions) and are not covered by this preset.
+- Currencies outside EUR/RON/USD/GBP/CHF are reported as errors (types.ts `CURRENCIES`). Transfers need a destination account column.
 
 ## Verificare (pentru fiecare fază)
 - `npm run check`, `npm run build`, `npx vitest run` verzi; CI verde (inclusiv garda anti-inline și Lighthouse).
