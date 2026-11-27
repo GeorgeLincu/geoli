@@ -1,0 +1,45 @@
+---
+import Invest from '../../../../layouts/Invest.astro';
+import '../../../../styles/invest-reports.css';
+---
+<Invest title="Rapoarte" active="rapoarte">
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Rapoarte anuale</h1>
+      <p class="inv-lead">Un raport pentru fiecare an: valoare, contribuții, câștig de piață, randamente (TWR, XIRR, real), alocare, IPS, progres FI, impozite. Se pot tipări ca PDF.</p>
+    </div>
+  </div>
+
+  <p class="inv-muted" id="rpState">Se calculează…</p>
+
+  <section class="inv-card" aria-labelledby="rpListTitle" id="rpListCard" hidden>
+    <h2 id="rpListTitle" class="inv-h2">Ani</h2>
+    <div class="rp-table-wrap">
+      <table class="rp-table" id="rpList">
+        <thead>
+          <tr>
+            <th scope="col">An</th>
+            <th scope="col" class="num">Valoare la sfârșit</th>
+            <th scope="col" class="num">Contribuții nete</th>
+            <th scope="col" class="num">Câștig de piață</th>
+            <th scope="col" class="num">TWR</th>
+            <th scope="col" class="num">XIRR</th>
+            <th scope="col" class="num">Real</th>
+            <th scope="col">Instantaneu</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="rp-note">Valorile sunt în EUR, pentru tot portofoliul fără Pilon 2/3. „Real” apare după ce notezi inflația anului în raport. Instantaneul de 31 decembrie se salvează automat pentru anii încheiați.</p>
+  </section>
+
+  <section class="inv-card" aria-labelledby="rpChartTitle" id="rpChartCard" hidden>
+    <h2 id="rpChartTitle" class="inv-h2">Valoarea la sfârșitul fiecărui an</h2>
+    <div class="inv-chart" id="rpYearsChart" role="img" aria-label="Valoarea portofoliului la sfârșitul fiecărui an, față de contribuțiile nete cumulate"></div>
+  </section>
+</Invest>
+
+<script>
+  import '../../../../scripts/invest/reports';
+</script>

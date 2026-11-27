@@ -100,7 +100,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] Extra: avere netă — `/vault/invest/avere/` (nav „Avere netă”) + card pe Panou: portofoliul din registru + alte active și datorii notate de George, total EUR/RON azi și în timp, lichid vs ilichid, fond de urgență în luni, datorii / active. Detalii: secțiunea „Avere netă”.
 - [x] Extra: calendar venituri — `/vault/invest/calendar/` (nav „Calendar”) + card „Încasări în următoarele 30 de zile” pe Panou. Detalii: secțiunea „Calendar venituri”.
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
-- [ ] 7 Rapoarte anuale & Panou
+- [x] 7 Rapoarte anuale & Panou — `/vault/invest/rapoarte/` (listă) și `/vault/invest/rapoarte/<an>/` (raport pe an, tipărire/PDF), instantanee la 31 dec. în `invest/snapshots/` (automate, corectabile, cu inflația anului), `returns.ts` (XIRR, TWR, real), Panou refăcut (cifrele importante sus, alerte comune, avere netă pe clase în timp), navigație pe grupuri, grafice uniformizate. Detalii: secțiunea „Rapoarte anuale & Panou (faza 7)”
 - [ ] 8 Întărire
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
@@ -151,6 +151,54 @@ Page `/vault/invest/calendar/` (`src/pages/vault/invest/calendar.astro`, `src/sc
   Amounts only with „Include prețuri și sume”. A changed maturity date drops the marker.
 - Tested locally on 2026-11-27 with invented data (owner, non-owner 404, 375 px, dark mode, no CSP errors) and a local cron
   run (`--test-scheduled`, the .eml was written). Not tested: delivery on Cloudflare; real Tezaur/Fidelis coupon calendars.
+
+## Rapoarte anuale & Panou (faza 7)
+Logic (tested, invented data only): `src/lib/invest/returns.ts` (`returns.test.ts`), `src/lib/invest/report.ts` and
+`src/lib/invest/snapshots.ts` (`report.test.ts`). UI: `src/pages/vault/invest/rapoarte/index.astro` + `src/scripts/invest/reports.ts`,
+`src/pages/vault/invest/rapoarte/an/index.astro` + `src/scripts/invest/report-year.ts` (loader `report-data.ts`, helpers `report-ui.ts`,
+`chart-slot.ts`), CSS `src/styles/invest-reports.css` (also the print stylesheet). Worker: `worker/snapshots.ts`; `worker/invest.ts`
+serves the one built page `rapoarte/an/` for every `/vault/invest/rapoarte/<year>/` (1990–2200, owner only; `/rapoarte/an/` itself is 404).
+- **Scope of the returns**: every account except Pillar 2/3 (values typed by hand, no contributions), EUR at the BNR rate of each
+  transaction's date; month-end values with the latest saved price on or before that date (no price → cost, counted in a warning).
+- **Flows** (`portfolioFlows`): accounts with any deposit/withdrawal/cash transfer (decided over the whole history) → deposits and
+  withdrawals; other accounts → buys in, sales out, dividends/interest out as „Venituri retrase”, standalone fees in. Cash transfers
+  between the portfolio and Pillar 2/3 are flows; security transfers there are ignored with a warning.
+- **Year figures** (`yearFigures`): start/end value, contributions in/out, dividends, interest, withheld tax, fees (transaction fees +
+  fee rows), realised gain, payouts, market gain = end − start − net flows − income + withheld + fees (price + FX only; the waterfall adds up
+  exactly, unit test). TWR = monthly Modified Dietz chained (exact without flows; GIPS-accepted approximation otherwise); XIRR =
+  money-weighted (Newton + bisection; a part year shows the period rate, the annualised one is in the table). Max drawdown of the
+  time-weighted wealth index, measured from the peak since the start.
+- **Real return** = (1 + TWR) / (1 + inflation) − 1. Inflation is typed by George per year on the report (snapshot form) with its
+  source. Not downloaded. Suggested official sources (shown on the page): Eurostat HICP annual average, euro area
+  (`prc_hicp_aind`) — matches the EUR returns; INS „Indicele prețurilor de consum” (Dec/Dec or annual average) for Romanian prices.
+- **Snapshots** `invest/snapshots/<year>-12-31.json` (`YearSnapshot` in `types.ts`, validated by `validateSnapshot`): `computed` = report-scope
+  portfolio (EUR/RON, by class, positions at cost, missing FX) from `portfolioAt` + net worth from `netWorthAt`; George's
+  `portfolioEur` / `netWorthEur` corrections, `inflation`, `note`. Saved automatically (in the browser, then PUT with ETag) for every finished year
+  without one when the Rapoarte pages are opened; „Recalculează din registru” recomputes and keeps his fields. A corrected portfolio value
+  replaces that year-end in every figure (history override). Backups: `invest/backups/snapshots/<year>/` (newest 20).
+  API: `GET /vault/api/invest/snapshots`, `GET|PUT /vault/api/invest/snapshots/<year>`.
+- **Report sections**: KPIs, waterfall, figures table, monthly-returns heatmap (last 10 years; diverging red ↔ grey ↔ blue; table view),
+  drawdown chart (report year shaded), allocation vs **today's** target (`computeDrift`, 5 pp fallback band) and by asset class, IPS compliance with
+  the version in force on the year end (`ipsVersionOn`, `ipsCompliance`: drift, emergency fund, months with the contribution, yearly review),
+  FI progress (`fiProgress`: plan FI number from today's settings vs the year-end portfolio, years to FI), net worth (snapshot or `netWorthAt`),
+  taxes (`taxResults` = the Taxe page computation: DU payable, CASS, withheld, total, effective rate, unconfirmed-parameter count).
+- **Print / PDF**: „Tipărește / PDF” or Ctrl+P. Before printing the page switches to the light theme and redraws the charts (canvas), opens the
+  method/table sections, hides navigation, buttons and the snapshot form; restored after printing (`installPrintTheme` in `charts.ts`).
+- **Dashboard** (`index.astro`, `dashboard.ts`): KPIs first — net worth (+ RON, emergency months), portfolio (no Pillar 2/3), FI progress,
+  years to FI, time-weighted return since 1 January, largest drift (pp, rows out of band), next-30-days income (from the calendar card),
+  last price update. One alert list: IPS (`collectIpsAlerts()` in `ips-alerts.ts`), George's drawdown levels crossed (same rules as Scăderi:
+  `levelsForInstrument`, ATH from the history index or 52-week high from the price store) and stale automatic prices of held instruments.
+  Chart: net worth by asset class at month-ends (≤ 72 points; savings → cash, gold/vehicles → other, debts below zero, net line), drawn after the
+  numbers. Speed: `loadDocOnce` / `loadMarketOnce` / `loadMarketSummary` in `api.ts` share one request per document/year across the cards.
+  The phase-0 example chart is gone. Savings rate is not shown: there is no income data to compute it from.
+- **Navigation** (`Invest.astro`): groups Acum · Ce am (Portofoliu, Avere netă, Calendar, Scăderi) · Planuri (Plan, Pensie, IPS) ·
+  Rapoarte (Rapoarte, Taxe). ≤ 760 px: a „Secțiune: …” menu (`<details>`, no JS).
+- **Charts** (all pages, `charts.ts`): 8-slot categorical palette validated with the dataviz validator in both themes (adjacent CVD ΔE ≥ 8,
+  normal-vision ≥ 15; light slots 3–5 are below 3:1 on white, so legends/tables stay), diverging tokens `--inv-neg/mid/pos`, shared mark
+  defaults (2 px lines, 8 px markers, 4 px rounded bar ends, surface gaps in stacks), confined crosshair tooltips, scrolling legends; Title and
+  Graphic components registered (empty states now render). Calendar kinds and drawdown levels no longer use series colours as text.
+- Tested locally on 2026-11-28 with invented data (owner; non-owner → 404 on pages and API; 375 px; dark; no CSP errors; print theme switch).
+  Not tested: a real browser print dialog on a phone, real data volumes (hundreds of transactions × many years).
 
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).
@@ -226,7 +274,7 @@ Page `/vault/invest/import/` (`src/pages/vault/invest/import.astro`, `src/script
 - Currencies outside EUR/RON/USD/GBP/CHF are reported as errors (types.ts `CURRENCIES`). Transfers need a destination account column.
 
 ## Avere netă
-- Page `/vault/invest/avere/` (nav „Avere netă”) and a compact card on the dashboard (`src/scripts/invest/networth-card.ts`).
+- Page `/vault/invest/avere/` (nav „Avere netă”) and the net worth KPI + chart on the dashboard (`src/scripts/invest/dashboard.ts`; the old `networth-card.ts` was folded into it in Phase 7).
 - **Portfolio is never re-entered**: one item per portfolio account from `computeLedger` + `valuePortfolio` on that date (positions at market price, else face value, else cost; tracked cash; Pillar 2/3 manual values). Categories: `investments`, `pension` (Pillar 2/3), `cash` (accounts of type `cash`).
 - **Other assets and debts** in `data.json` → optional `netWorth` (`NetWorthDoc`): `assets[]` (category `cash | savings | real_estate | vehicle | other`, currency, optional `liquid` / `emergency` flags, `values[]` dated) and `liabilities[]` (kind `mortgage | loan | credit_card | other`, currency, yearly `rate` decimal, `monthlyPayment`, `balances[]` dated), plus `monthlyExpenses` (EUR). A dated value stays valid until the next one; 0 = sold / paid off.
 - **Liquid**: portfolio except Pillar 2/3, plus cash and savings by default (the flag overrides). **Emergency fund**: assets flagged „Fond de urgență” (default: cash and savings) plus the portfolio accounts chosen in the IPS rule (`activeIpsRules().rules.emergencyFund.accountIds`). Months = that money / monthly expenses; expenses = the page value, else the IPS rule's `monthlyExpenses`; target months from the IPS rule (the IPS dashboard alert is unchanged and still uses only its own accounts).

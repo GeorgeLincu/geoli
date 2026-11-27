@@ -4,7 +4,7 @@ import { manualFx } from './fx';
 import { manualPrices } from './prices';
 import {
   portfolioFlows, cashTrackedAccounts, portfolioAt, buildHistory, yearFigures, reportYears, waterfall, waterfallBars,
-  monthEnds, ipsCompliance, driftOf, accountValues, fiProgress, ipsVersionOn,
+  monthEnds, ipsCompliance, driftOf, accountValues, fiProgress, ipsVersionOn, netWorthComposition,
 } from './report';
 import { netWorthAt } from './networth';
 import { buildSnapshot, applySnapshotEdit, missingSnapshotYears, snapshotOverrides, snapshotPortfolio } from './snapshots';
@@ -209,5 +209,26 @@ describe('snapshots', () => {
   it('lists closed years without a snapshot', () => {
     const s = { year: 2024 } as never;
     expect(missingSnapshotYears([2026, 2025, 2024, 2023], [s], '2026-03-01')).toEqual([2023, 2025]);
+  });
+});
+
+describe('net worth composition (dashboard)', () => {
+  it('splits by asset class, includes Pillar 2/3 and other assets, debts below zero; total = netWorthAt', () => {
+    const d = sample();
+    d.netWorth = {
+      assets: [
+        { id: 'sv', name: 'Depozit', category: 'savings', currency: 'EUR', values: [{ date: '2025-01-01', value: 2000 }] },
+        { id: 'car', name: 'Mașină', category: 'vehicle', currency: 'EUR', values: [{ date: '2025-01-01', value: 5000 }] },
+      ],
+      liabilities: [{ id: 'l', name: 'Credit', kind: 'loan', currency: 'EUR', balances: [{ date: '2025-01-01', value: 3000 }] }],
+    };
+    const c = netWorthComposition(d, src(), '2025-12-31');
+    expect(c.parts.equity).toBeCloseTo(1950, 6);
+    expect(c.parts.bond).toBeCloseTo(450, 6);
+    expect(c.parts.cash).toBeCloseTo(498 + 2000, 6);
+    expect(c.parts.pension).toBeCloseTo(1000, 6);
+    expect(c.parts.other).toBeCloseTo(5000, 6);
+    expect(c.parts.debts).toBeCloseTo(-3000, 6);
+    expect(c.netEur).toBeCloseTo(netWorthAt(d, src(), '2025-12-31').netEur, 6);
   });
 });

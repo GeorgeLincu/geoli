@@ -1,14 +1,15 @@
 // Dashboard card "Prețuri și cursuri" (Phase 3): last update, BNR rates, latest price per instrument,
 // stale-price warnings, "Actualizează acum" and manual price overrides.
 import { toast, fmtDateTime } from './common';
+import { loadMarketSummary } from './api';
 import { EXCHANGES, parsePriceSource, type MarketStatus, type LatestPrice, type InstrumentStatus, type FxDay } from '../../lib/invest/market';
 import type { Currency } from '../../lib/invest/types';
 
-interface Row {
+export interface Row {
   id: string; name: string; ticker: string | null; currency: Currency; priceSource: string | null;
   latest: LatestPrice | null; stale: boolean; status: InstrumentStatus | null;
 }
-interface Summary { today: string; status: MarketStatus | null; fx: FxDay | null; instruments: Row[] }
+export interface Summary { today: string; status: MarketStatus | null; fx: FxDay | null; instruments: Row[] }
 
 const API = '/vault/api/invest/market';
 const card = document.getElementById('market');
@@ -107,10 +108,8 @@ async function readError(res: Response) {
   return [body.error || `Eroare ${res.status}`, ...(body.problems || []).slice(0, 3)].join(' — ');
 }
 
-async function load() {
-  const res = await fetch(API, { headers: { Accept: 'application/json' }, cache: 'no-store' });
-  if (!res.ok) throw new Error(await readError(res));
-  render((await res.json()) as Summary);
+async function load(fresh = false) {
+  render(await loadMarketSummary<Summary>(fresh));
 }
 
 async function refresh(btn: HTMLButtonElement) {
@@ -123,7 +122,8 @@ async function refresh(btn: HTMLButtonElement) {
     const r = (await res.json()) as { status: MarketStatus };
     const failed = Object.values(r.status.instruments).filter(i => !i.ok && i.symbol).length;
     toast(failed || !r.status.fx.ok ? 'Actualizat, cu erori — vezi tabelul.' : 'Prețuri și cursuri actualizate.', failed || !r.status.fx.ok ? 'err' : 'ok');
-    await load();
+    await load(true);
+    document.dispatchEvent(new CustomEvent('invest:market-refreshed'));
   } catch (e) {
     toast((e as Error).message, 'err');
   } finally {
@@ -143,7 +143,7 @@ async function saveOverride(form: HTMLFormElement, remove: boolean) {
     if (!res.ok) throw new Error(await readError(res));
     toast(remove ? 'Prețul manual a fost șters.' : 'Prețul manual a fost salvat.');
     if (!remove) (form.elements.namedItem('close') as HTMLInputElement).value = '';
-    await load();
+    await load(true);
   } catch (e) {
     toast((e as Error).message, 'err');
   }

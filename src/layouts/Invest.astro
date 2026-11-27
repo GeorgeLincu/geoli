@@ -11,19 +11,29 @@ interface Props {
 }
 const { title, active } = Astro.props;
 
-// Pages land phase by phase; items without a page are shown as "soon".
-const NAV = [
-  { key: 'panou',      label: 'Panou',      href: '/vault/invest/' },
-  { key: 'portofoliu', label: 'Portofoliu', href: '/vault/invest/portofoliu/' },
-  { key: 'plan',       label: 'Plan',       href: '/vault/invest/plan/' },
-  { key: 'avere',      label: 'Avere netă', href: '/vault/invest/avere/' },
-  { key: 'pensie',     label: 'Pensie',     href: '/vault/invest/pensie/' },
-  { key: 'taxe',       label: 'Taxe',       href: '/vault/invest/taxe/' },
-  { key: 'ips',        label: 'IPS',        href: '/vault/invest/ips/' },
-  { key: 'rapoarte',   label: 'Rapoarte',   href: null },
-  { key: 'scaderi',    label: 'Scăderi',    href: '/vault/invest/oportunitati/' },
-  { key: 'calendar',   label: 'Calendar',   href: '/vault/invest/calendar/' },
+// Navigation in four groups (what I have · plans · reports). Wide screens: one row with dividers;
+// phones: a <details> menu (no JS) with the current page in the summary.
+const NAV_GROUPS = [
+  { label: 'Acum', items: [
+    { key: 'panou',      label: 'Panou',      href: '/vault/invest/' },
+  ] },
+  { label: 'Ce am', items: [
+    { key: 'portofoliu', label: 'Portofoliu', href: '/vault/invest/portofoliu/' },
+    { key: 'avere',      label: 'Avere netă', href: '/vault/invest/avere/' },
+    { key: 'calendar',   label: 'Calendar',   href: '/vault/invest/calendar/' },
+    { key: 'scaderi',    label: 'Scăderi',    href: '/vault/invest/oportunitati/' },
+  ] },
+  { label: 'Planuri', items: [
+    { key: 'plan',       label: 'Plan',       href: '/vault/invest/plan/' },
+    { key: 'pensie',     label: 'Pensie',     href: '/vault/invest/pensie/' },
+    { key: 'ips',        label: 'IPS',        href: '/vault/invest/ips/' },
+  ] },
+  { label: 'Rapoarte', items: [
+    { key: 'rapoarte',   label: 'Rapoarte',   href: '/vault/invest/rapoarte/' },
+    { key: 'taxe',       label: 'Taxe',       href: '/vault/invest/taxe/' },
+  ] },
 ];
+const current = NAV_GROUPS.flatMap(g => g.items).find(i => i.key === active);
 ---
 <!DOCTYPE html>
 <html lang="ro">
@@ -47,10 +57,23 @@ const NAV = [
   </header>
 
   <nav class="inv-nav" aria-label="Secțiuni">
-    {NAV.map(n => n.href
-      ? <a href={n.href} aria-current={n.key === active ? 'page' : undefined}>{n.label}</a>
-      : <span class="inv-nav__soon" title="În curând">{n.label}</span>)}
+    {NAV_GROUPS.map(g => (
+      <div class="inv-nav__group" role="group" aria-label={g.label}>
+        {g.items.map(n => <a href={n.href} aria-current={n.key === active ? 'page' : undefined}>{n.label}</a>)}
+      </div>
+    ))}
   </nav>
+  <details class="inv-menu">
+    <summary><span class="inv-menu__label">Secțiune:</span> <strong>{current?.label ?? title}</strong></summary>
+    <nav class="inv-menu__panel" aria-label="Secțiuni">
+      {NAV_GROUPS.map(g => (
+        <div class="inv-menu__group">
+          <p class="inv-menu__title">{g.label}</p>
+          {g.items.map(n => <a href={n.href} aria-current={n.key === active ? 'page' : undefined}>{n.label}</a>)}
+        </div>
+      ))}
+    </nav>
+  </details>
 
   <main class="inv-main" id="main">
     <slot />

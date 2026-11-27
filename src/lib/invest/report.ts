@@ -25,6 +25,7 @@ import { computeLedger } from './ledger';
 import { valuePortfolio, computeDrift, type DriftResult, type Holding } from './portfolio';
 import { monthContributions } from './ips-checks';
 import { inputsFromSettings, fiNumber, yearsToFI } from './projection';
+import { netWorthAt } from './networth';
 import { modifiedDietz, chainReturns, periodXirr, realReturn, drawdownSeries, wealthIndex, type DatedFlow } from './returns';
 
 export const DEFAULT_BAND = 0.05;
@@ -498,4 +499,42 @@ export function taxResults(data: InvestData, rules: TaxRules | null, fxDocs: rea
       exactRules: r.exact,
     };
   });
+}
+
+// ─── Dashboard: net worth by asset class over time ───
+
+/** Stacked series of the dashboard chart, in this fixed order (colour slots follow it). */
+export type CompositionKey = 'equity' | 'bond' | 'gov_bond' | 'cash' | 'real_estate' | 'pension' | 'other' | 'debts';
+export const COMPOSITION_KEYS: readonly CompositionKey[] = ['equity', 'bond', 'gov_bond', 'cash', 'real_estate', 'pension', 'other', 'debts'];
+export const COMPOSITION_LABEL: Record<CompositionKey, string> = {
+  equity: 'Acțiuni', bond: 'Obligațiuni', gov_bond: 'Titluri de stat', cash: 'Cash și economii',
+  real_estate: 'Imobiliare', pension: 'Pilon 2/3', other: 'Altele (aur, auto…)', debts: 'Datorii',
+};
+
+const COMPOSITION_OF_CLASS: Record<AssetClass, CompositionKey> = {
+  equity: 'equity', bond: 'bond', gov_bond: 'gov_bond', gold: 'other', cash: 'cash', real_estate: 'real_estate', pension: 'pension', other: 'other',
+};
+
+export interface CompositionPoint { date: string; parts: Record<CompositionKey, number>; netEur: number }
+
+/**
+ * Net worth on `date` split by asset class: the whole portfolio (Pillar 2/3 included) by the class of each holding,
+ * other assets by category (savings → cash, vehicles → other), debts as a negative part. Same valuation as netWorthAt.
+ */
+export function netWorthComposition(data: InvestData, src: ValueSources, date: string): CompositionPoint {
+  const parts = Object.fromEntries(COMPOSITION_KEYS.map(k => [k, 0])) as Record<CompositionKey, number>;
+  if (data.accounts.length) {
+    const ledger = computeLedger(data, src.fx, date);
+    const v = valuePortfolio(data, ledger, src.prices, src.fx, date);
+    for (const h of v.holdings) if (h.valueEur !== null) parts[COMPOSITION_OF_CLASS[h.assetClass]] += h.valueEur;
+  }
+  const other = netWorthAt({ ...data, accounts: [] }, { fx: src.fx, prices: src.prices }, date);
+  for (const it of other.items) {
+    if (it.valueEur === null) continue;
+    if (it.kind === 'liability') { parts.debts -= it.valueEur; continue; }
+    const c = it.category;
+    parts[c === 'cash' || c === 'savings' ? 'cash' : c === 'real_estate' ? 'real_estate' : 'other'] += it.valueEur;
+  }
+  const netEur = COMPOSITION_KEYS.reduce((s, k) => s + parts[k], 0);
+  return { date, parts, netEur };
 }
