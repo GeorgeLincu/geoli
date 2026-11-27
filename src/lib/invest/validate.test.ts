@@ -51,3 +51,25 @@ describe('validateDoc', () => {
     expect(isDocName('../secret')).toBe(false);
   });
 });
+
+describe('validateDoc: plan projection settings', () => {
+  it('accepts projection settings and rejects unknown classes or modes', () => {
+    const ok = {
+      ...emptyData(),
+      settings: {
+        baseCurrency: 'EUR', birthYear: 1990,
+        projection: {
+          planToAge: 90, correlation: 0.3, mcMode: 'bootstrap', mcRuns: 5000, mcSeed: 1,
+          assumptions: { equity: { ret: 0.05, vol: 0.16 } }, weights: { equity: 0.8, bond: 0.2 },
+          history: [{ year: 2000, returns: { equity: -0.1 } }], historySource: 'https://example.org',
+        },
+      },
+    };
+    expect(validateDoc('data', ok)).toEqual([]);
+    const bad = { ...ok, settings: { ...ok.settings, projection: { weights: { crypto: 1 }, mcMode: 'x', assumptions: { equity: { ret: 0.05 } } } } };
+    const errs = validateDoc('data', bad);
+    expect(errs).toContain('data.settings.projection.weights.crypto: unknown asset class');
+    expect(errs.some(e => e.includes('mcMode'))).toBe(true);
+    expect(errs).toContain('data.settings.projection.assumptions.equity.vol: required');
+  });
+});

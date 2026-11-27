@@ -39,10 +39,29 @@ function list(item: Check, max = 100_000): Check {
 }
 const id = str(64);
 
+const ASSET_CLASSES = ['equity', 'bond', 'gov_bond', 'gold', 'cash', 'real_estate', 'pension', 'other'];
+/** Object whose keys are asset classes and whose values pass `item`. */
+const byClass = (item: Check): Check => (v, p, e) => {
+  if (!isObj(v)) { e.push(`${p}: object expected`); return; }
+  for (const [k, x] of Object.entries(v)) {
+    if (!ASSET_CLASSES.includes(k)) e.push(`${p}.${k}: unknown asset class`);
+    else item(x, `${p}.${k}`, e);
+  }
+};
+const projection = record({
+  planToAge: [num, false],
+  assumptions: [byClass(record({ ret: [num, true], vol: [num, true] })), false],
+  weights: [byClass(num), false], correlation: [num, false],
+  mcMode: [oneOf(['normal', 'bootstrap']), false], mcRuns: [num, false], mcSeed: [num, false],
+  history: [list(record({ year: [num, true], returns: [byClass(num), true] }), 300), false],
+  historySource: [str(500), false],
+});
+
 const settings = record({
   birthYear: [num, false], baseCurrency: [oneOf(['EUR']), true], monthlyContribution: [num, false],
   contributionGrowth: [num, false], yearsToInvest: [num, false], retirementSpending: [num, false],
   swr: [num, false], inflation: [num, false], manualCapital: [num, false],
+  projection: [projection, false],
 });
 const account = record({
   id: [id, true], name: [str(120), true], type: [oneOf(ACCOUNT_TYPES), true], institution: [str(120), false],
