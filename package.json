@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@astrojs/rss": "^4",
-    "astro": "^7.3.5",
+    "astro": "^7.4.7",
     "echarts": "^6.1.0",
     "marked": "^18.0.14"
   },
