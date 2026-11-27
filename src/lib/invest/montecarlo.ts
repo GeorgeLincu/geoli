@@ -42,6 +42,22 @@ export function percentile(sorted: ArrayLike<number>, p: number): number {
 }
 
 /**
+ * Lognormal parameters so the MEDIAN yearly return is `ret` and the standard deviation ≈ `vol`.
+ * Draw: exp(mu + s × z) − 1, z standard normal. Shared by the plan and the retirement simulations.
+ */
+export function lognormalParams(ret: number, vol: number): { mu: number; s: number } {
+  const sd = Math.max(0, vol);
+  return { mu: Math.log(1 + ret), s: Math.sqrt(Math.log(1 + (sd * sd) / ((1 + ret) * (1 + ret)))) };
+}
+
+/** Portfolio real return of one historical year for normalized weights (missing classes use their expected return). */
+export function historyYearReturn(
+  h: HistoryYear, w: readonly (readonly [AssetClass, number])[], assumptions?: Partial<Record<AssetClass, ClassAssumption>>,
+): number {
+  return w.reduce((s, [c, wi]) => s + wi * (h.returns[c] ?? assumptionFor(c, assumptions).ret), 0);
+}
+
+/**
  * Portfolio real return for each historical year. Classes with no value in a year use their expected
  * return; years where none of the weighted classes has data are skipped.
  */
@@ -52,7 +68,7 @@ export function portfolioHistory(
   const out: number[] = [];
   for (const h of history) {
     if (!w.some(([c]) => typeof h.returns[c] === 'number')) continue;
-    out.push(w.reduce((s, [c, wi]) => s + wi * (h.returns[c] ?? assumptionFor(c, assumptions).ret), 0));
+    out.push(historyYearReturn(h, w, assumptions));
   }
   return out;
 }
@@ -108,9 +124,7 @@ export function runMonteCarlo(inp: McInputs): McResult {
   if (inp.mode === 'bootstrap' && hist.length === 0) throw new Error('Bootstrap mode needs historical returns');
 
   // lognormal parameters for the normal mode
-  const g = inp.realReturn, sd = Math.max(0, inp.volatility);
-  const s = Math.sqrt(Math.log(1 + (sd * sd) / ((1 + g) * (1 + g))));
-  const mu = Math.log(1 + g);
+  const { mu, s } = lognormalParams(inp.realReturn, inp.volatility);
   const draw = inp.mode === 'bootstrap'
     ? () => hist[Math.floor(rng() * hist.length)]
     : () => Math.exp(mu + s * gaussian(rng)) - 1;

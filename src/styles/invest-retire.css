@@ -1,0 +1,27 @@
+/* /vault/invest/pensie/ (Phase 5). Builds on invest.css (plan-* classes). */
+.ret-strats { border: 0; padding: 0; margin: 0 0 0.75rem; display: grid; gap: 0.5rem; }
+.ret-strat {
+  display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.55rem 0.7rem; cursor: pointer;
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.ret-strat:has(input:checked) { border-color: var(--indigo); background: color-mix(in srgb, var(--indigo) 10%, transparent); }
+.ret-strat input { margin-top: 0.25rem; accent-color: var(--indigo); }
+.ret-strat span { display: grid; gap: 0.15rem; }
+.ret-strat small { color: var(--text-muted); font-size: 0.8rem; line-height: 1.35; }
+.ret-params { margin-top: 0.75rem; }
+.ret-params[hidden] { display: none; }
+.ret-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+.ret-row .plan-inline input, .ret-row .plan-inline select { max-width: 14rem; }
+.ret-warn {
+  border: 1px solid var(--border-h); border-left: 4px solid var(--warn-text); border-radius: 8px;
+  padding: 0.6rem 0.8rem; margin: 0.5rem 0 0.75rem; color: var(--text);
+}
+.ret-inc input[type="text"] { min-width: 9rem; }
+.ret-inc input[type="number"], .ret-gp input[type="number"] { max-width: 5.5rem; }
+.ret-gp td, .ret-gp th { white-space: nowrap; }
+.plan-table tr.is-current th, .plan-table tr.is-current td { font-weight: 600; background: color-mix(in srgb, var(--indigo) 8%, transparent); }
+.ret-ips { display: grid; gap: 0.6rem; white-space: pre-line; }
+.ret-ips p { margin: 0; }
+#rSucc[data-kind="ok"] { color: var(--ok-text); }
+#rSucc[data-kind="near"] { color: var(--warn-text); }
+#rSucc[data-kind="under"] { color: var(--err-text); }
