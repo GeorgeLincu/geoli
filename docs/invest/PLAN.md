@@ -96,7 +96,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”. Portofoliul folosește aceleași cursuri BNR și prețuri (un singur loc pentru corecțiile manuale): `src/lib/invest/market-sources.ts`
 - [ ] 4 Taxe RO
 - [ ] 5 Pensie & retragere
-- [ ] 6 IPS
+- [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [ ] 7 Rapoarte anuale & Panou
 - [ ] 8 Întărire
 
@@ -121,6 +121,15 @@ How it works:
 - „Actualizează acum”: `POST /vault/api/invest/market/refresh`, owner only, at most once every 5 minutes (HTTP 429 + `Retry-After`).
 - Pure logic and tests: `src/lib/invest/market.ts` (`parseBnrXml`, `parseYahooChart`, `rateOn`, `convert`, `latestPrice`, `isStale`…), fixtures in `src/lib/invest/__fixtures__/`.
 - Not tested live: the Cron Trigger on Cloudflare's network (only locally) and how Yahoo treats Cloudflare's egress IPs. If prices fail after deploy, the dashboard shows the error per instrument.
+
+## IPS (faza 6)
+- Outline (headings + guiding questions only): `src/lib/invest/ips-sections.ts`. Keys are stored in `ips.json` `sections`; never rename one.
+- `ips.json`: `versions[]` (immutable: `date`, `changeNote`, `sections`, `rules?`) and an optional `draft` (work in progress, never enforced).
+- Rules in force = newest version by date: `activeIpsRules(doc)`. Other phases (drawdown alerts, yearly report) should read the rules through it.
+- Alerts: `ipsAlerts(doc, facts)` in `src/lib/invest/ips-checks.ts`; the dashboard gathers the facts in `src/scripts/invest/ips-alerts.ts`
+  (valuation with BNR rates + price store, drift with the Portofoliu default scope — no Pillar 2/3, with cash — and the same 5 pp fallback band).
+- Crash rules: drawdown = latest saved close vs the highest saved close of the reference instrument (price store, plus older manual prices in `data.json`).
+- Diff: line-based (`src/lib/invest/ips-diff.ts`); the rules are compared as readable lines. Print view: „Vizualizare pentru tipărire” → „Tipărește / PDF”.
 
 ## Verificare (pentru fiecare fază)
 - `npm run check`, `npm run build`, `npx vitest run` verzi; CI verde (inclusiv garda anti-inline și Lighthouse).
