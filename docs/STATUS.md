@@ -70,6 +70,7 @@ _Last updated: 2026-10-01. Update this file whenever something important changes
 - [ ] Case studies section, once George provides real projects.
 - [ ] Cloudflare Turnstile on the contact form if spam appears (needs a Turnstile token permission; add to the CSP).
 - [ ] R2 backup job.
+- [ ] **Investiții** (private, owner-only, `/vault/invest/`): plan in `docs/invest/PLAN.md`, phase prompts in `docs/invest/PROMPTS.md`. Nothing built yet.
 - [ ] **dermi.ro**: separate repo and session. The full brief is in `PROMPT-dermi.md` (not committed; kept locally next to this repo).
 
 ## 6. History (short)
