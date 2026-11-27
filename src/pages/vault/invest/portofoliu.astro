@@ -47,7 +47,7 @@ const TABS = [
   <!-- ─── Positions ─── -->
   <section class="inv-card pf-panel" role="tabpanel" id="panel-pozitii" aria-labelledby="tab-pozitii">
     <h2 class="inv-h2">Poziții</h2>
-    <p class="inv-muted">Preț: <b>piață</b> = ultimul preț introdus (tab „Cursuri & prețuri”), <b>nominal</b> = valoarea nominală a titlului de stat, <b>cost</b> = fără preț, se folosește costul mediu.</p>
+    <p class="inv-muted">Preț: <b>piață</b> = ultimul preț (automat sau corectat de tine în „Cursuri & prețuri”), <b>nominal</b> = valoarea nominală a titlului de stat, <b>cost</b> = fără preț, se folosește costul mediu.</p>
     <div class="pf-scroll"><table class="pf-table" id="positionsTable"></table></div>
     <h3 class="pf-h3">Cash pe conturi</h3>
     <p class="inv-muted">Apar doar conturile în care ai înregistrat depuneri sau retrageri; doar cash-ul lor intră în valoarea totală.</p>
@@ -224,8 +224,9 @@ const TABS = [
 
   <!-- ─── FX and prices ─── -->
   <section class="inv-card pf-panel" role="tabpanel" id="panel-cursuri" aria-labelledby="tab-cursuri" hidden>
-    <h2 class="inv-h2">Cursuri valutare (manual)</h2>
-    <p class="inv-muted">Lei pentru 1 unitate de valută, ca la BNR. Se folosește cel mai recent curs din data tranzacției sau dinainte. Până vine actualizarea automată (Faza 3), introdu cursurile de care ai nevoie.</p>
+    <h2 class="inv-h2">Cursuri valutare</h2>
+    <p class="inv-muted">Se folosește automat cursul BNR din ziua tranzacției (sau ultimul publicat înainte). Cursurile introduse aici (lei pentru 1 unitate) se folosesc doar pentru zilele fără curs BNR.</p>
+    <p class="inv-muted" id="bnrInfo"></p>
     <form class="pf-form" id="fxForm" novalidate>
       <label>Data<input type="date" name="date" required class="pf-input" /></label>
       <label>Moneda<select name="currency" class="pf-input">{CURRENCIES.filter(c => c !== 'RON').map(c => <option value={c}>{c}</option>)}</select></label>
@@ -235,13 +236,12 @@ const TABS = [
     </form>
     <div class="pf-scroll"><table class="pf-table" id="fxTable"></table></div>
 
-    <h2 class="inv-h2 pf-gap">Prețuri (manual)</h2>
-    <p class="inv-muted">Prețul unei unități în moneda instrumentului, la o dată. Se folosește cel mai recent preț până la data evaluării.</p>
+    <h2 class="inv-h2 pf-gap">Corecții manuale de preț</h2>
+    <p class="inv-muted">Prețurile se iau automat pentru instrumentele care au „sursă de preț”. Aici adaugi un preț pentru instrumentele fără sursă automată sau corectezi o zi anume; actualizarea automată nu îl suprascrie. Prețul e în moneda instrumentului; se folosește cel mai recent preț până la data evaluării.</p>
     <form class="pf-form" id="priceForm" novalidate>
       <label>Instrument<select name="instrumentId" class="pf-input" data-instruments required></select></label>
       <label>Data<input type="date" name="date" required class="pf-input" /></label>
       <label>Preț<input name="price" inputmode="decimal" required class="pf-input" autocomplete="off" /></label>
-      <label class="pf-wide">Notă<input name="note" maxlength="200" class="pf-input" autocomplete="off" /></label>
       <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Salvează prețul</button></div>
     </form>
     <div class="pf-scroll"><table class="pf-table" id="priceTable"></table></div>
