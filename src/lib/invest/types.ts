@@ -147,6 +147,40 @@ export interface InvestData {
   fxRates?: FxRate[];
   /** Pillar 2/3 account values entered by hand over time */
   pensionValues?: PensionValue[];
+  /** Saved column mappings for the CSV import (/vault/invest/import/) */
+  importPresets?: ImportPreset[];
+}
+
+/** Fields a CSV column can be mapped to by the transaction import. */
+export type ImportField =
+  | 'date' | 'type' | 'ticker' | 'isin' | 'name' | 'quantity' | 'price' | 'currency'
+  | 'fees' | 'withheldTax' | 'amount' | 'account' | 'toAccount' | 'note';
+export const IMPORT_FIELDS: readonly ImportField[] = [
+  'date', 'type', 'ticker', 'isin', 'name', 'quantity', 'price', 'currency', 'fees', 'withheldTax', 'amount', 'account', 'toAccount', 'note',
+];
+
+/** A named CSV column mapping, so the next import of the same file layout is one click. */
+export interface ImportPreset {
+  id: string;
+  name: string;
+  delimiter: 'auto' | ',' | ';' | '	';
+  decimal: 'auto' | ',' | '.';
+  /** Order of day/month/year in dates that are not ISO (2024-03-05) or compact (20240305) */
+  dateOrder: 'dmy' | 'mdy' | 'ymd';
+  /** 1-based line of the header row; 0 or missing = detect it */
+  headerRow?: number;
+  /** Field → header text of the CSV column */
+  columns: Partial<Record<ImportField, string>>;
+  /** Value found in the type column (lower-case) → transaction type, or 'skip' to ignore the row */
+  typeMap: Record<string, TxType | 'skip'>;
+  /** No type column (or unmapped value): positive quantity = buy, negative = sell */
+  typeFromSign?: boolean;
+  /** Value found in the account column → account id */
+  accountMap?: Record<string, string>;
+  /** Account used when there is no account column or it is empty */
+  defaultAccountId?: string;
+  /** Currency used when neither the row nor the instrument gives one */
+  defaultCurrency?: Currency;
 }
 
 export interface PricePoint {

@@ -1,0 +1,121 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-portfolio.css';
+import '../../../styles/invest-import.css';
+import { CURRENCIES, IMPORT_FIELDS } from '../../../lib/invest/types';
+import { FIELD_LABEL } from '../../../lib/invest/import';
+---
+<Invest title="Import CSV" active="portofoliu">
+  <p class="imp-back"><a href="/vault/invest/portofoliu/">← Portofoliu</a></p>
+  <h1 class="inv-h1">Import tranzacții din CSV</h1>
+  <p class="inv-lead">Fișierul se citește doar în browser, pe dispozitivul tău. Nimic nu se salvează până nu apeși „Importă”; atunci se adaugă doar tranzacțiile (și instrumentele noi) în registru, într-o singură salvare, cu backup automat.</p>
+  <p class="inv-muted" id="loadState">Se încarcă registrul…</p>
+
+  <!-- ─── 1. File and preset ─── -->
+  <section class="inv-card" aria-labelledby="s1">
+    <h2 id="s1" class="inv-h2">1. Fișierul și formatul</h2>
+    <form class="pf-form" id="fileForm" novalidate>
+      <label class="pf-wide">Fișier CSV (export din Google Sheets, broker sau din această aplicație)
+        <input type="file" id="file" accept=".csv,.tsv,.txt,text/csv,text/plain" class="pf-input" />
+      </label>
+      <label class="pf-wide">Format salvat (preset)
+        <select id="presetSel" class="pf-input"></select>
+      </label>
+      <p class="pf-wide imp-doc" id="presetDoc" hidden></p>
+      <label>Separator
+        <select name="delimiter" class="pf-input">
+          <option value="auto">Automat</option><option value=",">Virgulă ( , )</option>
+          <option value=";">Punct și virgulă ( ; )</option><option value="tab">Tab</option>
+        </select>
+      </label>
+      <label>Zecimale
+        <select name="decimal" class="pf-input">
+          <option value="auto">Automat</option><option value=",">Virgulă (1.234,56)</option><option value=".">Punct (1,234.56)</option>
+        </select>
+      </label>
+      <label>Ordinea în date (ex. 05.03.2024)
+        <select name="dateOrder" class="pf-input">
+          <option value="dmy">zi.lună.an</option><option value="mdy">lună/zi/an</option><option value="ymd">an-lună-zi</option>
+        </select>
+      </label>
+      <label>Rândul cu antetul
+        <input name="headerRow" inputmode="numeric" class="pf-input" placeholder="automat" autocomplete="off" />
+      </label>
+    </form>
+    <p class="inv-muted imp-file" id="fileInfo"></p>
+  </section>
+
+  <!-- ─── 2. Mapping ─── -->
+  <section class="inv-card" aria-labelledby="s2" id="mapCard" hidden>
+    <h2 id="s2" class="inv-h2">2. Ce înseamnă fiecare coloană</h2>
+    <p class="inv-muted">Alege coloana din fișier pentru fiecare câmp (sau „—” dacă nu există). Ajunge una dintre ticker, ISIN sau nume pentru instrument. Pentru dividende, comisioane, depuneri și retrageri se folosește „Sumă”.</p>
+    <ul class="pf-warnings" id="mapWarnings" hidden></ul>
+    <form class="pf-form" id="mapForm" novalidate>
+      {IMPORT_FIELDS.map(f => (
+        <label>{FIELD_LABEL[f]}<select name={f} class="pf-input" data-col></select></label>
+      ))}
+      <label>Cont implicit (când lipsește coloana)
+        <select name="defaultAccountId" class="pf-input" data-accounts></select>
+      </label>
+      <label>Moneda implicită
+        <select name="defaultCurrency" class="pf-input"><option value="">—</option>{CURRENCIES.map(c => <option value={c}>{c}</option>)}</select>
+      </label>
+      <label class="pf-check pf-wide"><input type="checkbox" name="typeFromSign" /> Fără tip: cantitate pozitivă = cumpărare, negativă = vânzare</label>
+    </form>
+
+    <h3 class="pf-h3">Primele rânduri din fișier</h3>
+    <div class="pf-scroll"><table class="pf-table imp-sample" id="sampleTable"></table></div>
+
+    <div class="pf-grid2 pf-gap">
+      <div>
+        <h3 class="pf-h3">Valorile din coloana „tip”</h3>
+        <p class="inv-muted">Ce tranzacție înseamnă fiecare valoare. „Ignoră” sare peste rândurile acelea.</p>
+        <div class="pf-scroll"><table class="pf-table" id="typeMapTable"></table></div>
+      </div>
+      <div>
+        <h3 class="pf-h3">Valorile din coloana „cont”</h3>
+        <p class="inv-muted">Conturile cu același nume ca în aplicație se potrivesc singure.</p>
+        <div class="pf-scroll"><table class="pf-table" id="accMapTable"></table></div>
+      </div>
+    </div>
+
+    <form class="pf-form pf-gap" id="presetForm" novalidate>
+      <label class="pf-wide">Numele presetului (ca importul următor să fie un click)
+        <input name="name" maxlength="120" class="pf-input" autocomplete="off" placeholder="ex. Google Sheets – Portofoliu" />
+      </label>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn">Salvează presetul</button>
+        <button type="button" class="inv-btn" id="deletePreset" hidden>Șterge presetul</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ─── 3. New instruments ─── -->
+  <section class="inv-card" aria-labelledby="s3" id="instCard" hidden>
+    <h2 id="s3" class="inv-h2">3. Instrumente noi</h2>
+    <p class="inv-muted">Acestea nu există încă în registru. Verifică datele (clasa și regiunea sunt doar o propunere) și debifează ce nu vrei creat; rândurile lor devin erori.</p>
+    <div class="pf-scroll"><table class="pf-table imp-inst" id="instTable"></table></div>
+  </section>
+
+  <!-- ─── 4. Preview ─── -->
+  <section class="inv-card" aria-labelledby="s4" id="previewCard" hidden>
+    <h2 id="s4" class="inv-h2">4. Previzualizare</h2>
+    <dl class="inv-stats" id="counts"></dl>
+    <div class="pf-row">
+      <label class="pf-inline">Arată
+        <select id="statusFilter" class="pf-input">
+          <option value="">Toate</option><option value="new">Noi</option><option value="duplicate">Duplicate</option>
+          <option value="error">Erori</option><option value="skipped">Ignorate</option>
+        </select>
+      </label>
+      <button type="button" class="inv-btn inv-btn--primary" id="importBtn" disabled>Importă</button>
+    </div>
+    <p class="inv-muted">Duplicat = există deja o tranzacție cu același cont, instrument, dată, tip, cantitate, preț și sumă; nu se importă decât dacă o bifezi.</p>
+    <div class="pf-scroll"><table class="pf-table" id="previewTable"></table></div>
+    <p class="inv-muted" id="previewMore"></p>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/import';
+</script>

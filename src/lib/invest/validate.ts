@@ -1,7 +1,7 @@
 // Structural validation for the invest/ JSON documents. Used by the Worker before every save
 // (and testable with vitest). It checks shape and types, not business rules.
 import {
-  SCHEMA_VERSION, ACCOUNT_TYPES, CURRENCIES, TX_TYPES, DOC_NAMES,
+  SCHEMA_VERSION, ACCOUNT_TYPES, CURRENCIES, TX_TYPES, DOC_NAMES, IMPORT_FIELDS,
   type DocName,
 } from './types';
 
@@ -92,6 +92,31 @@ const pricePoint = record({ instrumentId: [id, true], date: [date, true], price:
 const fxRate = record({ date: [date, true], currency: [oneOf(CURRENCIES), true], ron: [num, true], note: [str(200), false] });
 const pensionValue = record({ id: [id, true], accountId: [id, true], date: [date, true], value: [num, true], note: [str(200), false] });
 
+/** Object with free text keys (max 200 chars, max `max` entries) whose values pass `item`. */
+const strMap = (item: Check, max = 500): Check => (v, p, e) => {
+  if (!isObj(v)) { e.push(`${p}: object expected`); return; }
+  const entries = Object.entries(v);
+  if (entries.length > max) { e.push(`${p}: too many entries (max ${max})`); return; }
+  for (const [k, x] of entries) {
+    if (k.length > 200) e.push(`${p}: key too long`);
+    else item(x, `${p}.${k}`, e);
+  }
+};
+const importColumns: Check = (v, p, e) => {
+  if (!isObj(v)) { e.push(`${p}: object expected`); return; }
+  for (const [k, x] of Object.entries(v)) {
+    if (!(IMPORT_FIELDS as readonly string[]).includes(k)) e.push(`${p}.${k}: unknown field`);
+    else str(200)(x, `${p}.${k}`, e);
+  }
+};
+const importPreset = record({
+  id: [id, true], name: [str(120), true], delimiter: [oneOf(['auto', ',', ';', '	']), true],
+  decimal: [oneOf(['auto', ',', '.']), true], dateOrder: [oneOf(['dmy', 'mdy', 'ymd']), true],
+  headerRow: [num, false], columns: [importColumns, true],
+  typeMap: [strMap(oneOf([...TX_TYPES, 'skip'])), true], typeFromSign: [bool, false],
+  accountMap: [strMap(id), false], defaultAccountId: [id, false], defaultCurrency: [oneOf(CURRENCIES), false],
+});
+
 const versionCheck: Check = (v, p, e) => { if (v !== SCHEMA_VERSION) e.push(`${p}: must be ${SCHEMA_VERSION}`); };
 
 const data = record({
@@ -100,6 +125,7 @@ const data = record({
   targets: [list(target, 200), true], scenarios: [list(scenario, 200), true],
   prices: [list(pricePoint, 50_000), false], fxRates: [list(fxRate, 50_000), false],
   pensionValues: [list(pensionValue, 5000), false],
+  importPresets: [list(importPreset, 50), false],
 });
 
 const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false], confirmed: [bool, false] });

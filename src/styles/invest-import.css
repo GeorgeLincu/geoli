@@ -1,0 +1,16 @@
+/* /vault/invest/import/ — CSV import. Builds on invest.css and invest-portfolio.css. */
+
+.imp-back { margin-bottom: 0.25rem; font-size: 0.88rem; }
+.imp-back a { color: var(--accent-text); }
+.imp-doc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+.imp-doc[hidden] { display: none; }
+.imp-file:empty { display: none; }
+.imp-gap { margin-left: 0.4rem; }
+.imp-sample td { color: var(--text-muted); max-width: 22ch; overflow: hidden; text-overflow: ellipsis; }
+.imp-inst .pf-input { min-width: 9ch; }
+.imp-inst td:nth-child(2) .pf-input { min-width: 18ch; }
+.imp-row--error td, .imp-row--skipped td { color: var(--text-muted); }
+.imp-row--error .pf-note { color: var(--err-text); }
+#mapCard[hidden], #instCard[hidden], #previewCard[hidden] { display: none; }
+.imp-reason { white-space: normal; }
+.imp-reason small { font-size: 0.78rem; opacity: 0.85; }
