@@ -2,6 +2,7 @@
 import Invest from '../../../layouts/Invest.astro';
 import '../../../styles/invest-market.css';
 import '../../../styles/invest-ips.css';
+import '../../../styles/invest-networth.css';
 ---
 <Invest title="Panou" active="panou">
   <h1 class="inv-h1">Panou</h1>
@@ -17,6 +18,18 @@ import '../../../styles/invest-ips.css';
     </dl>
     <p class="inv-muted" id="storeState">Se încarcă…</p>
     <button class="inv-btn inv-btn--primary" id="initBtn" type="button" hidden>Creează fișierul de date (gol)</button>
+  </section>
+
+  <section class="inv-card" aria-labelledby="nwCardTitle" id="nwCard">
+    <h2 id="nwCardTitle" class="inv-h2">Avere netă</h2>
+    <dl class="inv-stats nw-stats">
+      <div class="nw-stat--main"><dt>Total (EUR)</dt><dd data-nwc="netEur">—</dd></div>
+      <div><dt>Total (RON)</dt><dd data-nwc="netRon">—</dd></div>
+      <div><dt>Fond de urgență</dt><dd data-nwc="ef">—</dd></div>
+      <div><dt>Datorii / active</dt><dd data-nwc="ratio">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="nwCardState">Se calculează…</p>
+    <a class="nw-card-link" href="/vault/invest/avere/">Deschide Avere netă →</a>
   </section>
 
   <section class="inv-card" aria-labelledby="ipsTitle" id="ipsCard">
@@ -72,4 +85,5 @@ import '../../../styles/invest-ips.css';
   import '../../../scripts/invest/dashboard';
   import '../../../scripts/invest/market';
   import '../../../scripts/invest/ips-alerts';
+  import '../../../scripts/invest/networth-card';
 </script>
