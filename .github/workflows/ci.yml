@@ -31,6 +31,9 @@ jobs:
       - name: Type-check (site + worker)
         run: npm run check
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build
         run: npm run build
 

@@ -18,6 +18,8 @@ import { createShareToken, verifyShareToken, MAX_SHARE_HOURS } from './share';
 import { APP_HTML, APP_CSS, APP_JS, pageHtml } from './ui';
 import { listPosts, getPost, savePost, deletePost, validate, HttpError } from './posts';
 import { handleContact } from './contact';
+import { baseHeaders, APP_CSP, respond, json, error, html } from './http';
+import { isInvestPath, handleInvest, INVEST_PREFIX } from './invest';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -34,6 +36,7 @@ export interface Env {
   CONTACT_EMAIL?: SendEmail;  // send_email binding (destination must be a verified Email Routing address)
   CONTACT_FROM?: string;      // sender on geoli.eu, e.g. formular@geoli.eu
   CONTACT_TO?: string;        // where messages go
+  INVEST_EMAILS?: string;     // comma-separated — owner(s) of the private /vault/invest/ section
 }
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024; // Workers request-body limit on the free plan
@@ -44,29 +47,6 @@ const PEOPLE = 'people/';
 // Types that are safe to render inline on our origin. Everything else is forced to download
 // (HTML/SVG/XML could otherwise run script as geoli.eu).
 const INLINE_TYPES = /^(image\/(png|jpe?g|gif|webp|avif)|application\/pdf|text\/plain|video\/(mp4|webm)|audio\/(mpeg|mp4|ogg|wav|webm))$/;
-
-const baseHeaders = {
-  'Cache-Control': 'private, no-store',
-  'X-Robots-Tag': 'noindex, nofollow',
-  'X-Content-Type-Options': 'nosniff',
-  'Referrer-Policy': 'no-referrer',
-  'X-Frame-Options': 'DENY',
-  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  'Cross-Origin-Opener-Policy': 'same-origin',
-  'Cross-Origin-Resource-Policy': 'same-origin',
-};
-const APP_CSP = "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
-
-function respond(body: BodyInit | null, init: ResponseInit & { csp?: string } = {}) {
-  const headers = new Headers({ ...baseHeaders, ...(init.headers as Record<string, string>) });
-  if (init.csp) headers.set('Content-Security-Policy', init.csp);
-  return new Response(body, { ...init, headers });
-}
-const json = (data: unknown, status = 200) =>
-  respond(JSON.stringify(data), { status, headers: { 'Content-Type': 'application/json; charset=utf-8' } });
-const error = (status: number, message: string) => json({ error: message }, status);
-const html = (body: string, status = 200) =>
-  respond(body, { status, csp: APP_CSP, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 
 /** Object keys: relative, no traversal, no control characters. Folders end with "/". */
 function cleanKey(raw: string, { folder = false } = {}): string | null {
@@ -84,7 +64,11 @@ function cleanKey(raw: string, { folder = false } = {}): string | null {
 // people/<email>/ folders: compare case-insensitively (emails are lower-cased at sign-in)
 const ownFolder = (user: User, key: string) => key.toLowerCase().startsWith(`${PEOPLE}${user.email}/`);
 
+// invest/ holds the private investment data: never visible through Files, share links or Markdown pages
+const reserved = (key: string) => key.toLowerCase().startsWith(INVEST_PREFIX);
+
 function canRead(user: User, key: string) {
+  if (reserved(key)) return false;
   if (user.admin) return true;
   if (!key.startsWith(PEOPLE)) return true;
   return ownFolder(user, key);
@@ -130,6 +114,7 @@ async function serveObject(env: Env, request: Request, key: string, opts: { forc
 }
 
 async function list(env: Env, user: User, prefix: string) {
+  if (reserved(prefix)) return error(404, 'Not found');
   // Non-admins inside people/ only ever see their own folder
   if (!user.admin && prefix.startsWith(PEOPLE) && !ownFolder(user, prefix)) {
     if (prefix !== PEOPLE) return error(403, 'Forbidden');
@@ -149,7 +134,7 @@ async function list(env: Env, user: User, prefix: string) {
     cursor = page.truncated ? page.cursor : undefined;
   } while (cursor && files.length < 5000);
 
-  let visible = [...folders];
+  let visible = [...folders].filter(f => !reserved(f));
   if (!user.admin && prefix === '') visible = visible.filter(f => f !== PEOPLE).concat(`${PEOPLE}${user.email}/`);
   return json({ prefix, folders: [...new Set(visible)].sort(), files: files.sort((a, b) => a.key.localeCompare(b.key)) });
 }
@@ -193,6 +178,8 @@ async function handleVault(request: Request, env: Env, url: URL) {
     if (request.headers.get('Origin') !== url.origin) return error(403, 'Bad origin');
   }
 
+  if (isInvestPath(path)) return handleInvest(request, env, url, user);
+
   if (path === '/vault/app.css') return respond(APP_CSS, { headers: { 'Content-Type': 'text/css; charset=utf-8' } });
   if (path === '/vault/app.js')  return respond(APP_JS,  { headers: { 'Content-Type': 'text/javascript; charset=utf-8' } });
 
@@ -228,12 +215,12 @@ async function handleVault(request: Request, env: Env, url: URL) {
     if (method === 'PUT') {
       if (isFolder) {
         const folder = cleanKey(rawKey, { folder: true });
-        if (!folder) return error(400, 'Bad folder name');
+        if (!folder || reserved(folder)) return error(400, 'Bad folder name');
         await env.VAULT.put(`${folder}.keep`, '');
         return json({ ok: true, key: folder });
       }
       const key = cleanKey(rawKey);
-      if (!key) return error(400, 'Bad file name');
+      if (!key || reserved(key)) return error(400, 'Bad file name');
       const length = Number(request.headers.get('Content-Length') || NaN);
       if (!Number.isFinite(length)) return error(411, 'Content-Length required');
       if (length > MAX_UPLOAD_BYTES) return error(413, 'File too large (max 100 MB)');
@@ -245,11 +232,11 @@ async function handleVault(request: Request, env: Env, url: URL) {
     if (method === 'DELETE') {
       if (isFolder) {
         const folder = cleanKey(rawKey, { folder: true });
-        if (!folder) return error(400, 'Bad folder name');
+        if (!folder || reserved(folder)) return error(400, 'Bad folder name');
         return json({ ok: true, deleted: await deletePrefix(env, folder) });
       }
       const key = cleanKey(rawKey);
-      if (!key) return error(400, 'Bad file name');
+      if (!key || reserved(key)) return error(400, 'Bad file name');
       await env.VAULT.delete(key);
       return json({ ok: true, deleted: 1 });
     }
@@ -263,7 +250,7 @@ async function handleVault(request: Request, env: Env, url: URL) {
     const body = (await request.json().catch(() => ({}))) as { key?: string; hours?: number };
     const key = cleanKey(body.key || '');
     const hours = Math.min(Math.max(Number(body.hours) || 24, 1), MAX_SHARE_HOURS);
-    if (!key) return error(400, 'Bad file');
+    if (!key || reserved(key)) return error(400, 'Bad file');
     if (!(await env.VAULT.head(key))) return error(404, 'Not found');
     const { token, expires } = await createShareToken(key, hours, env.SHARE_SECRET);
     return json({ url: `${url.origin}/s/${token}`, expires: new Date(expires * 1000).toISOString() });

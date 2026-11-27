@@ -25,4 +25,4 @@ Personal site + blog + private vault of **George Lincu** (Romania). **Talk to Ge
 - Screenshots and OG images: headless Edge (`msedge.exe --headless=new --screenshot`). It returns before the file is written, so poll for it (`scripts/og-images.mjs` does).
 
 ## Commands
-`npm run dev` (drafts visible) · `npm run build` · `npm run check` (astro check + worker tsc) · `npm run preview` (wrangler dev on built site; vault login is simulated via `.dev.vars` `DEV_EMAIL`, localhost only) · `npm run og` (social cards for new posts)
+`npm run dev` (drafts visible) · `npm run build` · `npm run check` (astro check + worker tsc) · `npm test` (vitest, `src/**/*.test.ts`) · `npm run preview` (wrangler dev on built site; vault login is simulated via `.dev.vars` `DEV_EMAIL`, localhost only) · `npm run og` (social cards for new posts)

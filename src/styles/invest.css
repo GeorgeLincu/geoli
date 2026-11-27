@@ -1,0 +1,108 @@
+/* Private investment section (/vault/invest/). Builds on the site's tokens in base.css. */
+
+/* ─── Tokens: chart series + panels (dark default) ─── */
+:root {
+  --inv-c1: #818cf8;  /* indigo */
+  --inv-c2: #22d3ee;  /* cyan */
+  --inv-c3: #34d399;  /* emerald */
+  --inv-c4: #fbbf24;  /* amber */
+  --inv-c5: #c084fc;  /* purple */
+  --inv-c6: #fb7185;  /* rose */
+  --inv-panel: #11131c;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --inv-c1: #4f46e5;
+    --inv-c2: #0e7490;
+    --inv-c3: #047857;
+    --inv-c4: #b45309;
+    --inv-c5: #7e22ce;
+    --inv-c6: #be123c;
+    --inv-panel: #ffffff;
+  }
+}
+:root[data-theme="light"] {
+  --inv-c1: #4f46e5;
+  --inv-c2: #0e7490;
+  --inv-c3: #047857;
+  --inv-c4: #b45309;
+  --inv-c5: #7e22ce;
+  --inv-c6: #be123c;
+  --inv-panel: #ffffff;
+}
+
+/* ─── Layout ─── */
+.inv { min-height: 100vh; font-variant-numeric: tabular-nums; }
+
+.inv-top {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--border);
+  background: var(--nav-bg-solid);
+  position: sticky; top: 0; z-index: 10;
+}
+.inv-logo { font-family: var(--font-head); font-weight: 700; font-size: 1.15rem; }
+.inv-logo span { color: var(--accent-text); }
+.inv-logo small { font-family: var(--font-sans); font-weight: 500; font-size: 0.85rem; color: var(--text-muted); margin-left: 0.35rem; }
+.inv-spacer { flex: 1; }
+
+.inv-nav {
+  display: flex; gap: 0.25rem; overflow-x: auto;
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: none;
+}
+.inv-nav a, .inv-nav__soon {
+  padding: 0.7rem 0.9rem; white-space: nowrap; font-weight: 500; font-size: 0.92rem;
+  color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.inv-nav a:hover { color: var(--text); }
+.inv-nav a[aria-current="page"] { color: var(--text); border-bottom-color: var(--indigo); }
+.inv-nav__soon { opacity: 0.55; cursor: default; }
+
+.inv-main { width: min(1160px, 100% - 2rem); margin: 0 auto; padding: 2rem 0 4rem; display: grid; gap: 1.25rem; }
+
+.inv-h1 { font-family: var(--font-head); font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.15; }
+.inv-h2 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; }
+.inv-lead { color: var(--text-muted); max-width: 65ch; }
+.inv-muted { color: var(--text-muted); font-size: 0.92rem; }
+
+.inv-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: grid; gap: 0.75rem; align-content: start;
+}
+
+.inv-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+.inv-stats > div { background: var(--surface); border-radius: 12px; padding: 0.75rem 1rem; }
+.inv-stats dt { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); }
+.inv-stats dd { font-size: 1.35rem; font-weight: 600; }
+
+.inv-chart { width: 100%; height: 320px; }
+@media (max-width: 640px) { .inv-chart { height: 260px; } }
+
+/* ─── Buttons ─── */
+.inv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  padding: 0.5rem 0.9rem; border-radius: 10px; border: 1px solid var(--border-h);
+  background: transparent; color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 500;
+  cursor: pointer; justify-self: start;
+}
+.inv-btn:hover { background: var(--surface-2); }
+.inv-btn--primary { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.inv-btn--primary:hover { background: #4f46e5; }
+.inv-btn--ghost { border-color: transparent; color: var(--text-muted); }
+.inv-btn--ghost:hover { color: var(--text); }
+.inv-btn:focus-visible, .inv-nav a:focus-visible, .inv-logo:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+@media (max-width: 480px) { .inv-top .inv-btn { padding: 0.45rem 0.55rem; font-size: 0.85rem; } }
+
+/* ─── Toast ─── */
+.inv-toast {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+  max-width: min(560px, 100% - 2rem);
+  background: var(--inv-panel); color: var(--text); border: 1px solid var(--border-h);
+  border-left: 4px solid var(--ok-text);
+  padding: 0.7rem 1rem; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.25); z-index: 20;
+}
+.inv-toast[data-kind="err"] { border-left-color: var(--err-text); }
+.inv-toast[hidden] { display: none; }

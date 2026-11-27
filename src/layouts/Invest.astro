@@ -1,0 +1,62 @@
+---
+// Private layout for /vault/invest/ — owner-only (the Worker checks before serving these pages).
+// No SEO, no JSON-LD, not in the sitemap, noindex. No inline script/style (CSP).
+import '../styles/base.css';
+import '../styles/invest.css';
+
+interface Props {
+  title: string;
+  /** Key of the active nav item */
+  active: string;
+}
+const { title, active } = Astro.props;
+
+// Pages land phase by phase; items without a page are shown as "soon".
+const NAV = [
+  { key: 'panou',      label: 'Panou',      href: '/vault/invest/' },
+  { key: 'portofoliu', label: 'Portofoliu', href: null },
+  { key: 'plan',       label: 'Plan',       href: null },
+  { key: 'pensie',     label: 'Pensie',     href: null },
+  { key: 'taxe',       label: 'Taxe',       href: null },
+  { key: 'ips',        label: 'IPS',        href: null },
+  { key: 'rapoarte',   label: 'Rapoarte',   href: null },
+];
+---
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="color-scheme" content="dark light" />
+  <title>{title} · Investiții · GeoLi</title>
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="preload" href="/assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
+  <script is:inline src="/theme-init.js"></script>
+</head>
+<body class="inv">
+  <header class="inv-top">
+    <a href="/vault/invest/" class="inv-logo">GeoLi<span>.</span> <small>Investiții</small></a>
+    <span class="inv-spacer"></span>
+    <a class="inv-btn inv-btn--ghost" href="/vault/">Vault</a>
+    <button class="inv-btn inv-btn--ghost" id="themeToggle" type="button" aria-label="Schimbă tema" title="Schimbă tema">Temă</button>
+    <a class="inv-btn inv-btn--ghost" href="/cdn-cgi/access/logout">Ieșire</a>
+  </header>
+
+  <nav class="inv-nav" aria-label="Secțiuni">
+    {NAV.map(n => n.href
+      ? <a href={n.href} aria-current={n.key === active ? 'page' : undefined}>{n.label}</a>
+      : <span class="inv-nav__soon" title="În curând">{n.label}</span>)}
+  </nav>
+
+  <main class="inv-main" id="main">
+    <slot />
+  </main>
+
+  <div class="inv-toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    import '../scripts/invest/common';
+  </script>
+</body>
+</html>

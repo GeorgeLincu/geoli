@@ -45,7 +45,9 @@
     "EDITOR_EMAILS": "volonci.madalina@gmail.com",
     // Contact form sender/recipient
     "CONTACT_FROM": "formular@geoli.eu",
-    "CONTACT_TO": "george.lincu@gmail.com"
+    "CONTACT_TO": "george.lincu@gmail.com",
+    // Owner(s) of the private investment section /vault/invest/ (also must pass Cloudflare Access)
+    "INVEST_EMAILS": "george.lincu@gmail.com"
   },
   // Secrets (not in git): SHARE_SECRET (share links) and GITHUB_TOKEN (article publishing:
   // fine-grained token for GeorgeLincu/geoli only, "Contents: Read and write")
