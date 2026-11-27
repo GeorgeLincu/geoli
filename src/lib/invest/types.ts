@@ -194,15 +194,55 @@ export interface TaxRules {
   years: TaxRuleSet[];
 }
 
+/** One "extra buy on a market drop" rule: when the reference is `dropPct` below its high, do `action`. */
+export interface IpsCrashRule {
+  id: string;
+  /** Drop below the high, as a decimal (0.2 = 20% below the high) */
+  dropPct: number;
+  /** What George decided to do, in his own words */
+  action?: string;
+  /** Optional extra amount to invest, EUR */
+  extraAmount?: number;
+}
+
+/**
+ * Machine-checkable IPS rules (Phase 6). Every field is optional: no field = no check.
+ * The allocation and its bands are NOT here: they live in data.json `targets` (Phase 2) and are linked.
+ * Other phases read these through `activeIpsRules()` in src/lib/invest/ips-checks.ts.
+ */
+export interface IpsRules {
+  /** Alert when a target row leaves its band (bands from data.json targets) */
+  driftAlerts?: boolean;
+  /** Emergency fund: N months × monthly expenses (EUR), held in the listed accounts */
+  emergencyFund?: { months: number; monthlyExpenses: number; accountIds: string[] };
+  /** Monthly contribution: amount (EUR) by `day` of the month, with optional grace days */
+  contribution?: { amount: number; day: number; graceDays?: number };
+  /** Month (1–12) of the yearly IPS review */
+  reviewMonth?: number;
+  /** Tax-return reminder (Declarația Unică): deadline month/day entered by George, remind N days before */
+  taxReturn?: { month: number; day: number; remindDaysBefore?: number };
+  /** Extra buys on market drops, measured on `referenceInstrumentId` (its price vs its high) */
+  crash?: { referenceInstrumentId?: string; rules: IpsCrashRule[] };
+}
+
 /** invest/ips.json — written by George (Phase 6) */
 export interface IpsVersion {
   date: string;
   changeNote?: string;
   sections: Record<string, string>;
+  /** Structured rules in force from this version on */
+  rules?: IpsRules;
+}
+/** Work in progress, not yet a version (rules here are not enforced) */
+export interface IpsDraft {
+  savedAt: string;
+  sections: Record<string, string>;
+  rules?: IpsRules;
 }
 export interface IpsDoc {
   version: typeof SCHEMA_VERSION;
   versions: IpsVersion[];
+  draft?: IpsDraft;
 }
 
 export type DocName = 'data' | 'tax-rules' | 'ips';

@@ -1,0 +1,64 @@
+---
+// Phase 6: Investment Policy Statement. The page only has containers; the editor is built by
+// src/scripts/invest/ips.ts from src/lib/invest/ips-sections.ts (headings + guiding questions only).
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-ips.css';
+---
+<Invest title="IPS" active="ips">
+  <div class="ips-head">
+    <div>
+      <h1 class="inv-h1">Politica de investiții (IPS)</h1>
+      <p class="inv-lead">Regulile tale, scrise pe îndelete, ca să le ai la îndemână când piața e agitată. Textul îl scrii tu: sub fiecare titlu sunt doar întrebări care te ghidează, nu răspunsuri.</p>
+    </div>
+  </div>
+
+  <div class="ips-bar" id="ipsBar">
+    <p class="inv-muted" id="ipsState">Se încarcă…</p>
+    <div class="ips-bar__actions">
+      <button class="inv-btn" id="saveDraft" type="button" disabled>Salvează ciorna</button>
+      <button class="inv-btn inv-btn--primary" id="openVersion" type="button" disabled>Salvează ca versiune nouă</button>
+      <button class="inv-btn" id="openPrint" type="button" disabled>Vizualizare pentru tipărire</button>
+    </div>
+  </div>
+
+  <form class="inv-card ips-version-form" id="versionForm" hidden>
+    <h2 class="inv-h2">Versiune nouă</h2>
+    <p class="inv-muted">O versiune nu se mai modifică după salvare. Regulile verificabile (alertele de pe Panou) se aplică din versiunea cea mai nouă, nu din ciornă.</p>
+    <div class="ips-row">
+      <label class="ips-field">Data <input type="date" name="date" required /></label>
+      <label class="ips-field ips-field--grow">Ce s-a schimbat <input type="text" name="changeNote" maxlength="1000" required placeholder="Scrie pe scurt ce ai schimbat și de ce" /></label>
+    </div>
+    <div class="ips-bar__actions">
+      <button class="inv-btn inv-btn--primary" type="submit">Salvează versiunea</button>
+      <button class="inv-btn" type="button" id="cancelVersion">Renunță</button>
+    </div>
+  </form>
+
+  <div id="ipsEditor" class="ips-editor" aria-live="off"></div>
+
+  <section class="inv-card" aria-labelledby="versionsTitle" id="versions">
+    <h2 id="versionsTitle" class="inv-h2">Versiuni</h2>
+    <div class="plan-table-wrap">
+      <table class="plan-table" id="versionTable"></table>
+    </div>
+    <h3 class="plan-h3">Ce s-a schimbat între două versiuni</h3>
+    <div class="ips-row">
+      <label class="ips-field">De la <select id="diffFrom"></select></label>
+      <label class="ips-field">La <select id="diffTo"></select></label>
+    </div>
+    <div id="diffOut" class="ips-diff"></div>
+  </section>
+
+  <section class="ips-print" id="printView" hidden aria-labelledby="printTitle">
+    <div class="ips-print__tools">
+      <label class="ips-field">Versiunea <select id="printPick"></select></label>
+      <button class="inv-btn inv-btn--primary" id="doPrint" type="button">Tipărește / PDF</button>
+      <button class="inv-btn" id="closePrint" type="button">Înapoi la editor</button>
+    </div>
+    <article class="ips-doc" id="printDoc"></article>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/ips';
+</script>

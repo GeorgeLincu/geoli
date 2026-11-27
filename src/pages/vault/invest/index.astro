@@ -1,6 +1,7 @@
 ---
 import Invest from '../../../layouts/Invest.astro';
 import '../../../styles/invest-market.css';
+import '../../../styles/invest-ips.css';
 ---
 <Invest title="Panou" active="panou">
   <h1 class="inv-h1">Panou</h1>
@@ -16,6 +17,13 @@ import '../../../styles/invest-market.css';
     </dl>
     <p class="inv-muted" id="storeState">Se încarcă…</p>
     <button class="inv-btn inv-btn--primary" id="initBtn" type="button" hidden>Creează fișierul de date (gol)</button>
+  </section>
+
+  <section class="inv-card" aria-labelledby="ipsTitle" id="ipsCard">
+    <h2 id="ipsTitle" class="inv-h2">Reguli IPS</h2>
+    <p class="inv-muted" id="ipsAlertsState">Se verifică…</p>
+    <ul class="ips-alerts" id="ipsAlerts"></ul>
+    <a class="ips-link" href="/vault/invest/ips/">Deschide IPS →</a>
   </section>
 
   <section class="inv-card" aria-labelledby="marketTitle" id="market">
@@ -63,4 +71,5 @@ import '../../../styles/invest-market.css';
 <script>
   import '../../../scripts/invest/dashboard';
   import '../../../scripts/invest/market';
+  import '../../../scripts/invest/ips-alerts';
 </script>
