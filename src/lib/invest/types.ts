@@ -149,6 +149,60 @@ export interface InvestData {
   pensionValues?: PensionValue[];
   /** Saved column mappings for the CSV import (/vault/invest/import/) */
   importPresets?: ImportPreset[];
+  /** Income calendar (/vault/invest/calendar/): dividend schedules, planned cash-ins, coupon frequency, reinvest markers */
+  calendar?: IncomeCalendar;
+}
+
+/** Expected dividends of one instrument, entered by George ('manual') or copied from last year's payments ('lastYear'). */
+export interface DividendSchedule {
+  id: string;
+  instrumentId: string;
+  mode: 'manual' | 'lastYear';
+  /** manual: months of payment (1–12) */
+  months?: number[];
+  /** manual: day of the month (default 15) */
+  day?: number;
+  /** manual: gross amount per unit held */
+  perUnit?: number;
+  /** manual: currency of perUnit (default: the instrument's) */
+  currency?: Currency;
+  note?: string;
+}
+
+/** Another cash-in George expects (rent, bonus, a loan repaid…), one-off or repeating. */
+export interface PlannedIncome {
+  id: string;
+  date: string;
+  label: string;
+  /** Gross amount */
+  amount: number;
+  currency: Currency;
+  repeat?: 'none' | 'monthly' | 'quarterly' | 'yearly';
+  /** Last date of a repeating cash-in (inclusive) */
+  until?: string;
+  /** George's own tax estimate as a decimal (no rule exists in tax-ro for this income) */
+  taxRate?: number;
+  note?: string;
+}
+
+/** Coupon schedule of a bond (Tezaur/Fidelis): payments per year, counted back from the maturity date. */
+export interface BondSchedule { instrumentId: string; frequency: 1 | 2 | 4 | 12 }
+
+/** "De reinvestit" marker for a maturity, with an optional e-mail reminder N days before. */
+export interface ReinvestMarker {
+  instrumentId: string;
+  /** The instrument's maturity the marker belongs to (a changed maturity drops the marker) */
+  maturity: string;
+  remind: boolean;
+  daysBefore: number;
+  note?: string;
+}
+
+export interface IncomeCalendar {
+  dividends?: DividendSchedule[];
+  planned?: PlannedIncome[];
+  bonds?: BondSchedule[];
+  reinvest?: ReinvestMarker[];
 }
 
 /** Fields a CSV column can be mapped to by the transaction import. */

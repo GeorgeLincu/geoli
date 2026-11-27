@@ -117,6 +117,27 @@ const importPreset = record({
   accountMap: [strMap(id), false], defaultAccountId: [id, false], defaultCurrency: [oneOf(CURRENCIES), false],
 });
 
+const month = (v: unknown, p: string, e: string[]) => {
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 1 || v > 12) e.push(`${p}: month 1–12 expected`);
+};
+const couponFreq: Check = (v, p, e) => { if (v !== 1 && v !== 2 && v !== 4 && v !== 12) e.push(`${p}: 1, 2, 4 or 12 expected`); };
+const calendar = record({
+  dividends: [list(record({
+    id: [id, true], instrumentId: [id, true], mode: [oneOf(['manual', 'lastYear']), true],
+    months: [list(month, 12), false], day: [num, false], perUnit: [num, false],
+    currency: [oneOf(CURRENCIES), false], note: [str(500), false],
+  }), 500), false],
+  planned: [list(record({
+    id: [id, true], date: [date, true], label: [str(120), true], amount: [num, true], currency: [oneOf(CURRENCIES), true],
+    repeat: [oneOf(['none', 'monthly', 'quarterly', 'yearly']), false], until: [date, false], taxRate: [num, false],
+    note: [str(500), false],
+  }), 500), false],
+  bonds: [list(record({ instrumentId: [id, true], frequency: [couponFreq, true] }), 2000), false],
+  reinvest: [list(record({
+    instrumentId: [id, true], maturity: [date, true], remind: [bool, true], daysBefore: [num, true], note: [str(500), false],
+  }), 2000), false],
+});
+
 const versionCheck: Check = (v, p, e) => { if (v !== SCHEMA_VERSION) e.push(`${p}: must be ${SCHEMA_VERSION}`); };
 
 const data = record({
@@ -126,6 +147,7 @@ const data = record({
   prices: [list(pricePoint, 50_000), false], fxRates: [list(fxRate, 50_000), false],
   pensionValues: [list(pensionValue, 5000), false],
   importPresets: [list(importPreset, 50), false],
+  calendar: [calendar, false],
 });
 
 const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false], confirmed: [bool, false] });
