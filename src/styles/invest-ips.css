@@ -1,0 +1,98 @@
+/* Phase 6: IPS page (/vault/invest/ips/) and the IPS card on the dashboard. */
+
+.ips-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem;
+  position: sticky; top: 4rem; z-index: 5;
+  background: var(--inv-panel); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+}
+.ips-bar__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+@media (max-width: 640px) { .ips-bar { position: static; } }
+.ips-bar .inv-btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.ips-dirty { color: var(--warn-text); }
+
+.ips-editor { display: grid; gap: 1.25rem; }
+.ips-section .inv-h2 { margin-bottom: 0; }
+.ips-questions { margin: 0; padding-left: 1.2rem; color: var(--text-muted); font-size: 0.92rem; display: grid; gap: 0.2rem; }
+.ips-link { color: var(--accent-text); font-size: 0.92rem; font-weight: 500; }
+.ips-link:hover { text-decoration: underline; }
+.inv .ips-section textarea { font-family: var(--font-sans); font-size: 0.95rem; line-height: 1.55; min-height: 8rem; }
+
+.ips-rules { display: grid; gap: 0.6rem; border-top: 1px dashed var(--border-h); padding-top: 0.75rem; }
+.ips-rules__title { font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.ips-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+.ips-field { display: grid; gap: 0.3rem; font-size: 0.88rem; font-weight: 500; flex: 0 1 12rem; min-width: 0; }
+.ips-field--grow { flex: 1 1 16rem; }
+.ips-check { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.92rem; cursor: pointer; }
+.ips-check input { accent-color: var(--indigo); width: 1rem; height: 1rem; }
+.ips-accounts { border: 0; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+.ips-accounts legend { font-size: 0.88rem; font-weight: 500; margin-bottom: 0.35rem; }
+.ips-linked { margin: 0; padding-left: 1.2rem; font-size: 0.92rem; }
+.ips-crash-rows { display: grid; gap: 0.6rem; }
+.ips-crash-row { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; padding: 0.6rem; border-radius: 10px; background: var(--surface); }
+.inv .ips-row input[type="text"], .inv .ips-row input[type="date"], .inv .ips-crash-row input[type="text"], .inv .ips-field input[type="date"] {
+  width: 100%; min-width: 0; padding: 0.45rem 0.6rem; border-radius: 8px;
+  border: 1px solid var(--border-h); background: var(--surface); color: var(--text); font: inherit; font-size: 0.92rem;
+}
+.inv .ips-crash-row input[type="text"] { background: var(--bg-card); }
+
+.ips-version-form { border-color: var(--indigo); }
+.ips-version-form[hidden] { display: none; }
+
+.ips-tag {
+  display: inline-block; margin-left: 0.5rem; padding: 0.05rem 0.45rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; color: var(--ok-text); border: 1px solid currentColor;
+}
+
+/* Diff */
+.ips-diff { display: grid; gap: 0.9rem; }
+.ips-diff__block h4 { font-size: 0.92rem; font-weight: 600; margin-bottom: 0.3rem; }
+.ips-diff__lines {
+  margin: 0; padding: 0.6rem 0.75rem; border-radius: 10px; background: var(--surface);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 0.82rem; line-height: 1.5;
+  white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+}
+.ips-diff__lines span { display: block; min-height: 1.5em; }
+.ips-diff__same { color: var(--text-muted); }
+.ips-diff__add { color: var(--ok-text); background: color-mix(in srgb, var(--ok-text) 12%, transparent); }
+.ips-diff__del { color: var(--err-text); background: color-mix(in srgb, var(--err-text) 12%, transparent); text-decoration: line-through; }
+
+/* Print view: on screen it replaces the editor; on paper only the document is printed */
+.ips-print[hidden] { display: none; }
+.ips-print { display: grid; gap: 1rem; }
+.ips-print__tools { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; }
+body.ips-printing .ips-head, body.ips-printing .ips-bar, body.ips-printing .ips-editor,
+body.ips-printing #versions, body.ips-printing .ips-version-form { display: none; }
+
+.ips-doc {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: clamp(1.25rem, 4vw, 2.5rem); max-width: 80ch; line-height: 1.6;
+}
+.ips-doc h1 { font-family: var(--font-head); font-size: 1.6rem; margin-bottom: 0.25rem; }
+.ips-doc h2 { font-size: 1.1rem; font-weight: 600; margin: 1.4rem 0 0.4rem; }
+.ips-doc ul { padding-left: 1.2rem; }
+.ips-doc__meta, .ips-doc__note { color: var(--text-muted); font-size: 0.9rem; }
+.ips-doc__text { white-space: pre-wrap; }
+
+@media print {
+  .inv-top, .inv-nav, .inv-toast, .ips-print__tools, .ips-head, .ips-bar, .ips-editor, #versions, .ips-version-form { display: none !important; }
+  .inv-main { width: auto; padding: 0; }
+  .ips-print { display: block !important; }
+  .ips-doc { border: 0; padding: 0; max-width: none; background: #fff; color: #000; }
+  .ips-doc__meta, .ips-doc__note { color: #444; }
+  .ips-doc section { break-inside: avoid-page; }
+  body { background: #fff; color: #000; }
+}
+
+/* Dashboard card */
+.ips-alerts { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.ips-alert {
+  display: grid; gap: 0.15rem; padding: 0.6rem 0.8rem; border-radius: 10px;
+  background: var(--surface); border-left: 4px solid var(--text-muted);
+}
+.ips-alert--warn { border-left-color: var(--warn-text); }
+.ips-alert--info { border-left-color: var(--indigo); }
+.ips-alert strong { font-weight: 600; }
+.ips-alert span { color: var(--text-muted); font-size: 0.9rem; }
+.ips-alert a { color: var(--accent-text); font-size: 0.88rem; font-weight: 500; justify-self: start; }
+.ips-alert a:hover { text-decoration: underline; }

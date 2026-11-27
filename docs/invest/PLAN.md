@@ -94,14 +94,29 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
 - [x] 2 Portofoliu — `/vault/invest/portofoliu/`: CRUD conturi/instrumente/tranzacții, `ledger.ts` (cost mediu ponderat, art. 97 alin. (8^2) Cod fiscal), `portfolio.ts` (evaluare, drift, rebalansare prin contribuții, scadențe), `fx.ts`/`prices.ts` (manual, interfață pentru Faza 3), Pilon 2/3 manual, export CSV
 - [x] 3 Prețuri & cursuri — cron (lucrătoare 17:45 + 21:30 UTC), curs BNR + backfill anual, prețuri Yahoo (Xetra/LSE/US/BVB), preț manual, „Actualizează acum”, card pe Panou. Detalii: secțiunea „Surse de date (faza 3)”. Portofoliul folosește aceleași cursuri BNR și prețuri (un singur loc pentru corecțiile manuale): `src/lib/invest/market-sources.ts`
+- [x] 4 Taxe RO — `/vault/invest/taxe/`: `tax-ro.ts` (foreign broker yearly net gain + loss carry-forward with cap, RO-broker withholding by FIFO holding period, RO/foreign dividends and interest with capped foreign tax credit, Tezaur/Fidelis exemption, CASS tiers, effective rate, `estimateSales` / `estimateWithdrawal` for Phase 5), per-year parameter editor (source, verified on, confirmed per value), printable „Fișă Declarația Unică” with BNR rates used, CASS step chart. Researched 2025/2026 values in `tax-ro-defaults.ts` (all `confirmed: false` until George confirms). Details: § „Reguli fiscale (faza 4)”
 - [x] Extra: import CSV — `/vault/invest/import/` (link „Importă CSV” în Portofoliu → Tranzacții). Detalii: secțiunea „Import CSV”.
-- [ ] 4 Taxe RO
 - [ ] 5 Pensie & retragere
-- [ ] 6 IPS
+- [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [ ] 7 Rapoarte anuale & Panou
 - [ ] 8 Întărire
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
+
+## Extra: scădere de la maxim + alerte pe e-mail
+- [x] Page `/vault/invest/oportunitati/` (nav „Scăderi”): per instrument with an automatic price source — last price, all-time high and 52-week high (with dates), % below each, deepest historical drawdown (peak → trough). Sortable table; rows that crossed George's levels are highlighted with the level and the extra amount he planned (if any) and the distance to the next level. Toggle: measure from the all-time or 52-week high. Underwater chart per instrument (ECharts) with his levels as dashed lines, plus the five deepest drawdowns (peak, trough, recovery date, duration). Numbers and his own rules only, no recommendations.
+- [x] Long history: one-off per instrument, Yahoo `interval=1wk` since listing → `invest/history/<id>.json` (weekly closes, compact `[date, close]`), plus the last 400 days of **daily** closes merged into the normal price store `invest/prices/<year>.json` (manual prices are never overwritten). Summary (`ath`, range, symbol) in `invest/history/index.json` so the cron never parses the big files. Weekly was chosen over daily because a full daily history (e.g. AAPL since 1980: 1.3 MB) risks the free plan's 10 ms CPU limit; consequence: highs older than ~13 months are weekly closes and can be slightly below the true daily-close high. Fetched by the cron (1–2 per run, inside the 50-subrequest budget, see `cronHistoryBudget`) or with „Descarcă istoricul lipsă” (owner, max 5 per click, once a minute). An instrument is re-fetched when its symbol changes.
+- [x] Levels: George's own list on the page (`invest/alerts.json` → `drawdown.levels`: % below the high, optional planned extra amount + currency, note) applies to every instrument. The IPS (Phase 6, PR #31) crash rules are read from the **newest `invest/ips.json` version by date** (never the draft): `rules.crash = { referenceInstrumentId?, rules: [{ id, dropPct (decimal), action?, extraAmount? (EUR) }] }`. With „Pentru instrumentul de referință din IPS…” on (default), they replace the page levels **for the reference instrument only**; with no reference instrument they apply to none. Reader: `ipsDipLevels()` in `drawdown.ts`, choice per instrument: `levelsForInstrument()` in `alerts.ts`. Default: no levels.
+- [x] E-mail alerts, run after the price job in the existing cron (weekdays 17:45 and 21:30 UTC), sent through the existing `send_email` binding `CONTACT_EMAIL` from `CONTACT_FROM` to the first `INVEST_EMAILS` address only. Everything is **off by default**. One plain-text digest per run:
+  - drawdown level crossed (once per crossing; re-armed when the price recovers 2.5 points above the level; a gap through several levels names all of them);
+  - automatic price older than N days (default 5; once per stale date);
+  - Declarația unică deadline (date entered on the page; if empty, the next occurrence of the IPS `rules.taxReturn` month/day; reminders N days before, default 30/7/1, each once);
+  - Tezaur/Fidelis (any held instrument with a maturity) maturing within N days (default 30; once per instrument and maturity).
+  - Privacy: names and percentages only; prices, planned amounts and face values only with „Include prețuri și sume”. Link to the page.
+  - State in `invest/alerts-state.json` (what was already announced + last 30 sends). A failed send keeps the old state so the same events are retried next run.
+  - „Trimite e-mail de test”: owner only, at most one per 2 minutes and 5 per day.
+- [x] Logic and tests: `src/lib/invest/drawdown.ts` (series merge, highs, underwater, episodes, levels, crossing state), `src/lib/invest/alerts.ts` (settings validation, planner, digest text, raw e-mail, rate limit). Worker: `worker/alerts.ts` (API `/vault/api/invest/alerts*`, history fetch, cron run). Client: `src/scripts/invest/drawdown.ts`, CSS `src/styles/invest-drawdown.css`.
+- Not tested live: e-mail delivery on Cloudflare (locally `wrangler dev` only writes the .eml file) and Yahoo's weekly endpoint from Cloudflare's egress IPs. Tested locally on 2026-11-27 with real Yahoo data (VWCE.DE, AAPL, TLV.RO).
 
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).
@@ -122,6 +137,36 @@ How it works:
 - „Actualizează acum”: `POST /vault/api/invest/market/refresh`, owner only, at most once every 5 minutes (HTTP 429 + `Retry-After`).
 - Pure logic and tests: `src/lib/invest/market.ts` (`parseBnrXml`, `parseYahooChart`, `rateOn`, `convert`, `latestPrice`, `isStale`…), fixtures in `src/lib/invest/__fixtures__/`.
 - Not tested live: the Cron Trigger on Cloudflare's network (only locally) and how Yahoo treats Cloudflare's egress IPs. If prices fail after deploy, the dashboard shows the error per instrument.
+
+## IPS (faza 6)
+- Outline (headings + guiding questions only): `src/lib/invest/ips-sections.ts`. Keys are stored in `ips.json` `sections`; never rename one.
+- `ips.json`: `versions[]` (immutable: `date`, `changeNote`, `sections`, `rules?`) and an optional `draft` (work in progress, never enforced).
+- Rules in force = newest version by date: `activeIpsRules(doc)`. Other phases (drawdown alerts, yearly report) should read the rules through it.
+- Alerts: `ipsAlerts(doc, facts)` in `src/lib/invest/ips-checks.ts`; the dashboard gathers the facts in `src/scripts/invest/ips-alerts.ts`
+  (valuation with BNR rates + price store, drift with the Portofoliu default scope — no Pillar 2/3, with cash — and the same 5 pp fallback band).
+- Crash rules: drawdown = latest saved close vs the highest saved close of the reference instrument (price store, plus older manual prices in `data.json`).
+- Diff: line-based (`src/lib/invest/ips-diff.ts`); the rules are compared as readable lines. Print view: „Vizualizare pentru tipărire” → „Tipărește / PDF”.
+
+## Reguli fiscale (faza 4)
+Researched on 2026-11-27 from the Codul fiscal consolidated to 25.10.2026 (legislatie.just.ro 171282), Norme HG 1/2016 (307847),
+Legea 141/2025, Legea 239/2025 and the US–RO treaty. Every value, with article and link, is in `src/lib/invest/tax-ro-defaults.ts`;
+George loads them on the page („Încarcă valorile cercetate”), checks and confirms them. The stored copy is `invest/tax-rules.json`.
+
+| | 2025 | 2026 |
+|---|---|---|
+| Foreign broker, yearly net gain (DU) | 10% | 16% |
+| RO broker withholding ≥365 / <365 days (final) | 1% / 3% | 3% / 6% |
+| Dividends | 10% | 16% |
+| Interest (Tezaur/Fidelis exempt) | 10% | 10% |
+| Loss carry-forward (foreign) | 5 years, max 70% of the year's gain | same |
+| CASS 10%: 6/12/24 minimum wages; wage on 1 Jan of the income year | 4 050 lei | 4 050 lei |
+| FX: gains at the daily BNR rate, foreign income at the yearly average | | |
+| DU deadline | 25 May of the next year | |
+Not modelled / open doubts (shown in the parameter notes): losses offset "per country"; losses from before 2024 keep their 7-year window;
+whether RO-broker gains count gross or net for CASS; whether foreign income counts net of foreign tax for CASS; whether carried
+losses reduce the CASS base; the rate for the purchase leg of foreign-currency trades; exact DU rows.
+Engine API for Phase 5: `rulesFor(rules, year)` → `estimateWithdrawal(set, { year, withdrawalRon, gainShare, … })`
+returns income tax, CASS, net amount and effective rate; `estimateSales` gives the marginal cost of planned sales.
 
 ## Import CSV
 Page `/vault/invest/import/` (`src/pages/vault/invest/import.astro`, `src/scripts/invest/import.ts`), pure logic in

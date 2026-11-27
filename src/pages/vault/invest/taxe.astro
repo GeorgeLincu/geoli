@@ -1,0 +1,128 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-portfolio.css';
+import '../../../styles/invest-tax.css';
+import { ACCOUNT_TYPE_LABEL } from '../../../lib/invest/labels';
+
+const TABS = [
+  ['calcul', 'Calcul pe an'],
+  ['fisa', 'Fișă Declarația Unică'],
+  ['estimare', 'Estimare vânzare'],
+  ['reguli', 'Parametri fiscali'],
+];
+---
+<Invest title="Taxe" active="taxe">
+  <h1 class="inv-h1">Taxe România</h1>
+  <p class="inv-lead">Impozitul și CASS pe veniturile din investiții, calculate din registrul de tranzacții cu parametrii fiscali ai fiecărui an.</p>
+
+  <aside class="tx-disclaimer" role="note">
+    <strong>Ajutor de calcul, nu consultanță fiscală.</strong>{' '}
+    Sumele sunt estimări făcute cu parametrii din tab-ul „Parametri fiscali”, fiecare cu sursa și data verificării.
+    Verifică legislația în vigoare și instrucțiunile ANAF (sau întreabă un consultant fiscal) înainte să depui Declarația Unică.
+  </aside>
+
+  <section class="inv-card" aria-labelledby="sumTitle">
+    <div class="pf-row">
+      <h2 id="sumTitle" class="inv-h2">Rezumat</h2>
+      <label class="pf-inline">Anul veniturilor
+        <select id="year" class="pf-input"></select>
+      </label>
+    </div>
+    <p class="tx-status" id="rulesStatus" hidden></p>
+    <dl class="inv-stats">
+      <div><dt>Impozit + CASS total</dt><dd data-sum="total">—</dd></div>
+      <div><dt>De plată prin Declarația Unică</dt><dd data-sum="payable">—</dd></div>
+      <div><dt>Reținut la sursă / credit</dt><dd data-sum="withheld">—</dd></div>
+      <div><dt>Rata efectivă</dt><dd data-sum="rate">—</dd></div>
+      <div><dt>CASS</dt><dd data-sum="cass">—</dd></div>
+      <div><dt>Termen declarație</dt><dd data-sum="deadline">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="loadState">Se încarcă…</p>
+    <ul class="pf-warnings" id="warnings" hidden></ul>
+  </section>
+
+  <div class="pf-tabs tx-noprint" role="tablist" aria-label="Secțiuni taxe">
+    {TABS.map(([key, label], i) => (
+      <button type="button" role="tab" id={`tab-${key}`} aria-controls={`panel-${key}`} aria-selected={i === 0 ? 'true' : 'false'} data-tab={key}>{label}</button>
+    ))}
+  </div>
+
+  <!-- ─── Yearly calculation ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-calcul" aria-labelledby="tab-calcul">
+    <h2 class="inv-h2">Calcul pe categorii (RON)</h2>
+    <div class="pf-scroll"><table class="pf-table" id="breakdownTable"></table></div>
+
+    <h3 class="pf-h3">CASS: în ce prag ești</h3>
+    <p class="inv-muted" id="cassText"></p>
+    <div class="inv-chart inv-chart--short" id="cassChart" role="img" aria-label="CASS datorat în funcție de venitul din investiții"></div>
+
+    <h3 class="pf-h3">Pierderi reportate (broker străin)</h3>
+    <div class="pf-scroll"><table class="pf-table" id="lossTable"></table></div>
+
+    <h3 class="pf-h3">Vânzări în anul selectat</h3>
+    <div class="pf-scroll"><table class="pf-table" id="salesTable"></table></div>
+
+    <h3 class="pf-h3">Dividende și dobânzi în anul selectat</h3>
+    <div class="pf-scroll"><table class="pf-table" id="incomeTable"></table></div>
+  </section>
+
+  <!-- ─── Printable sheet ─── -->
+  <section class="inv-card pf-panel tx-sheet" role="tabpanel" id="panel-fisa" aria-labelledby="tab-fisa" hidden>
+    <div class="pf-row tx-noprint">
+      <h2 class="inv-h2">Fișă pentru Declarația Unică</h2>
+      <button type="button" class="inv-btn inv-btn--primary" id="printBtn">Tipărește / salvează PDF</button>
+    </div>
+    <div id="sheet"></div>
+  </section>
+
+  <!-- ─── Planned sale estimate ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-estimare" aria-labelledby="tab-estimare" hidden>
+    <h2 class="inv-h2">Cât te costă o vânzare planificată</h2>
+    <p class="inv-muted">Impozitul în plus și CASS în plus dacă vinzi acum, peste ce ai realizat deja în anul selectat (inclusiv pierderile reportate).</p>
+    <form class="pf-form" id="estForm" novalidate>
+      <label>Tip cont
+        <select name="accountType" class="pf-input">
+          <option value="foreign_broker">{ACCOUNT_TYPE_LABEL.foreign_broker}</option>
+          <option value="ro_broker">{ACCOUNT_TYPE_LABEL.ro_broker}</option>
+        </select>
+      </label>
+      <label>Câștig estimat (RON; negativ = pierdere)<input name="gain" inputmode="decimal" class="pf-input" autocomplete="off" required /></label>
+      <label>Zile de deținere (broker RO)<input name="days" inputmode="numeric" class="pf-input" autocomplete="off" /></label>
+      <div class="pf-actions"><button type="submit" class="inv-btn inv-btn--primary">Calculează</button></div>
+    </form>
+    <dl class="inv-stats" id="estOut" hidden>
+      <div><dt>Impozit în plus</dt><dd data-est="tax">—</dd></div>
+      <div><dt>CASS în plus</dt><dd data-est="cass">—</dd></div>
+      <div><dt>Total</dt><dd data-est="total">—</dd></div>
+      <div><dt>Din câștig</dt><dd data-est="share">—</dd></div>
+    </dl>
+  </section>
+
+  <!-- ─── Rules editor ─── -->
+  <section class="inv-card pf-panel" role="tabpanel" id="panel-reguli" aria-labelledby="tab-reguli" hidden>
+    <div class="pf-row">
+      <h2 class="inv-h2">Parametri fiscali pe ani</h2>
+      <label class="pf-inline">An
+        <select id="rulesYear" class="pf-input"></select>
+      </label>
+    </div>
+    <p class="inv-muted">Fiecare an are propriii parametri; o modificare de lege = un an nou, anii vechi rămân neschimbați. Valorile neconfirmate de tine apar marcate „neconfirmat” și în calcul.</p>
+    <div class="pf-btns">
+      <button type="button" class="inv-btn" id="addYearBtn">Adaugă an (copiază ultimul)</button>
+      <button type="button" class="inv-btn" id="seedBtn">Încarcă valorile cercetate pentru anul ales</button>
+      <button type="button" class="inv-btn" id="confirmAllBtn">Confirmă toate valorile anului</button>
+      <button type="button" class="inv-btn" id="deleteYearBtn">Șterge anul</button>
+    </div>
+    <form id="rulesForm" novalidate>
+      <div id="rulesBody"></div>
+      <div class="pf-actions">
+        <button type="submit" class="inv-btn inv-btn--primary" id="saveRulesBtn">Salvează parametrii</button>
+        <span class="inv-muted" id="rulesSaved"></span>
+      </div>
+    </form>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/tax';
+</script>
