@@ -1,0 +1,201 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+
+// Slider + number pairs. `pct` = shown in %, stored as a decimal. `def` = a labelled placeholder default.
+// The ids must match FIELDS in src/scripts/invest/plan.ts.
+const personal = [
+  { id: 'age', label: 'Vârsta acum', unit: 'ani', min: 18, max: 80, step: 1 },
+  { id: 'capital', label: 'Capital investit acum', unit: '€', min: 0, max: 2000000, step: 1000, hint: 'Manual până când registrul de portofoliu poate calcula valoarea.' },
+  { id: 'monthlyContribution', label: 'Contribuție lunară', unit: '€', min: 0, max: 10000, step: 50 },
+  { id: 'contributionGrowth', label: 'Modificare anuală a contribuției (reală)', unit: '%/an', min: -10, max: 10, step: 0.5, pct: true },
+  { id: 'yearsToInvest', label: 'Ani de investit', unit: 'ani', min: 1, max: 50, step: 1 },
+  { id: 'spending', label: 'Cheltuială anuală dorită la pensie (bani de azi)', unit: '€/an', min: 0, max: 200000, step: 500 },
+  { id: 'planToAge', label: 'Banii trebuie să ajungă până la vârsta', unit: 'ani', min: 60, max: 110, step: 1 },
+];
+const general = [
+  { id: 'swr', label: 'Rată de retragere sigură (SWR)', unit: '%', min: 2, max: 6, step: 0.1, pct: true },
+  { id: 'inflation', label: 'Inflație estimată', unit: '%/an', min: 0, max: 15, step: 0.1, pct: true },
+  { id: 'correlation', label: 'Corelație medie între clase', unit: '', min: -0.5, max: 1, step: 0.05, hint: 'Folosită pentru volatilitatea portofoliului în Monte Carlo „normal”.' },
+];
+const CLASSES = [
+  ['equity', 'Acțiuni'], ['bond', 'Obligațiuni'], ['gov_bond', 'Titluri de stat'], ['gold', 'Aur'],
+  ['cash', 'Numerar'], ['real_estate', 'Imobiliare'], ['pension', 'Pensii (Pilon 2/3)'], ['other', 'Altele'],
+];
+---
+<Invest title="Plan & proiecție" active="plan">
+  <div class="plan-head">
+    <div>
+      <h1 class="inv-h1">Plan &amp; proiecție</h1>
+      <p class="inv-lead">Calculator personal, nu consultanță. Toate sumele sunt în <strong>bani de azi</strong> (reale, după inflație); valoarea nominală apare separat.</p>
+    </div>
+    <div class="plan-save">
+      <span class="inv-muted" id="saveState" aria-live="polite">Se încarcă…</span>
+      <button class="inv-btn inv-btn--primary" id="saveBtn" type="button" disabled>Salvează</button>
+    </div>
+  </div>
+
+  <div class="plan-grid">
+    <section class="inv-card" aria-labelledby="inTitle">
+      <h2 id="inTitle" class="inv-h2">Datele tale</h2>
+      <p class="inv-muted">Câmpurile goale nu au valori implicite: completează-le tu.</p>
+      <div class="plan-fields">
+        {personal.map(f => (
+          <div class="plan-field" data-field={f.id}>
+            <label for={`f-${f.id}`}>{f.label} <span class="plan-unit">{f.unit}</span></label>
+            <div class="plan-field__row">
+              <input type="range" id={`r-${f.id}`} min={f.min} max={f.max} step={f.step} aria-label={f.label} tabindex="-1" />
+              <input type="number" id={`f-${f.id}`} inputmode="decimal" step={f.step} data-pct={f.pct ? '1' : undefined} />
+            </div>
+            {f.hint && <p class="plan-hint">{f.hint}</p>}
+            <p class="plan-hint plan-default" hidden>Valoare implicită (ipoteză), modific-o.</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="inv-card" aria-labelledby="asTitle">
+      <h2 id="asTitle" class="inv-h2">Ipoteze</h2>
+      <p class="inv-muted">Valorile marcate „implicit” sunt doar puncte de plecare neutre, nu prognoze. Pune-le pe ale tale.</p>
+      <div class="plan-fields">
+        {general.map(f => (
+          <div class="plan-field" data-field={f.id}>
+            <label for={`f-${f.id}`}>{f.label} <span class="plan-unit">{f.unit}</span></label>
+            <div class="plan-field__row">
+              <input type="range" id={`r-${f.id}`} min={f.min} max={f.max} step={f.step} aria-label={f.label} tabindex="-1" />
+              <input type="number" id={`f-${f.id}`} inputmode="decimal" step={f.step} data-pct={f.pct ? '1' : undefined} />
+            </div>
+            {f.hint && <p class="plan-hint">{f.hint}</p>}
+            <p class="plan-hint plan-default" hidden>Valoare implicită (ipoteză), modific-o.</p>
+          </div>
+        ))}
+      </div>
+
+      <h3 class="plan-h3">Clase de active <span class="plan-unit">randament real și volatilitate pe an</span></h3>
+      <p class="inv-muted" id="weightsNote"></p>
+      <div class="plan-table-wrap">
+        <table class="plan-table" id="classTable">
+          <thead><tr><th scope="col">Clasă</th><th scope="col">Pondere %</th><th scope="col">Randament real %</th><th scope="col">Volatilitate %</th></tr></thead>
+          <tbody>
+            {CLASSES.map(([k, label]) => (
+              <tr data-class={k}>
+                <th scope="row">{label}</th>
+                <td><input type="number" inputmode="decimal" step="1" min="0" max="100" data-k="weight" aria-label={`Pondere ${label}`} /></td>
+                <td><input type="number" inputmode="decimal" step="0.1" data-k="ret" aria-label={`Randament real ${label}`} /></td>
+                <td><input type="number" inputmode="decimal" step="0.5" min="0" data-k="vol" aria-label={`Volatilitate ${label}`} /></td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot><tr><th scope="row">Portofoliu</th><td id="wSum">—</td><td id="pRet">—</td><td id="pVol">—</td></tr></tfoot>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <section class="inv-card" aria-labelledby="resTitle">
+    <h2 id="resTitle" class="inv-h2">Rezultat</h2>
+    <p class="plan-empty" id="emptyState">Completează: <span id="missingList"></span>.</p>
+    <div id="results" hidden>
+      <p class="plan-verdict" id="verdict"></p>
+      <dl class="inv-stats">
+        <div><dt>Număr FI</dt><dd id="kFi">—</dd><p class="plan-hint">cheltuieli ÷ SWR</p></div>
+        <div><dt>La pensionare (<span id="kRetAge">—</span> ani)</dt><dd id="kBal">—</dd><p class="plan-hint" id="kNom"></p></div>
+        <div><dt>Venit sigur la SWR</dt><dd id="kInc">—</dd><p class="plan-hint" id="kIncM"></p></div>
+        <div><dt>Independență financiară</dt><dd id="kFiAge">—</dd><p class="plan-hint" id="kYtf"></p></div>
+        <div><dt>Coast FI</dt><dd id="kCoast">—</dd><p class="plan-hint" id="kCoastAge"></p></div>
+        <div><dt>Total depus</dt><dd id="kPaid">—</dd><p class="plan-hint">capital + contribuții</p></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="projTitle">
+    <div class="plan-card-head">
+      <h2 id="projTitle" class="inv-h2">Proiecție până la pensionare</h2>
+      <div class="plan-seg" role="group" aria-label="Unitate">
+        <button type="button" class="plan-seg__btn" data-view="real" aria-pressed="true">Bani de azi</button>
+        <button type="button" class="plan-seg__btn" data-view="nominal" aria-pressed="false">Nominal</button>
+      </div>
+    </div>
+    <div class="inv-chart" id="projChart" role="img" aria-label="Proiecție: bani depuși și creștere din randament, cu linia numărului FI"></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="mcTitle">
+    <div class="plan-card-head">
+      <h2 id="mcTitle" class="inv-h2">Monte Carlo</h2>
+      <div class="plan-mc-ctrl">
+        <label class="plan-inline">Mod
+          <select id="mcMode">
+            <option value="normal">Normal (randament + volatilitate)</option>
+            <option value="bootstrap">Istoric (bootstrap)</option>
+          </select>
+        </label>
+        <label class="plan-inline">Simulări <input type="number" id="mcRuns" min="2000" max="20000" step="1000" /></label>
+        <button class="inv-btn" id="mcRerun" type="button">Altă sămânță</button>
+      </div>
+    </div>
+    <p class="inv-muted" id="mcNote">Acumulare cu contribuțiile tale, apoi retragi cheltuiala anuală (reală) până la vârsta aleasă. Reușită = banii nu se termină înainte.</p>
+    <dl class="inv-stats" id="mcStats">
+      <div><dt>Șanse de reușită</dt><dd id="mSucc">—</dd><p class="plan-hint" id="mDepl"></p></div>
+      <div><dt>Median la pensionare</dt><dd id="mRet">—</dd><p class="plan-hint" id="mRet10"></p></div>
+      <div><dt>Median la final</dt><dd id="mEnd">—</dd><p class="plan-hint">moștenire, bani de azi</p></div>
+      <div><dt>Pesimist (p10) la final</dt><dd id="mEnd10">—</dd><p class="plan-hint" id="mSeed"></p></div>
+    </dl>
+    <div class="inv-chart inv-chart--tall" id="fanChart" role="img" aria-label="Evantai Monte Carlo: percentilele 10, 50 și 90 pe vârstă, cu linia numărului FI"></div>
+    <h3 class="plan-h3">Riscul secvenței de randamente</h3>
+    <p class="inv-muted" id="seqNote">Șansele de reușită grupate după randamentul mediu din primii ani de pensie: aceleași randamente medii pe termen lung, dar ordinea lor contează.</p>
+    <div class="inv-chart inv-chart--short" id="seqChart" role="img" aria-label="Șanse de reușită pe chintile ale randamentului din primii ani de pensie"></div>
+  </section>
+
+  <details class="inv-card plan-details" id="histBox">
+    <summary class="inv-h2">Randamente istorice (pentru modul bootstrap)</summary>
+    <p class="inv-muted">Lipește un tabel cu randamente anuale în <strong>procente</strong>: prima coloană anul, apoi o coloană pe clasă (Acțiuni, Obligațiuni, Titluri de stat, Aur, Numerar, Imobiliare, Pensii, Altele). Dacă adaugi și o coloană <strong>Inflație</strong>, valorile sunt tratate ca nominale și transformate în reale. Separator: tab (copiat din Excel), punct și virgulă sau virgulă.</p>
+    <p class="inv-muted">Exemplu de sursă publică: tabelul „Historical Returns on Stocks, Bonds and Bills” al lui Aswath Damodaran (NYU Stern), care are și inflația SUA. Notează sursa mai jos.</p>
+    <textarea id="histText" rows="8" spellcheck="false" placeholder="An;Acțiuni;Obligațiuni;Inflație"></textarea>
+    <label class="plan-inline plan-inline--wide">Sursa datelor <input type="text" id="histSource" maxlength="500" placeholder="link sau descriere" /></label>
+    <div class="plan-actions">
+      <button class="inv-btn" id="histApply" type="button">Folosește datele</button>
+      <button class="inv-btn inv-btn--ghost" id="histClear" type="button">Șterge datele istorice</button>
+    </div>
+    <p class="inv-muted" id="histState"></p>
+  </details>
+
+  <section class="inv-card" aria-labelledby="sensTitle">
+    <h2 id="sensTitle" class="inv-h2">Senzitivitate: ce îți mută cel mai mult vârsta FI</h2>
+    <p class="inv-muted">Fiecare bară schimbă o singură ipoteză (restul rămân ca acum) și arată cu câți ani se mută vârsta la care atingi numărul FI.</p>
+    <div class="inv-chart" id="tornadoChart" role="img" aria-label="Grafic tornado: impactul fiecărei ipoteze asupra vârstei FI"></div>
+  </section>
+
+  <section class="inv-card" aria-labelledby="scTitle">
+    <h2 id="scTitle" class="inv-h2">Scenarii</h2>
+    <p class="inv-muted">Salvează varianta curentă cu un nume, apoi bifează scenariile pe care vrei să le compari.</p>
+    <form class="plan-actions" id="scForm">
+      <label class="plan-inline plan-inline--wide">Nume <input type="text" id="scName" maxlength="120" required placeholder="ex. Contribuție mai mare" /></label>
+      <button class="inv-btn" type="submit">Salvează ca scenariu</button>
+    </form>
+    <div class="plan-table-wrap">
+      <table class="plan-table plan-table--sc">
+        <thead><tr>
+          <th scope="col">Compară</th><th scope="col">Scenariu</th><th scope="col">Număr FI</th><th scope="col">La pensionare</th>
+          <th scope="col">Vârstă FI</th><th scope="col">Șanse MC</th><th scope="col"><span class="plan-sr">Acțiuni</span></th>
+        </tr></thead>
+        <tbody id="scBody"></tbody>
+      </table>
+    </div>
+    <p class="inv-muted" id="scEmpty">Niciun scenariu salvat.</p>
+    <div class="inv-chart" id="scChart" role="img" aria-label="Comparație scenarii: valoarea portofoliului pe vârstă" hidden></div>
+  </section>
+
+  <section class="inv-card plan-method">
+    <h2 class="inv-h2">Cum se calculează</h2>
+    <ul class="inv-muted">
+      <li>Randamentele sunt <strong>reale</strong> (peste inflație) și compuse. Nominal = real × (1 + inflație)<sup>ani</sup>.</li>
+      <li>Contribuțiile sunt lunare, deci în anul plății câștigă în medie o jumătate de an de randament. Contribuția se modifică anual cu procentul ales.</li>
+      <li>Număr FI = cheltuiala anuală ÷ SWR. Coast FI = suma care, fără alte contribuții, ajunge la numărul FI până la pensionare.</li>
+      <li>Monte Carlo „normal”: randament anual lognormal, cu mediana egală cu randamentul așteptat al portofoliului și volatilitatea din ponderi, volatilități și corelația medie. „Istoric”: fiecare an simulat este un an istoric ales la întâmplare (păstrează corelațiile reale dintre clase).</li>
+      <li>Simulările folosesc o sămânță fixă, deci același plan dă aceleași rezultate pe orice dispozitiv.</li>
+    </ul>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/plan';
+</script>

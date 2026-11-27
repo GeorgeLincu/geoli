@@ -29,6 +29,30 @@ export interface Settings {
   inflation?: number;
   /** Fallback capital when the ledger is empty */
   manualCapital?: number;
+  /** Market assumptions and Monte Carlo options for the plan page (Phase 1) */
+  projection?: ProjectionSettings;
+}
+
+/** Expected REAL (after inflation) compound return and yearly volatility of one asset class, as decimals. */
+export interface ClassAssumption { ret: number; vol: number }
+
+/** One year of historical REAL returns per asset class (decimals), used by the bootstrap Monte Carlo. */
+export interface HistoryYear { year: number; returns: Partial<Record<AssetClass, number>> }
+
+export interface ProjectionSettings {
+  /** Age until which the money must last (Monte Carlo horizon) */
+  planToAge?: number;
+  assumptions?: Partial<Record<AssetClass, ClassAssumption>>;
+  /** Plan-only weights, used while the target allocation (Phase 2) is empty. Sum to 1. */
+  weights?: Partial<Record<AssetClass, number>>;
+  /** Average correlation between asset classes (normal Monte Carlo) */
+  correlation?: number;
+  mcMode?: 'normal' | 'bootstrap';
+  mcRuns?: number;
+  mcSeed?: number;
+  /** Historical real returns for bootstrap mode, entered/pasted by George, with their source */
+  history?: HistoryYear[];
+  historySource?: string;
 }
 
 export interface Account {

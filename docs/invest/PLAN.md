@@ -91,7 +91,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 
 ## Progres faze
 - [x] 0 Fundație — owner gate, `/vault/api/invest/<doc>` (ETag + backups), layout, ECharts helper, `g i` shortcut, vitest
-- [ ] 1 Plan & proiecție
+- [x] 1 Plan & proiecție — `/vault/invest/plan/`: projection (real + nominal), FI number, Coast FI, years to FI, Monte Carlo in a Web Worker (seeded, normal/lognormal + historical bootstrap from pasted data, sequence-of-returns view), tornado, saved scenarios + comparison; inputs in `data.json` `settings.projection`
 - [ ] 2 Portofoliu
 - [ ] 3 Prețuri & cursuri
 - [ ] 4 Taxe RO
