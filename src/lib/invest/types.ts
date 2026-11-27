@@ -57,6 +57,8 @@ export interface Instrument {
   /** Government bonds (Tezaur/Fidelis) */
   coupon?: number;
   maturity?: string;
+  /** Nominal value per unit (Tezaur/Fidelis), used for the maturity ladder */
+  faceValue?: number;
 }
 
 export interface Transaction {
@@ -115,6 +117,36 @@ export interface InvestData {
   transactions: Transaction[];
   targets: TargetAllocation[];
   scenarios: Scenario[];
+  /** Manual prices per instrument and date, in the instrument's currency (Phase 2; Phase 3 overrides reuse this) */
+  prices?: PricePoint[];
+  /** Manual FX rates: RON per 1 unit of `currency` (BNR convention) */
+  fxRates?: FxRate[];
+  /** Pillar 2/3 account values entered by hand over time */
+  pensionValues?: PensionValue[];
+}
+
+export interface PricePoint {
+  instrumentId: string;
+  date: string;
+  price: number;
+  note?: string;
+}
+
+export interface FxRate {
+  date: string;
+  currency: Currency;
+  /** RON per 1 unit of currency */
+  ron: number;
+  note?: string;
+}
+
+export interface PensionValue {
+  id: string;
+  accountId: string;
+  date: string;
+  /** Account value in the account's currency */
+  value: number;
+  note?: string;
 }
 
 /** A tax parameter with provenance — values are never hard-coded (Phase 4). */

@@ -1,0 +1,79 @@
+/* /vault/invest/portofoliu/ — forms, tables and tabs. Builds on invest.css and the site tokens. */
+
+.pf-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.pf-row .inv-h2 { margin-bottom: 0; }
+.pf-h3 { font-size: 0.98rem; font-weight: 600; margin-top: 0.5rem; }
+.pf-gap { margin-top: 1.25rem; }
+.pf-hint:empty { display: none; }
+
+/* ─── Tabs ─── */
+.pf-tabs {
+  display: flex; gap: 0.35rem; overflow-x: auto; scrollbar-width: thin;
+  padding-bottom: 0.25rem;
+}
+.pf-tabs button {
+  flex: none; padding: 0.5rem 0.85rem; border-radius: 999px; border: 1px solid var(--border-h);
+  background: transparent; color: var(--text-muted); font: inherit; font-size: 0.88rem; font-weight: 500; cursor: pointer;
+  white-space: nowrap;
+}
+.pf-tabs button:hover { color: var(--text); background: var(--surface-2); }
+.pf-tabs button[aria-selected="true"] { background: var(--indigo); border-color: var(--indigo); color: #fff; }
+.pf-tabs button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.pf-panel[hidden] { display: none; }
+
+/* ─── Forms ─── */
+.pf-form {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 0.65rem 0.75rem;
+  background: var(--surface); border-radius: 12px; padding: 0.9rem;
+}
+.pf-form label, .pf-inline { display: grid; gap: 0.25rem; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+.pf-inline { display: inline-flex; align-items: center; gap: 0.5rem; }
+.pf-form label[hidden] { display: none; }
+.pf-wide { grid-column: 1 / -1; }
+.pf-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.pf-check { display: inline-flex !important; align-items: center; gap: 0.4rem; font-size: 0.88rem !important; color: var(--text) !important; align-self: end; }
+.pf-check input { width: 1rem; height: 1rem; accent-color: var(--indigo); }
+
+.pf-input {
+  width: 100%; min-width: 0; padding: 0.5rem 0.6rem; border-radius: 8px;
+  border: 1px solid var(--border-h); background: var(--bg-card); color: var(--text);
+  font: inherit; font-size: 0.92rem; font-variant-numeric: tabular-nums;
+}
+.pf-inline .pf-input { width: auto; }
+.pf-input:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.pf-input[aria-invalid="true"] { border-color: var(--err-text); }
+
+/* ─── Tables ─── */
+.pf-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pf-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.pf-table th, .pf-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; vertical-align: middle; }
+.pf-table th { font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.pf-table td.num, .pf-table th.num { text-align: right; }
+.pf-table tfoot td { font-weight: 600; border-bottom: none; }
+.pf-table tr:hover td { background: var(--surface); }
+.pf-table .pf-empty td { color: var(--text-muted); white-space: normal; text-align: center; padding: 1.25rem; }
+.pf-table .pf-note { white-space: normal; min-width: 12ch; color: var(--text-muted); }
+.pf-btns { display: flex; gap: 0.25rem; justify-content: flex-end; }
+.pf-btns .inv-btn { padding: 0.3rem 0.55rem; font-size: 0.8rem; }
+
+.pf-pos { color: var(--ok-text); }
+.pf-neg { color: var(--err-text); }
+.pf-tag {
+  display: inline-block; padding: 0.1rem 0.45rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
+  background: var(--surface-2); color: var(--text-muted);
+}
+.pf-tag--ok { color: var(--ok-text); }
+.pf-tag--warn { color: var(--warn-text); }
+.pf-tag--err { color: var(--err-text); }
+
+.pf-warnings { list-style: none; display: grid; gap: 0.35rem; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--surface); border-left: 4px solid var(--warn-text); font-size: 0.88rem; }
+.pf-warnings[hidden] { display: none; }
+
+.pf-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 1rem; }
+
+@media (max-width: 640px) {
+  .pf-form { grid-template-columns: 1fr 1fr; padding: 0.75rem; }
+  .pf-table { font-size: 0.82rem; }
+  .pf-table th, .pf-table td { padding: 0.45rem 0.45rem; }
+}
+@media (max-width: 380px) { .pf-form { grid-template-columns: 1fr; } }
