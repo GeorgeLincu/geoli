@@ -229,3 +229,35 @@ export function validateDoc(name: DocName, doc: unknown): string[] {
   (CHECKS[name] ?? anyObj)(doc, name, errs);
   return errs.slice(0, 50);
 }
+
+// ─── Year-end snapshots (Phase 7): invest/snapshots/<year>-12-31.json ───
+
+export const MAX_SNAPSHOT_BYTES = 200_000;
+const money = range(-1e12, 1e12);
+const snapshot = record({
+  version: [versionCheck, true],
+  year: [range(1990, 2200, true), true],
+  date: [date, true],
+  createdAt: [str(40), true],
+  updatedAt: [str(40), true],
+  computed: [record({
+    computedAt: [str(40), true],
+    portfolioEur: [money, true], portfolioRon: [money, true],
+    byAssetClass: [byClass(money), true],
+    netWorthEur: [money, true], netWorthRon: [money, true],
+    atCost: [range(0, 100_000, true), true],
+    missingFx: [list(oneOf(CURRENCIES), 10), true],
+  }), true],
+  portfolioEur: [money, false],
+  netWorthEur: [money, false],
+  inflation: [record({ rate: [range(-0.5, 10), true], source: [str(500), false] }), false],
+  note: [str(2000), false],
+});
+
+/** Problems of a snapshot document for `year` (empty = valid). */
+export function validateSnapshot(year: number, doc: unknown): string[] {
+  const errs: string[] = [];
+  snapshot(doc, 'snapshot', errs);
+  if (isObj(doc) && (doc.year !== year || doc.date !== `${year}-12-31`)) errs.push('snapshot: year/date must match the URL');
+  return errs.slice(0, 50);
+}

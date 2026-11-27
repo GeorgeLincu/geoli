@@ -13,6 +13,7 @@ import { isDocName, validateDoc, MAX_DOC_BYTES } from '../src/lib/invest/validat
 import { emptyDoc } from '../src/lib/invest/types';
 import { handleMarketApi } from './market';
 import { handleAlertsApi } from './alerts';
+import { handleSnapshotsApi } from './snapshots';
 
 export const INVEST_PREFIX = 'invest/';
 const BACKUPS_KEPT = 50;
@@ -34,9 +35,21 @@ export async function handleInvest(request: Request, env: Env, url: URL, user: U
   if (path === '/vault/api/invest/alerts' || path.startsWith('/vault/api/invest/alerts/')) {
     return handleAlertsApi(request, env, path.slice('/vault/api/invest/alerts'.length).replace(/^\//, ''), url.origin);
   }
+  if (path === '/vault/api/invest/snapshots' || path.startsWith('/vault/api/invest/snapshots/')) {
+    return handleSnapshotsApi(request, env, path.slice('/vault/api/invest/snapshots'.length).replace(/^\//, ''));
+  }
   if (path.startsWith('/vault/api/invest/')) return handleApi(request, env, path.slice('/vault/api/invest/'.length));
 
   if (request.method !== 'GET' && request.method !== 'HEAD') return error(405, 'Method not allowed');
+  // One built page serves every yearly report: /vault/invest/rapoarte/<year>/ → /vault/invest/rapoarte/an/
+  const report = /^\/vault\/invest\/rapoarte\/(\d{4})\/?$/.exec(path);
+  if (report) {
+    const year = Number(report[1]);
+    if (year < 1990 || year > 2200) return error(404, 'Not found');
+    if (!path.endsWith('/')) return Response.redirect(`${url.origin}${path}/`, 301);
+    return servePage(new Request(`${url.origin}/vault/invest/rapoarte/an/`, { method: request.method, headers: request.headers }), env);
+  }
+  if (path.startsWith('/vault/invest/rapoarte/an')) return error(404, 'Not found');
   return servePage(request, env);
 }
 
