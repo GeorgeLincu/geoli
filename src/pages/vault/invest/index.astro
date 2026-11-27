@@ -1,0 +1,29 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+---
+<Invest title="Panou" active="panou">
+  <h1 class="inv-h1">Panou</h1>
+  <p class="inv-lead">Secțiunea privată de investiții. Fundația e gata; paginile Portofoliu, Plan, Pensie, Taxe, IPS și Rapoarte vin pe rând.</p>
+
+  <section class="inv-card" aria-labelledby="storeTitle">
+    <h2 id="storeTitle" class="inv-h2">Datele tale</h2>
+    <dl class="inv-stats" id="storeStats">
+      <div><dt>Conturi</dt><dd data-stat="accounts">—</dd></div>
+      <div><dt>Instrumente</dt><dd data-stat="instruments">—</dd></div>
+      <div><dt>Tranzacții</dt><dd data-stat="transactions">—</dd></div>
+      <div><dt>Ultima salvare</dt><dd data-stat="saved">—</dd></div>
+    </dl>
+    <p class="inv-muted" id="storeState">Se încarcă…</p>
+    <button class="inv-btn inv-btn--primary" id="initBtn" type="button" hidden>Creează fișierul de date (gol)</button>
+  </section>
+
+  <section class="inv-card" aria-labelledby="demoTitle">
+    <h2 id="demoTitle" class="inv-h2">Exemplu de grafic</h2>
+    <p class="inv-muted">Doar un exemplu de calcul (nu datele tale): 100 € pe lună timp de 30 de ani, la un randament real ipotetic de 5% pe an.</p>
+    <div class="inv-chart" id="demoChart" role="img" aria-label="Grafic exemplu: contribuții cumulate față de valoarea cu dobândă compusă"></div>
+  </section>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/dashboard';
+</script>

@@ -61,7 +61,7 @@ async function verifyAccessJwt(token: string, env: Env): Promise<Record<string, 
   return payload;
 }
 
-const emailList = (v?: string) => (v || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+export const emailList = (v?: string) => (v || '').split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 
 function userFor(email: string, env: Env): User {
   const admin = emailList(env.ADMIN_EMAILS).includes(email);

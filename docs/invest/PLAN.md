@@ -90,7 +90,7 @@ tornado senzitivitate · cronologie scadențe titluri de stat · treaptă CASS.
 Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de 2+3; 7 depinde de toate.
 
 ## Progres faze
-- [ ] 0 Fundație
+- [x] 0 Fundație — owner gate, `/vault/api/invest/<doc>` (ETag + backups), layout, ECharts helper, `g i` shortcut, vitest
 - [ ] 1 Plan & proiecție
 - [ ] 2 Portofoliu
 - [ ] 3 Prețuri & cursuri
