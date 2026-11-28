@@ -14,7 +14,7 @@
 //     dividends and fees move money inside the account (its cash is part of the value);
 //   - accounts without them: each buy is money in, each sale and each dividend/interest payment is money out
 //     (their cash isn't valued), a standalone fee is money in that buys nothing.
-import type { Account, AssetClass, Currency, InvestData, IpsDoc, Settings, TargetAllocation, TaxRuleSet, TaxRules, Transaction } from './types';
+import type { Account, AssetClass, Currency, Instrument, InvestData, IpsDoc, Settings, TargetAllocation, TaxRuleSet, TaxRules, Transaction } from './types';
 import type { FxYear } from './market';
 import type { Ledger } from './ledger';
 import { flag, ledgerFx, rulesFor, buildTaxYear, computeTaxYears, annualAverages, type TaxYearResult } from './tax-ro';
@@ -537,4 +537,26 @@ export function netWorthComposition(data: InvestData, src: ValueSources, date: s
   }
   const netEur = COMPOSITION_KEYS.reduce((s, k) => s + parts[k], 0);
   return { date, parts, netEur };
+}
+
+// ─── Benchmark (George's chosen instrument) ───
+
+export interface BenchmarkResult { ret: number; startDate: string; endDate: string; startEur: number; endEur: number }
+
+/**
+ * Price change of the benchmark instrument between two dates, in EUR (BNR rates of the price dates).
+ * Price only: distributions are not added back (exact for accumulating funds). Null when a price is missing,
+ * or the first price is more than 14 days older than `start` (the series doesn't reach back far enough).
+ */
+export function benchmarkReturn(inst: Instrument | undefined, src: ValueSources, start: string, end: string): BenchmarkResult | null {
+  if (!inst) return null;
+  const p0 = src.prices.price(inst.id, start);
+  const p1 = src.prices.price(inst.id, end);
+  if (!p0 || !p1 || p1.date <= p0.date) return null;
+  const lag = (Date.parse(`${start}T00:00:00Z`) - Date.parse(`${p0.date}T00:00:00Z`)) / 86_400_000;
+  if (lag > 14) return null;
+  const e0 = convert(src.fx, p0.price, inst.currency, 'EUR', p0.date);
+  const e1 = convert(src.fx, p1.price, inst.currency, 'EUR', p1.date);
+  if (e0 === null || e1 === null || !(e0 > 0)) return null;
+  return { ret: e1 / e0 - 1, startDate: p0.date, endDate: p1.date, startEur: e0, endEur: e1 };
 }

@@ -126,7 +126,14 @@ export function mountChart(el: HTMLElement, build: (t: ChartTheme) => EChartsCor
   const chart = echarts.init(el, undefined, { renderer: 'canvas' });
   const render = () => {
     const t = readTheme();
-    const opt = { ...baseOption(t), ...build(t) } as EChartsCoreOption & { series?: unknown };
+    const base = baseOption(t) as Record<string, unknown>;
+    const own = build(t) as Record<string, unknown>;
+    const opt = { ...base, ...own } as EChartsCoreOption & { series?: unknown };
+    // A chart's own legend/tooltip extend the shared ones (scrolling legend, confined tooltip) instead of replacing them
+    for (const k of ['legend', 'tooltip'] as const) {
+      const b = base[k], o = own[k];
+      if (o && typeof o === 'object' && !Array.isArray(o) && b && typeof b === 'object') (opt as Record<string, unknown>)[k] = { ...b, ...o };
+    }
     opt.series = markDefaults(opt.series, t);
     chart.setOption(opt, { notMerge: true });
   };

@@ -22,6 +22,7 @@ import { baseHeaders, APP_CSP, respond, json, error, html } from './http';
 import { isInvestPath, handleInvest, INVEST_PREFIX } from './invest';
 import { runMarketUpdate } from './market';
 import { runHistoryBackfill, runAlerts, cronHistoryBudget } from './alerts';
+import { runMonthly } from './monthly';
 
 export interface Env {
   ASSETS: Fetcher;
@@ -382,6 +383,7 @@ export default {
       // Then (worker/alerts.ts): long price history for new instruments within the subrequest budget, then e-mail alerts
       try { await runHistoryBackfill(env, cronHistoryBudget(fetchable)); } catch (err) { console.error('history backfill failed', err); }
       try { console.log('alerts', JSON.stringify(await runAlerts(env))); } catch (err) { console.error('alerts failed', err); }
+      try { console.log('monthly', JSON.stringify(await runMonthly(env))); } catch (err) { console.error('monthly summary failed', err); }
     }));
   },
 } satisfies ExportedHandler<Env>;

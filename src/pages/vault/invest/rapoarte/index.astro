@@ -25,6 +25,7 @@ import '../../../../styles/invest-reports.css';
             <th scope="col" class="num">TWR</th>
             <th scope="col" class="num">XIRR</th>
             <th scope="col" class="num">Real</th>
+            <th scope="col" class="num">Referință</th>
             <th scope="col">Instantaneu</th>
           </tr>
         </thead>
@@ -33,6 +34,33 @@ import '../../../../styles/invest-reports.css';
     </div>
     <p class="rp-note">Valorile sunt în EUR, pentru tot portofoliul fără Pilon 2/3. „Real” apare după ce notezi inflația anului în raport. Instantaneul de 31 decembrie se salvează automat pentru anii încheiați.</p>
   </section>
+
+  <div class="rp-grid-2">
+    <section class="inv-card" aria-labelledby="bmTitle" id="bmCard" hidden>
+      <h2 id="bmTitle" class="inv-h2">Indice de referință</h2>
+      <p class="rp-note">Alege un instrument cu care să-ți compari randamentul în fiecare an (de exemplu un ETF global). Se folosește schimbarea prețului lui în EUR, de la 31 decembrie la 31 decembrie. Trebuie să aibă prețuri salvate (sursă automată în Portofoliu); nu trebuie să-l deții.</p>
+      <form class="rp-edit" id="bmForm">
+        <label class="rp-edit__wide">Instrument
+          <select name="instrumentId"></select>
+        </label>
+        <div class="rp-edit__actions"><button class="inv-btn inv-btn--primary" type="submit">Salvează</button></div>
+      </form>
+    </section>
+
+    <section class="inv-card" aria-labelledby="moTitle" id="moCard">
+      <h2 id="moTitle" class="inv-h2">Rezumat lunar pe e-mail</h2>
+      <p class="rp-note">În prima zi lucrătoare a lunii primești un e-mail scurt despre luna trecută: randamentul, schimbarea averii nete, progresul FI, numărul de tranzacții. Fără „Include sume”, e-mailul are doar procente.</p>
+      <form class="rp-edit" id="moForm">
+        <label class="rp-check"><input type="checkbox" name="enabled" /> Trimite rezumatul lunar</label>
+        <label class="rp-check"><input type="checkbox" name="includeAmounts" /> Include sume (valori în EUR)</label>
+        <div class="rp-edit__actions">
+          <button class="inv-btn inv-btn--primary" type="submit">Salvează</button>
+          <button class="inv-btn" type="button" id="moTest">Trimite acum un test</button>
+        </div>
+      </form>
+      <p class="inv-muted" id="moState"></p>
+    </section>
+  </div>
 
   <section class="inv-card" aria-labelledby="rpChartTitle" id="rpChartCard" hidden>
     <h2 id="rpChartTitle" class="inv-h2">Valoarea la sfârșitul fiecărui an</h2>

@@ -3,8 +3,10 @@
 export const NF0 = new Intl.NumberFormat('ro-RO', { maximumFractionDigits: 0 });
 export const NF1 = new Intl.NumberFormat('ro-RO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
-export const eur = (n: number | null | undefined) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : `${NF0.format(n)} €`);
-export const ron = (n: number | null | undefined) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : `${NF0.format(n)} lei`);
+/** Whole units; values that round to 0 never show as "-0"; minus sign is the typographic one. */
+const whole = (n: number) => { const r = Math.round(n); return `${r < 0 ? '−' : ''}${NF0.format(Math.abs(r))}`; };
+export const eur = (n: number | null | undefined) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : `${whole(n)} €`);
+export const ron = (n: number | null | undefined) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : `${whole(n)} lei`);
 export const signedEur = (n: number) => `${n > 0.5 ? '+' : n < -0.5 ? '−' : ''}${NF0.format(Math.abs(n))} €`;
 /** Percent with one decimal; `signed` adds + for gains. */
 export const pct = (x: number | null | undefined, signed = false) => {

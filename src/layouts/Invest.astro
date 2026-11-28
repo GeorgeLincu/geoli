@@ -11,7 +11,7 @@ interface Props {
 }
 const { title, active } = Astro.props;
 
-// Navigation in four groups (what I have · plans · reports). Wide screens: one row with dividers;
+// Navigation in four groups (now · what I have · plans · analyses). Wide screens: one row with dividers;
 // phones: a <details> menu (no JS) with the current page in the summary.
 const NAV_GROUPS = [
   { label: 'Acum', items: [
@@ -27,10 +27,13 @@ const NAV_GROUPS = [
     { key: 'plan',       label: 'Plan',       href: '/vault/invest/plan/' },
     { key: 'pensie',     label: 'Pensie',     href: '/vault/invest/pensie/' },
     { key: 'ips',        label: 'IPS',        href: '/vault/invest/ips/' },
+    { key: 'jurnal',     label: 'Jurnal',     href: '/vault/invest/jurnal/' },
   ] },
-  { label: 'Rapoarte', items: [
+  { label: 'Analize', items: [
     { key: 'rapoarte',   label: 'Rapoarte',   href: '/vault/invest/rapoarte/' },
     { key: 'taxe',       label: 'Taxe',       href: '/vault/invest/taxe/' },
+    { key: 'costuri',    label: 'Costuri',    href: '/vault/invest/costuri/' },
+    { key: 'simulare',   label: 'Ce-ar fi dacă', href: '/vault/invest/simulare/' },
   ] },
 ];
 const current = NAV_GROUPS.flatMap(g => g.items).find(i => i.key === active);
@@ -44,6 +47,15 @@ const current = NAV_GROUPS.flatMap(g => g.items).find(i => i.key === active);
   <meta name="color-scheme" content="dark light" />
   <title>{title} · Investiții · GeoLi</title>
   <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <!-- Home-screen app: the manifest is behind the owner check (credentials needed); icons are the public site icons.
+       No service worker: nothing is stored on the phone, every page comes fresh from the server. -->
+  <link rel="manifest" href="/vault/invest/manifest.webmanifest" crossorigin="use-credentials" />
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+  <meta name="theme-color" content="#08090f" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Investiții" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
   <link rel="preload" href="/assets/fonts/inter.woff2" as="font" type="font/woff2" crossorigin />
   <script is:inline src="/theme-init.js"></script>
 </head>

@@ -1,0 +1,66 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-reports.css';
+---
+<Invest title="Costuri" active="costuri">
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Costuri</h1>
+      <p class="inv-lead">Cât plătești pe an: comisioanele brokerilor (din tranzacții) și costul anual al fondurilor (TER, scris de tine din fișa fiecărui ETF). Și cât înseamnă asta pe termen lung.</p>
+    </div>
+  </div>
+
+  <p class="inv-muted" id="coState">Se încarcă…</p>
+
+  <div class="rp-body" id="coBody" hidden>
+    <section class="inv-card" aria-labelledby="coSumTitle">
+      <h2 id="coSumTitle" class="inv-h2">Pe scurt</h2>
+      <dl class="kpis" id="coKpis"></dl>
+    </section>
+
+    <section class="inv-card" aria-labelledby="coTerTitle">
+      <h2 id="coTerTitle" class="inv-h2">Costul fondurilor (TER) pe ce deții azi</h2>
+      <p class="rp-note">TER-ul îl găsești în fișa ETF-ului (KID / factsheet), de exemplu 0,22%. Lasă gol pentru acțiuni individuale sau titluri de stat (fără cost anual).</p>
+      <form id="coTerForm">
+        <div class="rp-table-wrap">
+          <table class="rp-table" id="coTer">
+            <thead><tr><th scope="col">Instrument</th><th scope="col" class="num">Valoare</th><th scope="col" class="num">TER (%)</th><th scope="col" class="num">Cost pe an</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="rp-edit__actions"><button class="inv-btn inv-btn--primary" type="submit">Salvează TER-urile</button></div>
+      </form>
+    </section>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="coFeesTitle">
+        <h2 id="coFeesTitle" class="inv-h2">Comisioane la broker, pe ani</h2>
+        <div class="rp-table-wrap"><table class="rp-table" id="coFees">
+          <thead><tr><th scope="col">An</th><th scope="col" class="num">Comisioane</th><th scope="col" class="num">Tranzacții cu comision</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <section class="inv-card" aria-labelledby="coDragTitle">
+        <h2 id="coDragTitle" class="inv-h2">Pe termen lung</h2>
+        <form class="rp-edit" id="coDragForm">
+          <label>Ani <input type="text" name="years" inputmode="numeric" autocomplete="off" /></label>
+          <label>Randament real așteptat (%) <input type="text" name="ret" inputmode="decimal" autocomplete="off" /></label>
+          <label>Contribuție lunară (EUR) <input type="text" name="monthly" inputmode="decimal" autocomplete="off" /></label>
+          <label>Cost pe an (%) <input type="text" name="cost" inputmode="decimal" autocomplete="off" /></label>
+          <div class="rp-edit__actions"><button class="inv-btn" type="submit">Recalculează</button></div>
+        </form>
+        <p class="rp-note" id="coDragNote"></p>
+      </section>
+    </div>
+
+    <section class="inv-card" aria-labelledby="coChartTitle">
+      <h2 id="coChartTitle" class="inv-h2">Valoarea cu și fără costuri</h2>
+      <div class="inv-chart" id="coChart" role="img" aria-label="Valoarea portofoliului pe ani, cu și fără costurile anuale"></div>
+    </section>
+  </div>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/costs';
+</script>

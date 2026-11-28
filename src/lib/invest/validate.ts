@@ -80,6 +80,7 @@ const settings = record({
   contributionGrowth: [num, false], yearsToInvest: [num, false], retirementSpending: [num, false],
   swr: [num, false], inflation: [num, false], manualCapital: [num, false],
   projection: [projection, false], retirement: [retirement, false],
+  benchmarkInstrumentId: [id, false],
 });
 const account = record({
   id: [id, true], name: [str(120), true], type: [oneOf(ACCOUNT_TYPES), true], institution: [str(120), false],
@@ -91,6 +92,7 @@ const instrument = record({
   region: [oneOf(['global', 'us', 'europe', 'romania', 'emerging', 'developed_ex_us', 'other']), true],
   currency: [oneOf(CURRENCIES), true], distribution: [oneOf(['accumulating', 'distributing']), false],
   priceSource: [str(80), false], coupon: [num, false], maturity: [date, false], faceValue: [num, false],
+  ter: [range(0, 0.2), false],
 });
 const transaction = record({
   id: [id, true], date: [date, true], type: [oneOf(TX_TYPES), true], accountId: [id, true],
@@ -183,6 +185,10 @@ const data = record({
   netWorth: [netWorth, false],
   importPresets: [list(importPreset, 50), false],
   calendar: [calendar, false],
+  journal: [list(record({
+    id: [id, true], date: [date, true], title: [str(200), true], text: [str(10_000), true],
+    txIds: [list(id, 50), false], instrumentId: [id, false], review: [str(10_000), false], reviewedOn: [date, false],
+  }), 5000), false],
 });
 
 const taxParam = record({ value: [num, true], source: [str(500), false], verifiedOn: [date, false], note: [str(1000), false], confirmed: [bool, false] });

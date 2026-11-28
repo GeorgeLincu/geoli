@@ -33,6 +33,8 @@ export interface Settings {
   projection?: ProjectionSettings;
   /** Retirement / withdrawal page (Phase 5) */
   retirement?: RetirementSettings;
+  /** Instrument used as the yearly benchmark in the reports (its price change Dec 31 → Dec 31, in EUR) */
+  benchmarkInstrumentId?: string;
 }
 
 /** One glidepath point: the allocation (decimals, by asset class) George wants at `age`. */
@@ -121,6 +123,8 @@ export interface Instrument {
   maturity?: string;
   /** Nominal value per unit (Tezaur/Fidelis), used for the maturity ladder */
   faceValue?: number;
+  /** Yearly fund cost (TER) as a decimal (0.0022 = 0.22%), entered by George; used on the Costuri page */
+  ter?: number;
 }
 
 export interface Transaction {
@@ -215,6 +219,8 @@ export interface InvestData {
   calendar?: IncomeCalendar;
   /** Assets and debts outside the portfolio, for the full net worth (/vault/invest/avere/) */
   netWorth?: NetWorthDoc;
+  /** Decision journal (/vault/invest/jurnal/): why George bought, sold or changed something */
+  journal?: JournalEntry[];
 }
 
 /** Expected dividends of one instrument, entered by George ('manual') or copied from last year's payments ('lastYear'). */
@@ -458,3 +464,16 @@ export const emptyIps = (): IpsDoc => ({ version: SCHEMA_VERSION, versions: [] }
 
 export const emptyDoc = (name: DocName) =>
   name === 'data' ? emptyData() : name === 'tax-rules' ? emptyTaxRules() : emptyIps();
+
+/** One decision-journal entry, written by George. `review` is what he notes later about how it turned out. */
+export interface JournalEntry {
+  id: string;
+  date: string;
+  title: string;
+  text: string;
+  /** Linked transaction(s), optional */
+  txIds?: string[];
+  instrumentId?: string;
+  review?: string;
+  reviewedOn?: string;
+}
