@@ -102,6 +102,7 @@ Fazele 1–3 pot rula în paralel după faza 0 (fișiere diferite); 4 depinde de
 - [x] 6 IPS — `/vault/invest/ips/`: editor cu titluri + întrebări (fără răspunsuri scrise), ciornă + versiuni imuabile (dată, notă), diferențe între versiuni, vizualizare pentru tipărire. Reguli verificabile în `ips.json` → `versions[].rules` (`IpsRules`): alertă la ieșirea din bandă (benzile rămân în ținta din Portofoliu), fond de urgență (luni × cheltuieli, conturi alese), contribuție lunară (sumă, zi, păsuire), luna revizuirii, termen Declarația Unică (scris de George), praguri la căderi (% sub maxim, pe un instrument). Alertele pe Panou: `src/lib/invest/ips-checks.ts`. Detalii: secțiunea „IPS (faza 6)”
 - [x] 7 Rapoarte anuale & Panou — `/vault/invest/rapoarte/` (listă) și `/vault/invest/rapoarte/<an>/` (raport pe an, tipărire/PDF), instantanee la 31 dec. în `invest/snapshots/` (automate, corectabile, cu inflația anului), `returns.ts` (XIRR, TWR, real), Panou refăcut (cifrele importante sus, alerte comune, avere netă pe clase în timp), navigație pe grupuri, grafice uniformizate. Detalii: secțiunea „Rapoarte anuale & Panou (faza 7)”
 - [ ] 8 Întărire
+- [x] Extra: Imobiliare — `/vault/invest/imobiliare/`: oportunități (locuință / închiriere), avans %, credit fix → IRCC + marjă, DAE, plăți anticipate recurente/oricând, „merită?” vs investit, randament, cumpăr vs chirie, comparație 2–3, legătură cu Avere netă. Detalii: secțiunea „Imobiliare”
 - [x] Extra (după faza 7): indice de referință, rezumat lunar pe e-mail, jurnal de decizii, „Ce-ar fi dacă” (retragere), Costuri (comisioane + TER), „Ce cumpăr luna asta”, aplicație pe ecranul telefonului. Detalii: secțiunea „Extra după faza 7”
 
 Prompt-urile pentru fiecare fază: [PROMPTS.md](PROMPTS.md).
@@ -231,6 +232,47 @@ New data (additive, validated): `settings.benchmarkInstrumentId`, `Instrument.te
 - Charts: a chart's own legend/tooltip now extend the shared settings (scrolling legend on phones) instead of replacing them.
 - Tested locally on 2026-11-28 with invented data (owner; non-owner → 404 on the new pages, manifest and API; 375 px; dark; no console/CSP errors;
   test e-mail written as .eml). Not tested: the monthly cron run on Cloudflare and real e-mail delivery; installing on a real phone.
+
+## Imobiliare
+Page `/vault/invest/imobiliare/` (nav Planuri): `src/pages/vault/invest/imobiliare.astro`, `src/scripts/invest/realestate.ts` (state, editor,
+legal rules, net-worth link) and `realestate-view.ts` (results, charts, table, comparison), CSS `src/styles/invest-realestate.css`.
+Logic (tested, invented data only): `src/lib/invest/mortgage.ts` (`mortgage.test.ts`), `property.ts` + `prepay.ts` (`property.test.ts`),
+researched legal values `realestate-defaults.ts`. Data: `data.json` → `realEstate` (`RealEstateDoc`, validated in `validate.ts`) so the
+phase-8 export/backup covers it. Everything is typed by George; nothing is pre-filled.
+- **Purchase**: price EUR, down payment % (shown in EUR and RON), EUR/RON per opportunity (empty = latest BNR), purchase costs in any
+  currency, own cash = down payment + costs + loan signing fees (cash purchase: the whole price).
+- **Loan** (RON): amount (empty = price − down payment), years, equal instalments or decreasing, first instalment month, fixed rate for N years,
+  then IRCC + margin (instalment recomputed on the remaining term at the switch), IRCC scenarios in pp, signing fees, monthly fee, life insurance
+  (% of balance per year), home insurance. Monthly rate = yearly / 12. DAE = XIRR of (amount − signing fees) vs instalments + monthly fees +
+  insurance (no prepayments). Ages at purchase and at the last instalment from `settings.birthYear`; debt-to-income vs the BNR limit (worst IRCC
+  scenario warned).
+- **Prepayments**: once or recurring (amount, first month, how many times, every N months), effect „reduce durata” (instalment kept) or
+  „reduce rata” (term kept); fee from the rules. Shows interest/insurance saved, months saved, extra paid. CSV of the monthly schedule.
+- **„Merită?”** (`prepayVsInvest`): equal monthly spending in both cases — the prepayment money goes into the portfolio in the "invest" case;
+  when the prepaid loan ends earlier or its instalment is lower, the "prepay" case invests the difference. Wealth at the end of the original
+  loan after the tax on gains (`tax-ro.ts` `cg.foreign.rate`, current year rules). Return = plan real return + plan inflation (nominal); break-even
+  return by bisection; Monte Carlo (1 000 runs, lognormal yearly returns with the plan volatility, `montecarlo.ts` helpers, same path for both)
+  → probability investing wins and p10/p90 of the difference. Notes: the loan is RON, the portfolio EUR (no FX), keep the IPS emergency fund.
+- **Rental**: rent × occupancy − management − upkeep (% of value) − other − tax (rate × (1 − flat deduction)) = NOI; gross yield, net yield
+  (year 1 NOI / (price + costs)), cash-on-cash after the loan, IRR over the horizon with a sale (price growth, selling costs, minus the loan).
+- **Home**: buy vs rent (`buyVsRent`): the renter invests the own cash at the start; each month whoever pays less invests the difference; wealth
+  at the horizon = home after selling costs − loan + investments vs the renter's investments (gains taxed); break-even year.
+- **Comparison** (2–3 ticked): price, own cash, loan, instalments, DAE, total interest, last instalment / age, debt-to-income, net yield,
+  cash-on-cash, IRR, buy vs rent, equity at the horizon; ★ marks the best value per row; bar chart in EUR.
+- **Charts**: loan balance with/without prepayments; instalment over time per IRCC scenario; per year principal / interest / prepayments /
+  insurance + fees (stacked); rental cash flows or buy-vs-rent wealth.
+- **„Am cumpărat”**: adds to `netWorth` the home (asset `real_estate`, EUR, purchase price) and the loan (liability `mortgage`, RON, current
+  rate and instalment, a balance per month up to today from the schedule with only the prepayments marked done). „Marchează plățile anticipate
+  de până azi ca făcute” + „Actualizează soldul creditului” keep it in sync; George's own asset values are never overwritten.
+- **Legal rules** (`realEstate.params`, each with source, verified-on and „Confirmat”; researched 2026-11-28, all unconfirmed until George
+  checks): prepayment fee 0 (OUG 52/2016 art. 41, mortgages after 30.09.2016; OUG 50/2010 art. 68 for older contracts: max 1%/0.5% in the fixed
+  period), rent tax 10% with a 20% flat deduction (Codul fiscal art. 84, 2025 and 2026; ANAF), DSTI 40% RON / +5 pp first home (Reg. BNR
+  17/2012 art. 19, secondary source), max age at maturity = bank policy (no BNR rule; George enters it). CASS on rent is not modelled (shown in
+  the note). IRCC is never pre-filled: the page explains where BNR publishes it; at research time the press reported 5.57% (Q4 2026) and 5.61%
+  from 1 Jan 2027 (not read from bnr.ro).
+- Tested locally on 2026-11-28 with invented data: 3 opportunities, comparison, recurring + one-off prepayments, rules loaded, „Am cumpărat”
+  (future and past purchase → monthly balances), non-owner 404, 375 px, dark, no console/CSP errors. Not tested: real offers vs a bank's
+  own schedule (rounding conventions can differ by a few lei).
 
 ## Surse de date (faza 3)
 Tested on 2026-11-27 from the laptop and from the Worker (`wrangler dev`, `/cdn-cgi/handler/scheduled`).

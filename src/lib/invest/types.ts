@@ -221,6 +221,8 @@ export interface InvestData {
   netWorth?: NetWorthDoc;
   /** Decision journal (/vault/invest/jurnal/): why George bought, sold or changed something */
   journal?: JournalEntry[];
+  /** Real-estate purchases being considered or bought (/vault/invest/imobiliare/) */
+  realEstate?: RealEstateDoc;
 }
 
 /** Expected dividends of one instrument, entered by George ('manual') or copied from last year's payments ('lastYear'). */
@@ -476,4 +478,112 @@ export interface JournalEntry {
   instrumentId?: string;
   review?: string;
   reviewedOn?: string;
+}
+
+// ─── Real estate (/vault/invest/imobiliare/) ───
+// Everything here is typed by George (prices, rates, IRCC, rents); nothing is pre-filled.
+
+export type PropertyUse = 'home' | 'rental';
+
+/** One purchase cost besides the price: notary, land registry, valuation, agency, renovation, furniture… */
+export interface CostItem { id: string; label: string; amount: number; currency: Currency }
+
+/** Mortgage in RON. Rates are yearly decimals (0.055 = 5.5%), monthly rate = yearly / 12 as banks quote them. */
+export interface MortgageLoan {
+  /** Loan amount; missing = price − down payment at the scenario's EUR/RON rate */
+  principalRon?: number;
+  months: number;
+  type: 'annuity' | 'decreasing';
+  /** First instalment month, YYYY-MM */
+  startMonth: string;
+  /** Fixed rate for the first `fixedMonths` (0 months = variable from the start) */
+  fixedRate: number;
+  fixedMonths: number;
+  /** After the fixed period: IRCC + margin */
+  ircc?: number;
+  margin?: number;
+  /** IRCC changes to test, as decimals (0.01 = +1 pp) */
+  irccScenarios?: number[];
+  /** Fees at signing (analysis, valuation…), RON */
+  upfrontFeesRon?: number;
+  /** Monthly account/administration fee, RON */
+  monthlyFeeRon?: number;
+  /** Life insurance: yearly share of the outstanding balance */
+  lifeInsuranceRate?: number;
+  /** Home insurance, RON per year */
+  propertyInsuranceRon?: number;
+}
+
+/** Extra repayment: once, or `count` times every `everyMonths` months from `month`. */
+export interface Prepayment {
+  id: string;
+  kind: 'once' | 'recurring';
+  amountRon: number;
+  /** First (or only) month, YYYY-MM */
+  month: string;
+  count?: number;
+  everyMonths?: number;
+  /** Keep the instalment and shorten the loan, or keep the term and lower the instalment */
+  effect: 'term' | 'installment';
+  /** Months (YYYY-MM) George marked as actually paid */
+  done?: string[];
+  note?: string;
+}
+
+/** Rent received (rental) or rent George would otherwise pay (home), with running costs. */
+export interface RentAssumptions {
+  /** EUR per month */
+  monthlyEur?: number;
+  /** Share of the year rented (rental), e.g. 0.92 */
+  occupancy?: number;
+  /** Agency/management, share of the rent collected */
+  managementPct?: number;
+  /** Repairs and upkeep, yearly share of the property value */
+  maintenancePct?: number;
+  /** Other yearly costs (property tax, building fees not paid by the tenant…), EUR */
+  otherYearlyEur?: number;
+  /** Yearly rent increase, decimal */
+  growth?: number;
+}
+
+export interface PropertyScenario {
+  id: string;
+  name: string;
+  use: PropertyUse;
+  priceEur: number;
+  /** Planned or actual purchase date */
+  purchaseDate: string;
+  /** Down payment as a share of the price (0.15 = 15%) */
+  downPct: number;
+  /** RON per EUR used for this scenario; missing = latest BNR rate */
+  eurRon?: number;
+  costs: CostItem[];
+  /** No loan = cash purchase */
+  loan?: MortgageLoan;
+  prepayments: Prepayment[];
+  rent?: RentAssumptions;
+  /** Expected yearly price change, decimal */
+  appreciation?: number;
+  /** Years to compare / hold before a (hypothetical) sale */
+  holdYears?: number;
+  /** Selling costs, share of the sale price */
+  sellCostPct?: number;
+  /** Household net income and other debt instalments per month, RON (debt-to-income) */
+  monthlyIncomeRon?: number;
+  otherDebtRon?: number;
+  status: 'draft' | 'bought';
+  /** Items created in data.json netWorth when George marks it as bought */
+  netWorthAssetId?: string;
+  netWorthLiabilityId?: string;
+  note?: string;
+}
+
+/** A legal/market rule with provenance (like the tax parameters): prepayment fees, rent tax, BNR limits. */
+export interface RealEstateParam { value: number; source?: string; verifiedOn?: string; confirmed?: boolean; note?: string }
+
+export interface RealEstateDoc {
+  scenarios: PropertyScenario[];
+  params?: Record<string, RealEstateParam>;
+  /** Scenario ids picked for the comparison (2–3) */
+  compare?: string[];
 }

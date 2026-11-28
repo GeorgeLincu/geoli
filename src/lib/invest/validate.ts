@@ -176,6 +176,44 @@ const netWorth = record({
 
 const versionCheck: Check = (v, p, e) => { if (v !== SCHEMA_VERSION) e.push(`${p}: must be ${SCHEMA_VERSION}`); };
 
+const yearMonth: Check = (v, p, e) => { if (typeof v !== 'string' || !/^\d{4}-(0[1-9]|1[0-2])$/.test(v)) e.push(`${p}: month YYYY-MM expected`); };
+const rate = range(-0.1, 1);
+const reParam = record({ value: [num, true], source: [str(1000), false], verifiedOn: [date, false], confirmed: [bool, false], note: [str(2000), false] });
+const realEstate = record({
+  scenarios: [list(record({
+    id: [id, true], name: [str(160), true], use: [oneOf(['home', 'rental']), true],
+    priceEur: [range(0, 1e9), true], purchaseDate: [date, true], downPct: [range(0, 1), true], eurRon: [range(0.01, 100), false],
+    costs: [list(record({ id: [id, true], label: [str(160), true], amount: [range(0, 1e9), true], currency: [oneOf(CURRENCIES), true] }), 50), true],
+    loan: [record({
+      principalRon: [range(0, 1e10), false], months: [range(1, 600, true), true], type: [oneOf(['annuity', 'decreasing']), true],
+      startMonth: [yearMonth, true], fixedRate: [rate, true], fixedMonths: [range(0, 600, true), true],
+      ircc: [rate, false], margin: [rate, false], irccScenarios: [list(range(-0.2, 0.2), 6), false],
+      upfrontFeesRon: [range(0, 1e8), false], monthlyFeeRon: [range(0, 1e6), false],
+      lifeInsuranceRate: [range(0, 0.2), false], propertyInsuranceRon: [range(0, 1e7), false],
+    }), false],
+    prepayments: [list(record({
+      id: [id, true], kind: [oneOf(['once', 'recurring']), true], amountRon: [range(0, 1e10), true], month: [yearMonth, true],
+      count: [range(1, 600, true), false], everyMonths: [range(1, 120, true), false], effect: [oneOf(['term', 'installment']), true],
+      done: [list(yearMonth, 600), false], note: [str(500), false],
+    }), 200), true],
+    rent: [record({
+      monthlyEur: [range(0, 1e7), false], occupancy: [range(0, 1), false], managementPct: [range(0, 1), false],
+      maintenancePct: [range(0, 0.5), false], otherYearlyEur: [range(0, 1e8), false], growth: [range(-0.5, 1), false],
+    }), false],
+    appreciation: [range(-0.5, 1), false], holdYears: [range(1, 60, true), false], sellCostPct: [range(0, 0.5), false],
+    monthlyIncomeRon: [range(0, 1e8), false], otherDebtRon: [range(0, 1e8), false],
+    status: [oneOf(['draft', 'bought']), true], netWorthAssetId: [id, false], netWorthLiabilityId: [id, false], note: [str(2000), false],
+  }), 50), true],
+  params: [(v, p, e) => {
+    if (!isObj(v)) { e.push(`${p}: object expected`); return; }
+    for (const [k, x] of Object.entries(v)) {
+      if (k.length > 64) { e.push(`${p}: key too long`); continue; }
+      reParam(x, `${p}.${k}`, e);
+    }
+  }, false],
+  compare: [list(id, 3), false],
+});
+
 const data = record({
   version: [versionCheck, true], settings: [settings, true], accounts: [list(account, 500), true],
   instruments: [list(instrument, 2000), true], transactions: [list(transaction), true],
@@ -185,6 +223,7 @@ const data = record({
   netWorth: [netWorth, false],
   importPresets: [list(importPreset, 50), false],
   calendar: [calendar, false],
+  realEstate: [realEstate, false],
   journal: [list(record({
     id: [id, true], date: [date, true], title: [str(200), true], text: [str(10_000), true],
     txIds: [list(id, 50), false], instrumentId: [id, false], review: [str(10_000), false], reviewedOn: [date, false],
