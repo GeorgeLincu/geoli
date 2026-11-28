@@ -1,0 +1,22 @@
+/* Real estate (/vault/invest/imobiliare/) */
+.re-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.re-tab { border: 1px solid var(--border-h) !important; border-radius: 10px; }
+.re-derived { font-size: 0.9rem; color: var(--text-muted); }
+.re-costs { display: grid; gap: 0.4rem; }
+.re-cost { display: grid; grid-template-columns: minmax(0, 1fr) 7.5rem 5.5rem auto; gap: 0.4rem; align-items: center; }
+@media (max-width: 480px) { .re-cost { grid-template-columns: minmax(0, 1fr) 6rem 4.8rem auto; } }
+.re-savebar {
+  position: sticky; bottom: 0.75rem; z-index: 4; display: flex; align-items: center; gap: 0.75rem;
+  background: var(--inv-panel); border: 1px solid var(--border-h); border-radius: 12px; padding: 0.6rem 0.8rem;
+  justify-self: start; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+.re-verdict { display: grid; gap: 0.5rem; }
+.re-verdict__main { display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: baseline; }
+.re-best { font-weight: 700; color: var(--ok-text); }
+.re-cmp-pick { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; }
+.re-cmp-pick .rp-check { grid-column: auto; }
+.rp-edit input[type="month"] {
+  width: 100%; min-width: 0; padding: 0.45rem 0.6rem; border-radius: 8px; border: 1px solid var(--border-h);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 0.92rem; color-scheme: light dark;
+}
+#rePreList .inv-btn { justify-self: start; padding: 0.3rem 0.6rem; font-size: 0.82rem; }

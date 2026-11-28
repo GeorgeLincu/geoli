@@ -227,3 +227,12 @@ export function balanceAt(rows: readonly MortgageRow[], principal: number, month
   for (const x of rows) { if (x.month > month) break; b = x.balance; }
   return b;
 }
+
+/** Repayment schedule as CSV (semicolons, decimal commas, BOM — opens in Excel set to Romanian). */
+export function scheduleCsv(rows: readonly MortgageRow[]): string {
+  const n = (x: number) => (Math.round(x * 100) / 100).toString().replace('.', ',');
+  const head = ['nr', 'luna', 'perioada', 'dobanda_anuala_%', 'rata', 'din_care_dobanda', 'din_care_principal', 'plata_anticipata', 'comision_anticipata', 'asigurari', 'comision_lunar', 'sold_dupa', 'total_platit_luna'];
+  const lines = rows.map(r => [r.n, r.month, r.phase === 'fixed' ? 'fixa' : 'variabila', n(r.rate * 100), n(r.payment), n(r.interest), n(r.principal),
+    n(r.prepayment), n(r.prepaymentFee), n(r.insurance), n(r.fee), n(r.balance), n(r.cash)].join(';'));
+  return '\uFEFF' + [head.join(';'), ...lines].join('\r\n') + '\r\n';
+}

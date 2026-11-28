@@ -1,0 +1,205 @@
+---
+import Invest from '../../../layouts/Invest.astro';
+import '../../../styles/invest-reports.css';
+import '../../../styles/invest-realestate.css';
+---
+<Invest title="Imobiliare" active="imobiliare">
+  <div class="rp-head">
+    <div>
+      <h1 class="inv-h1">Imobiliare</h1>
+      <p class="inv-lead">Compară oportunități de cumpărare (locuință sau de închiriat): avans, credit cu dobândă fixă apoi IRCC + marjă, plăți anticipate, randament și „cumpăr sau închiriez”. Toate cifrele sunt ale tale; nimic nu e completat dinainte.</p>
+    </div>
+  </div>
+
+  <p class="inv-muted" id="reState">Se încarcă…</p>
+
+  <div class="rp-body" id="reBody" hidden>
+    <section class="inv-card" aria-labelledby="reListTitle">
+      <div class="plan-card-head">
+        <h2 id="reListTitle" class="inv-h2">Oportunități</h2>
+        <div class="rp-actions">
+          <button class="inv-btn" type="button" id="reAdd">+ Oportunitate nouă</button>
+          <button class="inv-btn" type="button" id="reDup">Duplică</button>
+          <button class="inv-btn" type="button" id="reDel">Șterge</button>
+        </div>
+      </div>
+      <div class="re-tabs" id="reTabs" role="tablist" aria-label="Oportunități"></div>
+      <p class="rp-warn" id="reDirty" hidden>Ai modificări nesalvate.</p>
+    </section>
+
+    <form id="reForm" class="rp-body" novalidate>
+      <section class="inv-card" aria-labelledby="reBuyTitle">
+        <h2 id="reBuyTitle" class="inv-h2">Achiziția</h2>
+        <div class="rp-edit">
+          <label class="rp-edit__wide">Nume <input type="text" name="name" maxlength="160" autocomplete="off" /></label>
+          <label>Scop
+            <select name="use"><option value="home">Locuință proprie</option><option value="rental">Investiție (închiriere)</option></select>
+          </label>
+          <label>Data cumpărării <input type="date" name="purchaseDate" /></label>
+          <label>Preț (EUR) <input type="text" name="priceEur" inputmode="decimal" autocomplete="off" /></label>
+          <label>Avans (%) <input type="text" name="downPct" inputmode="decimal" autocomplete="off" /></label>
+          <label>Curs EUR/RON <small id="reFxHint">gol = cursul BNR</small> <input type="text" name="eurRon" inputmode="decimal" autocomplete="off" /></label>
+        </div>
+        <p class="re-derived" id="reDown"></p>
+        <h3 class="plan-h3">Alte costuri la cumpărare</h3>
+        <p class="rp-note">Notar, cartea funciară, evaluare, agenție, renovare, mobilă… sumele tale.</p>
+        <div class="re-costs" id="reCosts"></div>
+        <button class="inv-btn" type="button" id="reCostAdd">+ Cost</button>
+      </section>
+
+      <section class="inv-card" aria-labelledby="reLoanTitle">
+        <h2 id="reLoanTitle" class="inv-h2">Creditul</h2>
+        <label class="rp-check"><input type="checkbox" name="hasLoan" /> Cumpăr cu credit</label>
+        <div class="rp-edit" id="reLoanFields">
+          <label>Suma împrumutată (lei) <small>gol = preț − avans</small> <input type="text" name="principalRon" inputmode="decimal" autocomplete="off" /></label>
+          <label>Durata (ani) <input type="text" name="years" inputmode="numeric" autocomplete="off" /></label>
+          <label>Tip rate
+            <select name="type"><option value="annuity">Rate egale (anuități)</option><option value="decreasing">Rate descrescătoare</option></select>
+          </label>
+          <label>Prima rată (luna) <input type="month" name="startMonth" /></label>
+          <label>Dobândă fixă (% pe an) <input type="text" name="fixedRate" inputmode="decimal" autocomplete="off" /></label>
+          <label>Perioada fixă (ani) <small>0 = variabilă de la început</small> <input type="text" name="fixedYears" inputmode="decimal" autocomplete="off" /></label>
+          <label>IRCC (%) <small id="reIrccHint">valoarea ta; vezi bnr.ro</small> <input type="text" name="ircc" inputmode="decimal" autocomplete="off" /></label>
+          <label>Marja băncii (%) <input type="text" name="margin" inputmode="decimal" autocomplete="off" /></label>
+          <label>Scenarii IRCC (pp) <small>ex. −1; +1; +2</small> <input type="text" name="irccScenarios" autocomplete="off" /></label>
+          <label>Comisioane la semnare (lei) <input type="text" name="upfrontFeesRon" inputmode="decimal" autocomplete="off" /></label>
+          <label>Comision lunar (lei) <input type="text" name="monthlyFeeRon" inputmode="decimal" autocomplete="off" /></label>
+          <label>Asigurare de viață (% pe an din sold) <input type="text" name="lifeInsuranceRate" inputmode="decimal" autocomplete="off" /></label>
+          <label>Asigurare locuință (lei pe an) <input type="text" name="propertyInsuranceRon" inputmode="decimal" autocomplete="off" /></label>
+          <label>Venitul net al familiei (lei/lună) <small>pentru gradul de îndatorare</small> <input type="text" name="monthlyIncomeRon" inputmode="decimal" autocomplete="off" /></label>
+          <label>Alte rate lunare (lei) <input type="text" name="otherDebtRon" inputmode="decimal" autocomplete="off" /></label>
+        </div>
+      </section>
+
+      <section class="inv-card" aria-labelledby="reRentTitle">
+        <h2 id="reRentTitle" class="inv-h2" data-home="Cumpăr sau stau în chirie?" data-rental="Chiria și costurile">Chiria și costurile</h2>
+        <p class="rp-note" id="reRentNote"></p>
+        <div class="rp-edit">
+          <label><span data-home="Chiria pe care aș plăti-o (EUR/lună)" data-rental="Chirie încasată (EUR/lună)">Chirie (EUR/lună)</span> <input type="text" name="rentEur" inputmode="decimal" autocomplete="off" /></label>
+          <label class="re-rental-only">Grad de ocupare (%) <input type="text" name="occupancy" inputmode="decimal" autocomplete="off" /></label>
+          <label class="re-rental-only">Administrare / agenție (% din chirie) <input type="text" name="managementPct" inputmode="decimal" autocomplete="off" /></label>
+          <label>Întreținere și reparații (% pe an din valoare) <input type="text" name="maintenancePct" inputmode="decimal" autocomplete="off" /></label>
+          <label>Alte costuri (EUR pe an) <small>impozit clădire, fond reparații…</small> <input type="text" name="otherYearlyEur" inputmode="decimal" autocomplete="off" /></label>
+          <label>Creșterea chiriei (% pe an) <input type="text" name="growth" inputmode="decimal" autocomplete="off" /></label>
+          <label>Creșterea prețului locuinței (% pe an) <input type="text" name="appreciation" inputmode="decimal" autocomplete="off" /></label>
+          <label>Orizont de comparație (ani) <input type="text" name="holdYears" inputmode="numeric" autocomplete="off" /></label>
+          <label>Costuri la vânzare (%) <input type="text" name="sellCostPct" inputmode="decimal" autocomplete="off" /></label>
+          <label class="rp-edit__wide">Notă <textarea name="note" rows="2" maxlength="2000"></textarea></label>
+        </div>
+      </section>
+
+      <div class="re-savebar">
+        <button class="inv-btn inv-btn--primary" type="submit">Salvează</button>
+        <span class="inv-muted" id="reSaveState"></span>
+      </div>
+    </form>
+
+    <section class="inv-card" aria-labelledby="reResTitle">
+      <h2 id="reResTitle" class="inv-h2">Rezultat</h2>
+      <dl class="kpis" id="reKpis"></dl>
+      <p class="rp-warn" id="reWarn" hidden></p>
+    </section>
+
+    <section class="inv-card" aria-labelledby="rePreTitle" id="rePreCard">
+      <h2 id="rePreTitle" class="inv-h2">Plăți anticipate</h2>
+      <p class="rp-note">O sumă o singură dată sau aceeași sumă recurentă (de ex. 1.000 lei lunar, 24 de luni). „Reduce durata” păstrează rata și termină creditul mai devreme; „Reduce rata” păstrează durata.</p>
+      <div class="rp-edit" id="rePreForm">
+        <label>Tip <select name="pKind"><option value="once">O singură dată</option><option value="recurring">Recurentă</option></select></label>
+        <label>Suma (lei) <input type="text" name="pAmount" inputmode="decimal" autocomplete="off" /></label>
+        <label>Luna (prima) <input type="month" name="pMonth" /></label>
+        <label class="re-rec">De câte ori <input type="text" name="pCount" inputmode="numeric" autocomplete="off" /></label>
+        <label class="re-rec">La fiecare (luni) <input type="text" name="pEvery" inputmode="numeric" autocomplete="off" value="1" /></label>
+        <label>Efect <select name="pEffect"><option value="term">Reduce durata</option><option value="installment">Reduce rata</option></select></label>
+        <div class="rp-edit__actions"><button class="inv-btn" type="button" id="rePreAdd">+ Adaugă plata</button></div>
+      </div>
+      <ul class="db-alerts" id="rePreList"></ul>
+      <dl class="kpis" id="rePreKpis"></dl>
+      <div class="re-verdict" id="reVerdict"></div>
+    </section>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="reBalTitle">
+        <h2 id="reBalTitle" class="inv-h2">Soldul creditului</h2>
+        <div class="inv-chart" id="reBalChart" role="img" aria-label="Soldul creditului în timp, cu și fără plăți anticipate, și pe scenarii IRCC"></div>
+      </section>
+      <section class="inv-card" aria-labelledby="rePayTitle">
+        <h2 id="rePayTitle" class="inv-h2">Rata lunară pe scenarii IRCC</h2>
+        <div class="inv-chart" id="rePayChart" role="img" aria-label="Rata lunară în timp pentru IRCC-ul tău și scenariile alese"></div>
+      </section>
+    </div>
+
+    <div class="rp-grid-2">
+      <section class="inv-card" aria-labelledby="reSplitTitle">
+        <h2 id="reSplitTitle" class="inv-h2">Pe ani: principal, dobândă, costuri</h2>
+        <div class="inv-chart" id="reSplitChart" role="img" aria-label="Pe fiecare an: cât din plăți merge la principal, dobândă, plăți anticipate și asigurări"></div>
+      </section>
+      <section class="inv-card" aria-labelledby="reYieldTitle">
+        <h2 id="reYieldTitle" class="inv-h2" data-home="Avere: cumpăr vs stau în chirie" data-rental="Fluxuri de numerar din închiriere">Randament</h2>
+        <div class="inv-chart" id="reYieldChart" role="img" aria-label="Randamentul oportunității pe ani"></div>
+        <p class="rp-note" id="reYieldNote"></p>
+      </section>
+    </div>
+
+    <section class="inv-card" aria-labelledby="reTableTitle">
+      <div class="plan-card-head">
+        <h2 id="reTableTitle" class="inv-h2">Graficul de rambursare (pe ani)</h2>
+        <button class="inv-btn" type="button" id="reCsv">Descarcă lunar (CSV)</button>
+      </div>
+      <div class="rp-table-wrap">
+        <table class="rp-table" id="reTable">
+          <thead><tr><th scope="col">An</th><th scope="col" class="num">Rate</th><th scope="col" class="num">Dobândă</th><th scope="col" class="num">Principal</th><th scope="col" class="num">Anticipat</th><th scope="col" class="num">Asigurări + comisioane</th><th scope="col" class="num">Sold la final</th><th scope="col" class="num">Vârsta</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="inv-card" aria-labelledby="reCmpTitle">
+      <h2 id="reCmpTitle" class="inv-h2">Comparație</h2>
+      <p class="rp-note">Bifează 2–3 oportunități. Sumele în EUR la cursul fiecărei oportunități; ratele în lei.</p>
+      <div class="re-cmp-pick" id="reCmpPick"></div>
+      <div class="rp-table-wrap"><table class="rp-table" id="reCmp"></table></div>
+      <div class="inv-chart" id="reCmpChart" role="img" aria-label="Comparația oportunităților: bani proprii, dobândă totală, avere la orizont"></div>
+    </section>
+
+    <section class="inv-card" aria-labelledby="reNwTitle">
+      <h2 id="reNwTitle" class="inv-h2">Avere netă</h2>
+      <p class="inv-muted" id="reNwState"></p>
+      <div class="rp-actions">
+        <button class="inv-btn inv-btn--primary" type="button" id="reBought">Am cumpărat</button>
+        <button class="inv-btn" type="button" id="reSync" hidden>Actualizează soldul creditului</button>
+        <button class="inv-btn" type="button" id="reDoneAll" hidden>Marchează plățile anticipate de până azi ca făcute</button>
+      </div>
+    </section>
+
+    <details class="inv-card rp-method" id="reParamsCard">
+      <summary><strong>Reguli legale folosite</strong> <span class="inv-muted" id="reParamsSummary"></span></summary>
+      <p class="rp-note">Comisionul la plata anticipată, impozitul pe chirii și gradul de îndatorare BNR. Fiecare are sursa și data verificării; confirmă-le după ce le citești. Nu e consultanță juridică sau fiscală.</p>
+      <div class="rp-table-wrap"><table class="rp-table" id="reParams">
+        <thead><tr><th scope="col">Regula</th><th scope="col" class="num">Valoare (%)</th><th scope="col">Sursă și note</th><th scope="col">Confirmat</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="rp-actions">
+        <button class="inv-btn" type="button" id="reLoadParams">Încarcă valorile cercetate</button>
+        <button class="inv-btn inv-btn--primary" type="button" id="reSaveParams">Salvează regulile</button>
+      </div>
+      <p class="rp-note">IRCC îl publică BNR trimestrial (indicele de referință pentru creditele consumatorilor, calculat din tranzacțiile interbancare); o valoare se aplică la aproximativ două trimestre după trimestrul calculat. Scrie-l în câmpul IRCC al fiecărei oportunități, din pagina BNR sau din oferta băncii.</p>
+    </details>
+
+    <details class="inv-card rp-method">
+      <summary><strong>Cum se calculează</strong></summary>
+      <ul>
+        <li>Dobânda lunară = dobânda anuală / 12. Rate egale: rata = sold × r / (1 − (1 + r)<sup>−n</sup>); la trecerea pe IRCC + marjă rata se recalculează pe durata rămasă.</li>
+        <li>Plata anticipată se face după rata lunii. „Reduce durata” păstrează rata; „Reduce rata” păstrează durata. Comisionul vine din regulile de mai jos.</li>
+        <li>DAE = randamentul anual efectiv al: sumei primite (minus comisioanele la semnare) față de toate ratele, comisioanele lunare și asigurările (fără plăți anticipate).</li>
+        <li>Cursul EUR/RON rămâne cel ales pe toată durata (nu prevedem cursul).</li>
+        <li>„Merită plata anticipată?”: aceiași bani, fie în credit, fie investiți în portofoliu cu randamentul din Plan (real + inflație) și impozitul pe câștig din Taxe. Când creditul cu plăți anticipate se termină mai devreme sau are rata mai mică, diferența se investește. Comparăm averea la sfârșitul creditului inițial; Monte Carlo cu volatilitatea din Plan dă probabilitatea ca investiția să câștige.</li>
+        <li>Închiriere: venit = chirie × ocupare; minus administrare, întreținere, alte costuri și impozit (cota × (1 − deducerea forfetară)). Randament net = primul an / (preț + costuri). IRR cu vânzare la final (preț × creștere − costuri de vânzare − soldul creditului).</li>
+        <li>Locuință: în fiecare lună cel care plătește mai puțin (proprietarul sau chiriașul) investește diferența; chiriașul investește de la început banii proprii. Averea la orizont = locuința după vânzare − credit + investiții, față de investițiile chiriașului.</li>
+      </ul>
+    </details>
+  </div>
+</Invest>
+
+<script>
+  import '../../../scripts/invest/realestate';
+</script>
